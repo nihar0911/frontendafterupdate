@@ -93,8 +93,10 @@ else
                         </button>
                     </li>
 
+                    @if (Auth.IsPurchaseManager || Auth.IsAdmin)
+                    {
                     <li class="nav-item">
-                        <button class="nav-link" @onclick='() => Nav.NavigateTo(Auth.IsPurchaseManager || Auth.IsAdmin ? "/procurement" : "/quotations")'>
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/procurement")'>
                             <span class="nav-icon">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -106,6 +108,7 @@ else
                             <span class="nav-label">Purchase Requests</span>
                         </button>
                     </li>
+                    }
 
                     <li class="nav-item">
                         <button class="nav-link" @onclick='() => Nav.NavigateTo("/quotations")'>
@@ -447,7 +450,7 @@ else
                                                         <span class="c-outlet-pill">@currentContract.OutletName</span>
                                                     </div>
                                                     <span class="c-dates">
-                                                        Effective: @currentContract.StartDate.ToString("dd MMM yyyy") &ndash; @currentContract.EndDate.ToString("dd MMM yyyy")
+                                                        Effective: @currentContract.StartDate.ToIst("dd MMM yyyy") &ndash; @currentContract.EndDate.ToIst("dd MMM yyyy")
                                                     </span>
                                                 </div>
                                             </div>

@@ -17,7 +17,7 @@
         </div>
     </div>
 }
-else if (!Auth.IsOrgManager && !Auth.IsAdmin && !Auth.IsPurchaseManager)
+else if (!Auth.IsOrgManager && !Auth.IsAdmin && !Auth.IsPurchaseManager && !Auth.IsOutletManager)
 {
     <div class="org-po-warning-wrap">
         <div class="org-po-warning-card">
@@ -91,6 +91,8 @@ else
                         </button>
                     </li>
 
+                    @if (Auth.IsOrgManager || Auth.IsAdmin)
+                    {
                     <li class="nav-item">
                         <button class="nav-link" @onclick='() => Nav.NavigateTo("/organization/outlets")'>
                             <span class="nav-icon">
@@ -102,9 +104,12 @@ else
                             <span class="nav-label">Outlets</span>
                         </button>
                     </li>
+                    }
 
+                    @if (Auth.IsPurchaseManager || Auth.IsAdmin)
+                    {
                     <li class="nav-item">
-                        <button class="nav-link" @onclick='() => Nav.NavigateTo(Auth.IsPurchaseManager || Auth.IsAdmin ? "/procurement" : "/quotations")'>
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/procurement")'>
                             <span class="nav-icon">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -116,6 +121,7 @@ else
                             <span class="nav-label">Purchase Requests</span>
                         </button>
                     </li>
+                    }
 
                     <li class="nav-item">
                         <button class="nav-link" @onclick='() => Nav.NavigateTo("/quotations")'>
@@ -131,6 +137,8 @@ else
                         </button>
                     </li>
 
+                    @if (Auth.IsOrgManager || Auth.IsAdmin)
+                    {
                     <li class="nav-item">
                         <button class="nav-link" @onclick='() => Nav.NavigateTo("/organization/contracts")'>
                             <span class="nav-icon">
@@ -142,6 +150,7 @@ else
                             <span class="nav-label">Contracts</span>
                         </button>
                     </li>
+                    }
 
                     <li class="nav-item">
                         <button class="nav-link active" @onclick='() => { if (IsViewingPoDetails) { BackToPoList(); } else { Nav.NavigateTo("/organization/purchase-orders"); } }'>
@@ -227,7 +236,13 @@ else
                             <line x1="3" y1="18" x2="21" y2="18"></line>
                         </svg>
                     </button>
-                    <h1 class="topbar-page-title mb-0">@(IsViewingPoDetails ? "Purchase Order Details" : "Purchase Orders")</h1>
+                    <div>
+                        <h1 class="topbar-page-title mb-0">@(IsViewingPoDetails ? "Purchase Order Details" : "Purchase Orders")</h1>
+                        @if (!IsViewingPoDetails)
+                        {
+                            <p class="mb-0 small text-muted">@PageRoleSubtitle</p>
+                        }
+                    </div>
                     <span class="topbar-org-badge">@OrganizationName</span>
                 </div>
 
@@ -271,7 +286,7 @@ else
                                                     <strong class="@(notif.NotificationType == "OpportunityRejected" ? "text-danger" : "text-primary")">
                                                         @notif.Title
                                                     </strong>
-                                                    <small class="text-muted" style="font-size: 0.7rem;">@notif.CreatedDate.ToString("dd MMM, hh:mm tt")</small>
+                                                    <small class="text-muted" style="font-size: 0.7rem;">@notif.CreatedDate.ToIst("dd MMM, hh:mm tt")</small>
                                                 </div>
                                                 <p class="text-dark mb-1" style="font-size: 0.8rem; line-height: 1.3;">
                                                     @notif.Message
@@ -402,7 +417,7 @@ else
                             </button>
 
                             <div class="d-flex align-items-center gap-2">
-                                @if (Auth.IsOrgManager && (po.Status == "Awaiting Approval" || po.Status == "AwaitingApproval"))
+                                @if (CanApprovePo(po))
                                 {
                                     <button type="button" class="btn btn-success d-flex align-items-center gap-2 fw-semibold px-3 py-2 rounded-3 shadow-sm" @onclick="() => HandleApprovePo(po.PurchaseOrderID)" disabled="@IsActionProcessing">
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -445,7 +460,7 @@ else
                                     </button>
                                 }
 
-                                @if (isDelivered)
+                                @if (isDelivered && (Auth.IsPurchaseManager || Auth.IsAdmin))
                                 {
                                     <button type="button" class="btn btn-success d-flex align-items-center gap-2 fw-semibold px-3 py-2 rounded-3 shadow-sm" @onclick="OpenReviewModalForSelectedPo">
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -467,6 +482,19 @@ else
                         </div>
 
                         <!-- ALERTS -->
+                        @if (IsAwaitingApproval(po))
+                        {
+                            <div class="alert alert-warning d-flex align-items-center mb-4 shadow-sm rounded-3 py-2 px-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <polyline points="12 6 12 12 16 14"></polyline>
+                                    </svg>
+                                    <span class="small fw-semibold">Waiting for @GetApproverLabel(po) approval. This order has not been placed with the vendor yet.</span>
+                                </div>
+                            </div>
+                        }
+
                         @if (!string.IsNullOrWhiteSpace(DeliverySuccessMessage))
                         {
                             <div class="alert alert-success d-flex align-items-center justify-content-between mb-4 shadow-sm rounded-3 py-2 px-3">
@@ -612,7 +640,7 @@ else
                                     </div>
                                     <div class="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom">
                                         <span class="text-muted small">Actual Delivery Date</span>
-                                        <span class="text-dark fw-semibold">@DeliveryActualDate.ToString("dd MMM yyyy")</span>
+                                        <span class="text-dark fw-semibold">@DeliveryActualDate.ToIst("dd MMM yyyy")</span>
                                     </div>
                                     <div class="d-flex align-items-center justify-content-between">
                                         <span class="text-muted small">Delivery Performance</span>
@@ -708,17 +736,17 @@ else
                                     </div>
                                     <div class="col-md-3 col-sm-6">
                                         <span class="text-muted small d-block">Order Date</span>
-                                        <strong class="text-dark fs-6">@po.OrderDate.ToString("dd MMM yyyy, hh:mm tt")</strong>
+                                        <strong class="text-dark fs-6">@po.OrderDate.ToIst("dd MMM yyyy, hh:mm tt")</strong>
                                     </div>
                                     <div class="col-md-3 col-sm-6">
                                         <span class="text-muted small d-block">Expected Delivery</span>
-                                        <strong class="text-dark fs-6">@(po.ExpectedDeliveryDate.HasValue ? po.ExpectedDeliveryDate.Value.ToString("dd MMM yyyy") : po.OrderDate.AddDays(2).ToString("dd MMM yyyy"))</strong>
+                                        <strong class="text-dark fs-6">@(po.ExpectedDeliveryDate.HasValue ? po.ExpectedDeliveryDate.Value.ToIst("dd MMM yyyy") : po.OrderDate.AddDays(2).ToIst("dd MMM yyyy"))</strong>
                                     </div>
                                     <div class="col-md-3 col-sm-6">
                                         <span class="text-muted small d-block">Delivered On</span>
                                         @if (isDelivered)
                                         {
-                                            <strong class="text-success fs-6">@((po.ActualDeliveryDate ?? primaryDeliveryRecord?.DeliveryDate ?? po.OrderDate).ToString("dd MMM yyyy, hh:mm tt"))</strong>
+                                            <strong class="text-success fs-6">@((po.ActualDeliveryDate ?? primaryDeliveryRecord?.DeliveryDate ?? po.OrderDate).ToIst("dd MMM yyyy, hh:mm tt"))</strong>
                                         }
                                         else
                                         {
@@ -819,11 +847,11 @@ else
                                         <div class="row g-3 small">
                                             <div class="col-sm-6">
                                                 <span class="text-muted d-block">Dispatched On</span>
-                                                <strong class="text-dark">@(isDispatched ? (po.DispatchDateTime.HasValue ? po.DispatchDateTime.Value.ToString("dd MMM yyyy, hh:mm tt") : "Dispatched") : "Pending")</strong>
+                                                <strong class="text-dark">@(isDispatched ? (po.DispatchDateTime.HasValue ? po.DispatchDateTime.Value.ToIst("dd MMM yyyy, hh:mm tt") : "Dispatched") : "Pending")</strong>
                                             </div>
                                             <div class="col-sm-6">
                                                 <span class="text-muted d-block">Delivered On</span>
-                                                <strong class="text-dark">@(isDelivered ? (po.ActualDeliveryDate ?? primaryDeliveryRecord?.DeliveryDate ?? po.OrderDate).ToString("dd MMM yyyy, hh:mm tt") : "Pending")</strong>
+                                                <strong class="text-dark">@(isDelivered ? (po.ActualDeliveryDate ?? primaryDeliveryRecord?.DeliveryDate ?? po.OrderDate).ToIst("dd MMM yyyy, hh:mm tt") : "Pending")</strong>
                                             </div>
                                             <div class="col-sm-6">
                                                 <span class="text-muted d-block">Received Quantity</span>
@@ -871,7 +899,7 @@ else
                                             <div class="col-12 mt-2">
                                                 <span class="text-muted d-block">Notes / Observations</span>
                                                 <p class="text-dark mb-0 p-2.5 bg-light rounded-3 mt-1">
-                                                    @(isDelivered ? "Goods received in excellent condition and verified by outlet manager." : "Order is being fulfilled by the vendor.")
+                                                    @(isDelivered ? "Goods received and verified by the Purchase Manager." : "Order is being fulfilled by the vendor.")
                                                 </p>
                                             </div>
                                         </div>
@@ -890,23 +918,42 @@ else
                                         </div>
 
                                         <div class="delivery-vertical-timeline">
-                                            <!-- 1. Order Placed -->
+                                            @{
+                                                bool isAwaitingApproval = IsAwaitingApproval(po);
+                                                bool isRejectedPo = string.Equals(po.Status, "Rejected", StringComparison.OrdinalIgnoreCase);
+                                                bool isPlacedWithVendor = !isAwaitingApproval && !isRejectedPo
+                                                    && (po.Status == "Pending" || po.Status == "Accepted" || isDispatched || isDelivered);
+                                            }
+                                            <!-- 1. Manager Approval -->
                                             <div class="d-flex gap-3 mb-3">
-                                                <div class="timeline-step-icon completed">
-                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                                    </svg>
+                                                <div class="timeline-step-icon @(isAwaitingApproval ? "pending" : "completed")">
+                                                    @if (isAwaitingApproval)
+                                                    {
+                                                        <span>1</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                                        </svg>
+                                                    }
                                                 </div>
                                                 <div>
-                                                    <strong class="d-block text-dark small">Order Placed</strong>
-                                                    <span class="text-muted small">By Organization Manager &bull; @po.OrderDate.ToString("dd MMM yyyy, hh:mm tt")</span>
+                                                    <strong class="d-block text-dark small">Manager Approval</strong>
+                                                    <span class="text-muted small">
+                                                        @(isAwaitingApproval
+                                                            ? $"Waiting for {GetApproverLabel(po)}"
+                                                            : isRejectedPo
+                                                                ? $"Rejected by {GetApproverLabel(po)}"
+                                                                : $"Approved by {GetApproverLabel(po)}")
+                                                    </span>
                                                 </div>
                                             </div>
 
-                                            <!-- 2. Order Accepted -->
+                                            <!-- 2. Order Placed -->
                                             <div class="d-flex gap-3 mb-3">
-                                                <div class="timeline-step-icon @(isAccepted ? "completed" : "pending")">
-                                                    @if (isAccepted)
+                                                <div class="timeline-step-icon @(isPlacedWithVendor ? "completed" : "pending")">
+                                                    @if (isPlacedWithVendor)
                                                     {
                                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                                                             <polyline points="20 6 9 17 4 12"></polyline>
@@ -918,8 +965,28 @@ else
                                                     }
                                                 </div>
                                                 <div>
+                                                    <strong class="d-block text-dark small">Order Placed with Vendor</strong>
+                                                    <span class="text-muted small">@(isPlacedWithVendor ? $"Placed • {po.OrderDate.ToIst("dd MMM yyyy, hh:mm tt")}" : "Not placed until the manager approves")</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- 3. Order Accepted -->
+                                            <div class="d-flex gap-3 mb-3">
+                                                <div class="timeline-step-icon @(isAccepted ? "completed" : "pending")">
+                                                    @if (isAccepted)
+                                                    {
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                                        </svg>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span>3</span>
+                                                    }
+                                                </div>
+                                                <div>
                                                     <strong class="d-block text-dark small">Order Accepted</strong>
-                                                    <span class="text-muted small">@(isAccepted ? $"By {vendorName} • {po.OrderDate.AddHours(1).ToString("dd MMM yyyy, hh:mm tt")}" : "Pending vendor acceptance")</span>
+                                                    <span class="text-muted small">@(isAccepted ? $"By {vendorName} • {po.OrderDate.AddHours(1).ToIst("dd MMM yyyy, hh:mm tt")}" : "Pending vendor acceptance")</span>
                                                 </div>
                                             </div>
 
@@ -934,16 +1001,16 @@ else
                                                     }
                                                     else
                                                     {
-                                                        <span>3</span>
+                                                        <span>4</span>
                                                     }
                                                 </div>
                                                 <div>
                                                     <strong class="d-block text-dark small">Dispatched</strong>
-                                                    <span class="text-muted small">@(isDispatched ? (po.DispatchDateTime.HasValue ? $"By {vendorName} • {po.DispatchDateTime.Value.ToString("dd MMM yyyy, hh:mm tt")}" : $"By {vendorName} • Dispatched") : "Pending vendor dispatch")</span>
+                                                    <span class="text-muted small">@(isDispatched ? (po.DispatchDateTime.HasValue ? $"By {vendorName} • {po.DispatchDateTime.Value.ToIst("dd MMM yyyy, hh:mm tt")}" : $"By {vendorName} • Dispatched") : "Pending vendor dispatch")</span>
                                                 </div>
                                             </div>
 
-                                            <!-- 4. Delivered -->
+                                            <!-- 5. Delivered -->
                                             <div class="d-flex gap-3">
                                                 <div class="timeline-step-icon @(isDelivered ? "completed" : "pending")">
                                                     @if (isDelivered)
@@ -954,12 +1021,12 @@ else
                                                     }
                                                     else
                                                     {
-                                                        <span>4</span>
+                                                        <span>5</span>
                                                     }
                                                 </div>
                                                 <div>
                                                     <strong class="d-block text-dark small">Delivered</strong>
-                                                    <span class="text-muted small">@(isDelivered ? $"By {outletName} Manager • {(po.ActualDeliveryDate ?? primaryDeliveryRecord?.DeliveryDate ?? po.OrderDate).ToString("dd MMM yyyy, hh:mm tt")}" : "Awaiting receipt at outlet")</span>
+                                                    <span class="text-muted small">@(isDelivered ? $"By Purchase Manager • {(po.ActualDeliveryDate ?? primaryDeliveryRecord?.DeliveryDate ?? po.OrderDate).ToIst("dd MMM yyyy, hh:mm tt")}" : "Awaiting receipt — Purchase Manager confirms delivery")</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -1015,8 +1082,8 @@ else
                                 </svg>
                             </div>
                             <div class="metric-details">
-                                <span class="metric-val">@AllPurchaseOrders.Count(p => p.Status == "Pending")</span>
-                                <span class="metric-lbl">Pending Vendor Confirmation</span>
+                                <span class="metric-val">@AllPurchaseOrders.Count(p => IsAwaitingApproval(p))</span>
+                                <span class="metric-lbl">Awaiting Manager Approval</span>
                             </div>
                         </div>
 
@@ -1087,6 +1154,24 @@ else
                             }
                         </div>
 
+                        @if (Auth.IsOrgManager && OrgOutlets.Count > 0)
+                        {
+                            <div class="po-select-box">
+                                <select value="@ApproverSettingOutletId" @onchange="HandleApproverOutletChanged" disabled="@IsSavingApproverRole">
+                                    @foreach (var o in OrgOutlets)
+                                    {
+                                        <option value="@o.OutletID">@(OutletNames.TryGetValue(o.OutletID, out var on) ? on : o.OutletName)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="po-select-box">
+                                <select value="@PoApproverRole" @onchange="HandleApproverRoleChanged" disabled="@IsSavingApproverRole">
+                                    <option value="Organization Manager">Approve as Organization Manager</option>
+                                    <option value="Outlet Manager">Approve as Outlet Manager</option>
+                                </select>
+                            </div>
+                        }
+
                         @if (Auth.IsPurchaseManager || Auth.IsAdmin)
                         {
                             <div class="po-toolbar-right">
@@ -1095,7 +1180,7 @@ else
                                         <line x1="12" y1="5" x2="12" y2="19"></line>
                                         <line x1="5" y1="12" x2="19" y2="12"></line>
                                     </svg>
-                                    <span>Issue Purchase Order</span>
+                                    <span>Submit Purchase Order</span>
                                 </button>
                             </div>
                         }
@@ -1119,7 +1204,7 @@ else
                                 @if ((Auth.IsPurchaseManager || Auth.IsAdmin) && EligiblePoOptions.Count > 0)
                                 {
                                     <button class="btn btn-outline-success mt-2" @onclick="OpenCreateModal">
-                                        + Issue Purchase Order for Accepted Quotation
+                                        + Submit Purchase Order for Approval
                                     </button>
                                 }
                             </div>
@@ -1165,15 +1250,24 @@ else
                                                     <span class="vendor-name-text">@vName</span>
                                                 </td>
                                                 <td class="po-date-col">
-                                                    @p.OrderDate.ToString("dd MMM yyyy")
+                                                    @p.OrderDate.ToIst("dd MMM yyyy")
                                                 </td>
                                                 <td class="po-date-col">
-                                                    @(p.ExpectedDeliveryDate.HasValue ? p.ExpectedDeliveryDate.Value.ToString("dd MMM yyyy") : "N/A")
+                                                    @(p.ExpectedDeliveryDate.HasValue ? p.ExpectedDeliveryDate.Value.ToIst("dd MMM yyyy") : "N/A")
                                                 </td>
                                                 <td class="po-status-col">
                                                     <span class="po-badge @badgeClass">@p.Status</span>
+                                                    @if (IsAwaitingApproval(p))
+                                                    {
+                                                        <div class="prod-sub">Needs @GetApproverLabel(p)</div>
+                                                    }
                                                 </td>
                                                 <td class="text-end pe-3">
+                                                    @if (CanApprovePo(p))
+                                                    {
+                                                        <button type="button" class="btn btn-sm btn-success fw-semibold px-2 py-1 me-1" @onclick="() => HandleApprovePo(p.PurchaseOrderID)" @onclick:stopPropagation="true" disabled="@IsActionProcessing">Approve</button>
+                                                        <button type="button" class="btn btn-sm btn-outline-danger fw-semibold px-2 py-1 me-1" @onclick="() => HandleRejectPo(p.PurchaseOrderID)" @onclick:stopPropagation="true" disabled="@IsActionProcessing">Reject</button>
+                                                    }
                                                     <button type="button" class="btn btn-sm btn-outline-success fw-semibold px-2 py-1" @onclick="() => OpenPoDetails(p.PurchaseOrderID)" @onclick:stopPropagation="true">
                                                         Details &rarr;
                                                     </button>
@@ -1199,7 +1293,7 @@ else
         <div class="modal-backdrop-custom">
             <div class="create-po-modal-card">
                 <div class="modal-header-custom">
-                    <h4 class="modal-title-custom">Issue Purchase Order</h4>
+                    <h4 class="modal-title-custom">Submit Purchase Order for Approval</h4>
                     <button type="button" class="modal-close-btn" @onclick="CloseCreateModal" title="Close">&times;</button>
                 </div>
 
@@ -1264,6 +1358,7 @@ else
                             <label class="form-label-custom">Expected Delivery Date</label>
                             <input type="date" class="form-control-custom" @bind="ExpectedDeliveryDate" />
                         </div>
+                        <p class="small text-muted mb-0">This order will not go to the vendor until the @GetSelectedQuotationApproverLabel() for this outlet approves it.</p>
                     }
                 </div>
 
@@ -1278,7 +1373,7 @@ else
                             }
                             else
                             {
-                                <span>Confirm &amp; Issue Purchase Order</span>
+                                <span>Submit for Approval</span>
                             }
                         </button>
                     }

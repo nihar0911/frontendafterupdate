@@ -23,6 +23,7 @@ public partial class OrgOutlets : ComponentBase
     private List<PurchaseRequestDto> PurchaseRequests { get; set; } = new();
     private List<ContractDto> Contracts { get; set; } = new();
     private OutletDto? SelectedOutlet { get; set; }
+    private string? ActionMessage { get; set; }
 
     private void ToggleSidebar()
     {
@@ -146,6 +147,45 @@ public partial class OrgOutlets : ComponentBase
     private void ViewOutletDetails(OutletDto outlet) => SelectedOutlet = outlet;
 
     private void CloseModal() => SelectedOutlet = null;
+
+    private async Task HandleApproverRoleChanged(ChangeEventArgs e)
+    {
+        if (SelectedOutlet == null || !Auth.IsOrgManager)
+        {
+            return;
+        }
+
+        var selected = e.Value?.ToString() ?? "Organization Manager";
+        try
+        {
+            var result = await Api.UpdateOutletAsync(SelectedOutlet.OutletID, new UpdateOutletCommand
+            {
+                OutletID = SelectedOutlet.OutletID,
+                OrganizationID = SelectedOutlet.OrganizationID,
+                OutletName = SelectedOutlet.OutletName,
+                Address = SelectedOutlet.Address,
+                Latitude = SelectedOutlet.Latitude,
+                Longitude = SelectedOutlet.Longitude,
+                PurchaseOrderApproverRole = selected
+            });
+
+            if (result.Success && result.Data != null)
+            {
+                SelectedOutlet.PurchaseOrderApproverRole = result.Data.PurchaseOrderApproverRole;
+                var listed = AllOutlets.FirstOrDefault(o => o.OutletID == SelectedOutlet.OutletID);
+                if (listed != null)
+                {
+                    listed.PurchaseOrderApproverRole = result.Data.PurchaseOrderApproverRole;
+                }
+
+                ActionMessage = $"Purchase orders for {SelectedOutlet.OutletName} will be approved by the {result.Data.PurchaseOrderApproverRole}.";
+            }
+        }
+        catch
+        {
+            ActionMessage = "Unable to update the purchase order approval setting.";
+        }
+    }
 
     private string GetUserInitial()
     {

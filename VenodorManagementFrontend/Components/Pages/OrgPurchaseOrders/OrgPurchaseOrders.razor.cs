@@ -36,6 +36,10 @@ public partial class OrgPurchaseOrders : ComponentBase
     private Dictionary<int, VendorDto> VendorsMap { get; set; } = new();
 
     private string OrganizationName { get; set; } = "Organization";
+    private OrganizationDto? CurrentOrganization { get; set; }
+    private int ApproverSettingOutletId { get; set; }
+    private string PoApproverRole { get; set; } = "Organization Manager";
+    private bool IsSavingApproverRole { get; set; }
     private string SearchQuery { get; set; } = string.Empty;
     private string StatusFilter { get; set; } = "All";
     private int SelectedOutletId { get; set; } = 0;
@@ -161,7 +165,7 @@ public partial class OrgPurchaseOrders : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        if (Auth.IsAuthenticated && (Auth.IsOrgManager || Auth.IsAdmin || Auth.IsPurchaseManager))
+        if (Auth.IsAuthenticated && (Auth.IsOrgManager || Auth.IsAdmin || Auth.IsPurchaseManager || Auth.IsOutletManager))
         {
             await LoadData();
         }
@@ -201,10 +205,15 @@ public partial class OrgPurchaseOrders : ComponentBase
             var orgs = await orgsTask ?? new List<OrganizationDto>();
 
             int userOrgId = Auth.OrganizationID ?? 0;
-            var orgObj = orgs.FirstOrDefault(o => o.OrganizationID == userOrgId);
-            if (orgObj != null && !string.IsNullOrWhiteSpace(orgObj.OrganizationName))
+            var orgObj = orgs.FirstOrDefault(o => o.OrganizationID == userOrgId) ?? orgs.FirstOrDefault();
+            CurrentOrganization = orgObj;
+            if (orgObj != null)
             {
-                OrganizationName = orgObj.OrganizationName;
+                if (!string.IsNullOrWhiteSpace(orgObj.OrganizationName))
+                {
+                    OrganizationName = orgObj.OrganizationName;
+                }
+
             }
 
             // Populate Dictionaries
@@ -299,6 +308,15 @@ public partial class OrgPurchaseOrders : ComponentBase
                     .OrderByDescending(q => q.QuotationID)
                     .ToList();
             }
+
+            if (ApproverSettingOutletId <= 0 || OrgOutlets.All(o => o.OutletID != ApproverSettingOutletId))
+            {
+                ApproverSettingOutletId = SelectedOutletId > 0 && OrgOutlets.Any(o => o.OutletID == SelectedOutletId)
+                    ? SelectedOutletId
+                    : OrgOutlets.FirstOrDefault()?.OutletID ?? 0;
+            }
+
+            SyncApproverRoleFromSelectedOutlet();
 
             // Load notifications
             try
@@ -605,7 +623,7 @@ public partial class OrgPurchaseOrders : ComponentBase
             if (createdPo != null && createdPo.PurchaseOrderID > 0)
             {
                 CloseCreateModal();
-                ActionSuccessMessage = "Purchase Order created and sent for approval.";
+                ActionSuccessMessage = $"Purchase Order created. It is waiting for {GetApproverLabel(createdPo)} approval before it is placed with the vendor.";
                 await LoadData();
             }
             else
@@ -625,9 +643,160 @@ public partial class OrgPurchaseOrders : ComponentBase
         }
     }
 
+    private static bool IsAwaitingApproval(PurchaseOrderDto po)
+    {
+        return string.Equals(po.Status, "Awaiting Approval", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(po.Status, "AwaitingApproval", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private string PageRoleSubtitle
+    {
+        get
+        {
+            if (Auth.IsPurchaseManager)
+            {
+                return "Create purchase orders and record deliveries. Each outlet has its own approver. The vendor sees the order only after that manager approves.";
+            }
+
+            if (Auth.IsOrgManager || Auth.IsOutletManager)
+            {
+                return "View-only purchase orders. Approve or reject orders assigned to you. Delivery is recorded by the Purchase Manager.";
+            }
+
+            return "Monitor purchase orders across the organization.";
+        }
+    }
+
+    private static string GetApproverLabel(PurchaseOrderDto po)
+    {
+        return string.Equals(po.ApproverRole, "Outlet Manager", StringComparison.OrdinalIgnoreCase)
+            ? "Outlet Manager"
+            : "Organization Manager";
+    }
+
+    private bool CanApprovePo(PurchaseOrderDto po)
+    {
+        if (!IsAwaitingApproval(po))
+        {
+            return false;
+        }
+
+        if (Auth.IsAdmin)
+        {
+            return true;
+        }
+
+        var requiredRole = string.IsNullOrWhiteSpace(po.ApproverRole)
+            ? "Organization Manager"
+            : po.ApproverRole;
+
+        if (string.Equals(requiredRole, "Outlet Manager", StringComparison.OrdinalIgnoreCase))
+        {
+            return Auth.IsOutletManager;
+        }
+
+        return Auth.IsOrgManager;
+    }
+
+    private void SyncApproverRoleFromSelectedOutlet()
+    {
+        var outlet = OrgOutlets.FirstOrDefault(o => o.OutletID == ApproverSettingOutletId);
+        PoApproverRole = string.IsNullOrWhiteSpace(outlet?.PurchaseOrderApproverRole)
+            ? "Organization Manager"
+            : outlet.PurchaseOrderApproverRole;
+    }
+
+    private static string GetOutletApproverLabel(OutletDto? outlet)
+    {
+        return string.Equals(outlet?.PurchaseOrderApproverRole, "Outlet Manager", StringComparison.OrdinalIgnoreCase)
+            ? "Outlet Manager"
+            : "Organization Manager";
+    }
+
+    private string GetSelectedQuotationApproverLabel()
+    {
+        var option = EligiblePoOptions.FirstOrDefault(o => o.QuotationID == SelectedQuotationId);
+        if (option == null)
+        {
+            return "the configured manager";
+        }
+
+        OutletsMap.TryGetValue(option.OutletID, out var outlet);
+        return GetOutletApproverLabel(outlet);
+    }
+
+    private void HandleApproverOutletChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var outletId))
+        {
+            ApproverSettingOutletId = outletId;
+        }
+
+        SyncApproverRoleFromSelectedOutlet();
+    }
+
+    private async Task HandleApproverRoleChanged(ChangeEventArgs e)
+    {
+        var selected = e.Value?.ToString() ?? "Organization Manager";
+        var outlet = OrgOutlets.FirstOrDefault(o => o.OutletID == ApproverSettingOutletId);
+        if (outlet == null || !Auth.IsOrgManager)
+        {
+            return;
+        }
+
+        IsSavingApproverRole = true;
+        StateHasChanged();
+
+        try
+        {
+            var result = await Api.UpdateOutletAsync(outlet.OutletID, new UpdateOutletCommand
+            {
+                OutletID = outlet.OutletID,
+                OrganizationID = outlet.OrganizationID,
+                OutletName = outlet.OutletName,
+                Address = outlet.Address,
+                Latitude = outlet.Latitude,
+                Longitude = outlet.Longitude,
+                PurchaseOrderApproverRole = selected
+            });
+
+            if (result.Success && result.Data != null)
+            {
+                outlet.PurchaseOrderApproverRole = result.Data.PurchaseOrderApproverRole;
+                if (OutletsMap.TryGetValue(outlet.OutletID, out var mapped))
+                {
+                    mapped.PurchaseOrderApproverRole = result.Data.PurchaseOrderApproverRole;
+                }
+
+                PoApproverRole = result.Data.PurchaseOrderApproverRole;
+                var outletName = OutletNames.TryGetValue(outlet.OutletID, out var name) ? name : outlet.OutletName;
+                ActionSuccessMessage = $"New purchase orders for {outletName} will be sent to the {PoApproverRole} for approval.";
+            }
+            else
+            {
+                ActionErrorMessage = result.ErrorMessage ?? "Unable to update the purchase order approval setting.";
+                SyncApproverRoleFromSelectedOutlet();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[OrgPurchaseOrders] Approver setting error: {ex.Message}");
+            ActionErrorMessage = "Unable to update the purchase order approval setting.";
+            SyncApproverRoleFromSelectedOutlet();
+        }
+        finally
+        {
+            IsSavingApproverRole = false;
+            StateHasChanged();
+        }
+    }
+
     private async Task HandleApprovePo(int poId)
     {
-        if (!Auth.IsOrgManager) return;
+        var poToApprove = SelectedPoForDetail?.PurchaseOrderID == poId
+            ? SelectedPoForDetail
+            : AllPurchaseOrders.FirstOrDefault(p => p.PurchaseOrderID == poId);
+        if (poToApprove == null || !CanApprovePo(poToApprove)) return;
 
         IsActionProcessing = true;
         ActionSuccessMessage = null;
@@ -639,13 +808,13 @@ public partial class OrgPurchaseOrders : ComponentBase
             var result = await Api.ApprovePurchaseOrderAsync(poId);
             if (result != null)
             {
-                ActionSuccessMessage = "Purchase Order approved successfully.";
+                ActionSuccessMessage = "Purchase Order approved and placed with the vendor.";
                 if (SelectedPoForDetail != null && SelectedPoForDetail.PurchaseOrderID == poId)
                 {
-                    SelectedPoForDetail.Status = "Approved";
+                    SelectedPoForDetail.Status = result.Status;
                 }
                 var item = AllPurchaseOrders.FirstOrDefault(p => p.PurchaseOrderID == poId);
-                if (item != null) item.Status = "Approved";
+                if (item != null) item.Status = result.Status;
                 await LoadData();
                 if (SelectedPoForDetail != null)
                 {
@@ -671,7 +840,10 @@ public partial class OrgPurchaseOrders : ComponentBase
 
     private async Task HandleRejectPo(int poId)
     {
-        if (!Auth.IsOrgManager) return;
+        var poToReject = SelectedPoForDetail?.PurchaseOrderID == poId
+            ? SelectedPoForDetail
+            : AllPurchaseOrders.FirstOrDefault(p => p.PurchaseOrderID == poId);
+        if (poToReject == null || !CanApprovePo(poToReject)) return;
 
         IsActionProcessing = true;
         ActionSuccessMessage = null;
@@ -858,6 +1030,7 @@ public partial class OrgPurchaseOrders : ComponentBase
     // =========================================================================
     private void StartRecordDelivery()
     {
+        if (!Auth.IsPurchaseManager && !Auth.IsAdmin) return;
         if (SelectedPoForDetail == null) return;
 
         var firstItem = SelectedPoForDetail.Items?.FirstOrDefault();
@@ -950,6 +1123,7 @@ public partial class OrgPurchaseOrders : ComponentBase
 
     private async Task ConfirmDeliveryAsync()
     {
+        if (!Auth.IsPurchaseManager && !Auth.IsAdmin) return;
         if (SelectedPoForDetail == null) return;
 
         DeliveryFormError = string.Empty;

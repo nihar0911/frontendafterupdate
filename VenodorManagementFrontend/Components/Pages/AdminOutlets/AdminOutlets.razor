@@ -391,6 +391,7 @@ else
                                             <th class="th-name">OUTLET NAME</th>
                                             <th class="th-org">ORGANIZATION</th>
                                             <th class="th-address">ADDRESS</th>
+                                            <th class="th-approver">PO APPROVER</th>
                                             <th class="th-coords">COORDINATES (LAT / LONG)</th>
                                             <th class="th-actions">ACTIONS</th>
                                         </tr>
@@ -414,6 +415,7 @@ else
                                                     </span>
                                                 </td>
                                                 <td class="td-address">@(string.IsNullOrWhiteSpace(currentOutlet.Address) ? "—" : currentOutlet.Address)</td>
+                                                <td class="td-approver">@(string.Equals(currentOutlet.PurchaseOrderApproverRole, "Outlet Manager", StringComparison.OrdinalIgnoreCase) ? "Outlet Manager" : "Organization Manager")</td>
                                                 <td class="td-coords">
                                                     @(currentOutlet.Latitude.HasValue && currentOutlet.Longitude.HasValue ? $"{currentOutlet.Latitude.Value:F4}, {currentOutlet.Longitude.Value:F4}" : "N/A")
                                                 </td>
@@ -519,6 +521,10 @@ else
                         <div class="detail-row">
                             <span class="detail-label">Organization ID</span>
                             <span class="detail-value">#@selOutlet.OrganizationID</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Purchase order approval</span>
+                            <span class="detail-value">@(string.Equals(selOutlet.PurchaseOrderApproverRole, "Outlet Manager", StringComparison.OrdinalIgnoreCase) ? "Outlet Manager" : "Organization Manager")</span>
                         </div>
                     </div>
 

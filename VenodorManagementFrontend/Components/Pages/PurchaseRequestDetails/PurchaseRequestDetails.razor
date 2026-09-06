@@ -274,7 +274,7 @@ else
                                         {
                                             <div class="dropdown-item-notif @(!n.IsRead ? "unread" : "")" @onclick="() => MarkAsRead(n.NotificationID)">
                                                 <div class="notif-text">@n.Message</div>
-                                                <div class="notif-time">@n.CreatedDate.ToString("g")</div>
+                                                <div class="notif-time">@n.CreatedDate.ToIst("dd MMM yyyy, hh:mm tt")</div>
                                             </div>
                                         }
                                     }
@@ -381,7 +381,7 @@ else
                             </div>
                             <div class="col-md-4">
                                 <div class="text-muted small fw-bold text-uppercase">Created On</div>
-                                <div class="fw-bold text-dark fs-6 mt-1">@PurchaseRequest.RequestDate.ToString("MMM dd, yyyy")</div>
+                                <div class="fw-bold text-dark fs-6 mt-1">@PurchaseRequest.RequestDate.ToIst("MMM dd, yyyy")</div>
                             </div>
                             <div class="col-md-4">
                                 <div class="text-muted small fw-bold text-uppercase">Requested By</div>
@@ -412,7 +412,7 @@ else
                                     </div>
                                     <div class="d-flex justify-content-between py-2">
                                         <span class="text-muted small fw-semibold">Request Date</span>
-                                        <span class="fw-bold text-dark small">@PurchaseRequest.RequestDate.ToString("g")</span>
+                                        <span class="fw-bold text-dark small">@PurchaseRequest.RequestDate.ToIst("dd MMM yyyy, hh:mm tt")</span>
                                     </div>
                                 </div>
                             </div>

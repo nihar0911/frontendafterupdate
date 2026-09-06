@@ -35,6 +35,7 @@ public partial class PurchaseManagerDashboard : ComponentBase
     private int PurchaseRequestsCount { get; set; }
     private int VendorQuotationsCount { get; set; }
     private int PurchaseOrdersCount { get; set; }
+    private int POsAwaitingApprovalCount { get; set; }
     private int DeliveriesCount { get; set; }
     private int PendingInvoicesCount { get; set; }
     private int AwaitingPaymentCount { get; set; }
@@ -350,6 +351,9 @@ public partial class PurchaseManagerDashboard : ComponentBase
             PurchaseRequestsCount = scopedRequests.Count;
             VendorQuotationsCount = scopedQuotations.Count;
             PurchaseOrdersCount = scopedOrders.Count;
+            POsAwaitingApprovalCount = scopedOrders.Count(o =>
+                string.Equals(o.Status, "Awaiting Approval", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(o.Status, "AwaitingApproval", StringComparison.OrdinalIgnoreCase));
             
             DeliveriesCount = scopedOrders.Count(o =>
                 string.Equals(o.DeliveryStatus, "Delivered", StringComparison.OrdinalIgnoreCase) ||

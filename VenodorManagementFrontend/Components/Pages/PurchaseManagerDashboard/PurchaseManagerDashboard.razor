@@ -273,7 +273,7 @@ else
                                         {
                                             <div class="dropdown-item-notif @(!n.IsRead ? "unread" : "")" @onclick="() => MarkNotificationRead(n.NotificationID)">
                                                 <div class="notif-text">@n.Message</div>
-                                                <div class="notif-time">@n.CreatedDate.ToString("g")</div>
+                                                <div class="notif-time">@n.CreatedDate.ToIst("dd MMM yyyy, hh:mm tt")</div>
                                             </div>
                                         }
                                     }
@@ -415,6 +415,10 @@ else
                             <div class="kpi-content">
                                 <span class="kpi-label">Purchase Orders</span>
                                 <span class="kpi-value">@PurchaseOrdersCount</span>
+                                @if (POsAwaitingApprovalCount > 0)
+                                {
+                                    <span class="kpi-label">@POsAwaitingApprovalCount awaiting approval</span>
+                                }
                             </div>
                             <svg class="kpi-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="9 18 15 12 9 6"></polyline>
@@ -528,7 +532,7 @@ else
                                                         <span class="ref-pill">@item.ReferenceCode</span>
                                                     </td>
                                                     <td>
-                                                        <span class="text-muted small">@item.Timestamp.ToString("MMM dd, yyyy")</span>
+                                                        <span class="text-muted small">@item.Timestamp.ToIst("MMM dd, yyyy")</span>
                                                     </td>
                                                     <td>
                                                         <span class="@item.StatusClass">@item.Status</span>
@@ -574,7 +578,26 @@ else
                                     </div>
                                 </div>
 
-                                <!-- Task 2: Deliveries to Confirm -->
+                                <!-- Task 2: POs awaiting manager approval -->
+                                <div class="task-item-row" @onclick='() => Nav.NavigateTo("/organization/purchase-orders")'>
+                                    <div class="task-left">
+                                        <div class="task-icon-box">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="12" cy="12" r="10"></circle>
+                                                <polyline points="12 6 12 12 16 14"></polyline>
+                                            </svg>
+                                        </div>
+                                        <span class="task-title">POs Awaiting Approval</span>
+                                    </div>
+                                    <div class="task-right">
+                                        <span class="task-count-pill @(POsAwaitingApprovalCount > 0 ? "urgent" : "")">@POsAwaitingApprovalCount</span>
+                                        <svg class="task-arrow-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="9 18 15 12 9 6"></polyline>
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                <!-- Task 3: Deliveries to Confirm -->
                                 <div class="task-item-row" @onclick='() => Nav.NavigateTo("/organization/purchase-orders")'>
                                     <div class="task-left">
                                         <div class="task-icon-box">
@@ -693,7 +716,7 @@ else
                                         </div>
                                         <h5 class="action-card-title">Purchase Orders</h5>
                                     </div>
-                                    <p class="action-card-desc">Track active orders, confirm receipts, and record deliveries.</p>
+                                    <p class="action-card-desc">Submit orders for manager approval, then record delivery when the vendor dispatches.</p>
                                 </div>
                                 <button class="btn-quick-action" @onclick='() => Nav.NavigateTo("/organization/purchase-orders")'>
                                     View Orders &rarr;

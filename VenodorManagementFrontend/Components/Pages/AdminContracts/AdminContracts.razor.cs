@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
+using VenodorManagementFrontend.Helpers;
 using VenodorManagementFrontend.Models;
 using VenodorManagementFrontend.Services;
 
@@ -109,6 +110,6 @@ public partial class AdminContracts : ComponentBase
 
     private string FormatDate(DateTime dt)
     {
-        return dt.ToString("yyyy-MM-dd HH:mm");
+        return dt.ToIst("yyyy-MM-dd HH:mm");
     }
 }

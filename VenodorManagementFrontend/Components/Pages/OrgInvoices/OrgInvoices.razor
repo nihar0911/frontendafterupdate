@@ -88,6 +88,8 @@ else
                         </button>
                     </li>
 
+                    @if (Auth.IsOrgManager || Auth.IsAdmin)
+                    {
                     <li class="nav-item">
                         <button class="nav-link" @onclick='() => Nav.NavigateTo("/organization/outlets")'>
                             <span class="nav-icon">
@@ -99,9 +101,12 @@ else
                             <span class="nav-label">Outlets</span>
                         </button>
                     </li>
+                    }
 
+                    @if (Auth.IsPurchaseManager || Auth.IsAdmin)
+                    {
                     <li class="nav-item">
-                        <button class="nav-link" @onclick='() => Nav.NavigateTo(Auth.IsPurchaseManager || Auth.IsAdmin ? "/procurement" : "/quotations")'>
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/procurement")'>
                             <span class="nav-icon">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -113,6 +118,7 @@ else
                             <span class="nav-label">Purchase Requests</span>
                         </button>
                     </li>
+                    }
 
                     <li class="nav-item">
                         <button class="nav-link" @onclick='() => Nav.NavigateTo("/quotations")'>
@@ -128,6 +134,8 @@ else
                         </button>
                     </li>
 
+                    @if (Auth.IsOrgManager || Auth.IsAdmin)
+                    {
                     <li class="nav-item">
                         <button class="nav-link" @onclick='() => Nav.NavigateTo("/organization/contracts")'>
                             <span class="nav-icon">
@@ -139,6 +147,7 @@ else
                             <span class="nav-label">Contracts</span>
                         </button>
                     </li>
+                    }
 
                     <li class="nav-item">
                         <button class="nav-link" @onclick='() => Nav.NavigateTo("/organization/purchase-orders")'>
@@ -296,7 +305,7 @@ else
                                         }
                                     </div>
                                     <p class="text-muted small mb-0">
-                                        Submitted on @SelectedInvoice.InvoiceDate.ToString("dd MMMM yyyy, hh:mm tt") | PO Reference: <strong>PO-@SelectedInvoice.PurchaseOrderID</strong>
+                                        Submitted on @SelectedInvoice.InvoiceDate.ToIst("dd MMMM yyyy, hh:mm tt") | PO Reference: <strong>PO-@SelectedInvoice.PurchaseOrderID</strong>
                                     </p>
                                 </div>
 
@@ -401,15 +410,15 @@ else
                                     <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">Order &amp; Delivery Reference</h6>
                                     <div class="mb-2">
                                         <span class="text-muted small d-block">Purchase Order Date</span>
-                                        <span class="fw-medium text-dark">@(SelectedPo?.OrderDate.ToString("dd MMM yyyy") ?? "N/A")</span>
+                                        <span class="fw-medium text-dark">@(SelectedPo?.OrderDate.ToIst("dd MMM yyyy") ?? "N/A")</span>
                                     </div>
                                     <div class="mb-2">
                                         <span class="text-muted small d-block">Dispatched Date</span>
-                                        <span class="fw-medium text-dark">@(SelectedPo?.DispatchDateTime.HasValue == true ? SelectedPo.DispatchDateTime.Value.ToString("dd MMM yyyy, hh:mm tt") : "N/A")</span>
+                                        <span class="fw-medium text-dark">@(SelectedPo?.DispatchDateTime.HasValue == true ? SelectedPo.DispatchDateTime.Value.ToIst("dd MMM yyyy, hh:mm tt") : "N/A")</span>
                                     </div>
                                     <div>
                                         <span class="text-muted small d-block">Delivery Confirmation Date</span>
-                                        <span class="fw-medium text-dark">@(SelectedPo?.ActualDeliveryDate.HasValue == true ? SelectedPo.ActualDeliveryDate.Value.ToString("dd MMM yyyy, hh:mm tt") : "Confirmed")</span>
+                                        <span class="fw-medium text-dark">@(SelectedPo?.ActualDeliveryDate.HasValue == true ? SelectedPo.ActualDeliveryDate.Value.ToIst("dd MMM yyyy, hh:mm tt") : "Confirmed")</span>
                                     </div>
                                 </div>
                             </div>
@@ -630,7 +639,7 @@ else
                                                         <span class="text-dark">@invoice.OutletName</span>
                                                     </td>
                                                     <td>
-                                                        <span class="text-muted">@invoice.InvoiceDate.ToString("dd MMM yyyy")</span>
+                                                        <span class="text-muted">@invoice.InvoiceDate.ToIst("dd MMM yyyy")</span>
                                                     </td>
                                                     <td>
                                                         <span class="fw-bold text-dark">Rs. @invoice.TotalAmount.ToString("N2")</span>

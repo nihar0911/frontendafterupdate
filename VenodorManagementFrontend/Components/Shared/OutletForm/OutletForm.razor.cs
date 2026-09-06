@@ -22,6 +22,7 @@ public partial class OutletForm : ComponentBase
     private string Address { get; set; } = string.Empty;
     private decimal? Latitude { get; set; }
     private decimal? Longitude { get; set; }
+    private string PurchaseOrderApproverRole { get; set; } = "Organization Manager";
     private string? ValidationMessage { get; set; }
 
     protected override void OnParametersSet()
@@ -35,6 +36,9 @@ public partial class OutletForm : ComponentBase
             Address = EditingOutlet.Address ?? string.Empty;
             Latitude = EditingOutlet.Latitude;
             Longitude = EditingOutlet.Longitude;
+            PurchaseOrderApproverRole = string.IsNullOrWhiteSpace(EditingOutlet.PurchaseOrderApproverRole)
+                ? "Organization Manager"
+                : EditingOutlet.PurchaseOrderApproverRole;
         }
         else
         {
@@ -42,6 +46,7 @@ public partial class OutletForm : ComponentBase
             Address = string.Empty;
             Latitude = null;
             Longitude = null;
+            PurchaseOrderApproverRole = "Organization Manager";
             if (Organizations != null && Organizations.Count > 0)
             {
                 SelectedOrgId = Organizations[0].OrganizationID;
@@ -73,7 +78,8 @@ public partial class OutletForm : ComponentBase
                 OutletName = OutletName.Trim(),
                 Address = string.IsNullOrWhiteSpace(Address) ? null : Address.Trim(),
                 Latitude = Latitude,
-                Longitude = Longitude
+                Longitude = Longitude,
+                PurchaseOrderApproverRole = PurchaseOrderApproverRole
             };
             await OnCreate.InvokeAsync(command);
         }
@@ -86,7 +92,8 @@ public partial class OutletForm : ComponentBase
                 OutletName = OutletName.Trim(),
                 Address = string.IsNullOrWhiteSpace(Address) ? null : Address.Trim(),
                 Latitude = Latitude,
-                Longitude = Longitude
+                Longitude = Longitude,
+                PurchaseOrderApproverRole = PurchaseOrderApproverRole
             };
             await OnUpdate.InvokeAsync(command);
         }

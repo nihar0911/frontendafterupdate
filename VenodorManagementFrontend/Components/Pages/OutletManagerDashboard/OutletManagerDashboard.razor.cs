@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
+using VenodorManagementFrontend.Helpers;
 using VenodorManagementFrontend.Models;
 using VenodorManagementFrontend.Services;
 
@@ -467,7 +468,7 @@ public partial class OutletManagerDashboard : ComponentBase
         if (span.TotalHours < 24) return $"{(int)span.TotalHours} hours ago";
         if (span.TotalDays < 2) return "Yesterday";
         if (span.TotalDays < 7) return $"{(int)span.TotalDays} days ago";
-        return dt.ToString("dd MMM yyyy");
+        return dt.ToIst("dd MMM yyyy");
     }
 
     private void ToggleNotifications()
@@ -630,24 +631,7 @@ public partial class OutletManagerDashboard : ComponentBase
 
     private void StartRecordDelivery()
     {
-        if (SelectedPurchaseOrder == null) return;
-
-        var firstItem = SelectedPurchaseOrder.Items?.FirstOrDefault();
-        decimal orderedQty = firstItem?.Quantity ?? 0;
-
-        var alreadyReceived = DeliveryRecordsForSelectedPo?
-            .Where(d => d.POItemID == firstItem?.POItemID && !string.Equals(d.Status, "Rejected", StringComparison.OrdinalIgnoreCase))
-            .Sum(d => d.ReceivedQuantity) ?? 0;
-
-        decimal remainingQty = Math.Max(0, orderedQty - alreadyReceived);
-
-        DeliveryReceivedQuantity = remainingQty > 0 ? remainingQty : orderedQty;
-        DeliverySpoiledQuantity = 0;
-        DeliveryActualDate = DateTime.Now;
-        DeliveryNotes = string.Empty;
-        DeliveryFormError = string.Empty;
-        IsRecordingDelivery = true;
-        IsReviewingDelivery = false;
+        // Outlet Manager is view-only. Purchase Manager records delivery.
     }
 
     private void CancelRecordDelivery()
@@ -719,89 +703,9 @@ public partial class OutletManagerDashboard : ComponentBase
         IsReviewingDelivery = false;
     }
 
-    private async Task ConfirmDeliveryAsync()
+    private Task ConfirmDeliveryAsync()
     {
-        if (SelectedPurchaseOrder == null) return;
-
-        DeliveryFormError = string.Empty;
-        IsSubmittingDelivery = true;
-        StateHasChanged();
-
-        try
-        {
-            var firstItem = SelectedPurchaseOrder.Items?.FirstOrDefault();
-            int poItemId = firstItem?.POItemID ?? 0;
-
-            // 1. Create delivery record
-            var createCmd = new CreateDeliveryRecordCommand
-            {
-                PurchaseOrderID = SelectedPurchaseOrder.PurchaseOrderID,
-                POItemID = poItemId,
-                ReceivedQuantity = DeliveryReceivedQuantity,
-                SpoiledQuantity = DeliverySpoiledQuantity,
-                DeliveryDate = DeliveryActualDate
-            };
-
-            var createdRecord = await Api.CreateDeliveryRecordAsync(createCmd);
-            if (createdRecord == null || createdRecord.DeliveryRecordID <= 0)
-            {
-                DeliveryFormError = "Failed to create delivery record. Please check order status or try again.";
-                IsSubmittingDelivery = false;
-                StateHasChanged();
-                return;
-            }
-
-            // 2. Confirm delivery record
-            var confirmCmd = new ConfirmDeliveryRecordCommand
-            {
-                DeliveryRecordID = createdRecord.DeliveryRecordID,
-                ConfirmedByUserID = Auth.CurrentUser?.UserID ?? Auth.UserID
-            };
-
-            var confirmedRecord = await Api.ConfirmDeliveryRecordAsync(confirmCmd);
-            if (confirmedRecord == null)
-            {
-                DeliveryFormError = "Delivery record was created but confirmation failed. Please refresh.";
-                IsSubmittingDelivery = false;
-                StateHasChanged();
-                return;
-            }
-
-            // 3. Refresh Purchase Order and local state from backend
-            var refreshedPo = await Api.GetPurchaseOrderByIdAsync(SelectedPurchaseOrder.PurchaseOrderID);
-            if (refreshedPo != null)
-            {
-                if (string.IsNullOrWhiteSpace(refreshedPo.VendorName) && !string.IsNullOrWhiteSpace(SelectedPurchaseOrder.VendorName))
-                {
-                    refreshedPo.VendorName = SelectedPurchaseOrder.VendorName;
-                }
-                SelectedPurchaseOrder = refreshedPo;
-
-                // Update in OrdersForMyOutlet list as well
-                var idx = OrdersForMyOutlet.FindIndex(p => p.PurchaseOrderID == refreshedPo.PurchaseOrderID);
-                if (idx >= 0)
-                {
-                    OrdersForMyOutlet[idx] = refreshedPo;
-                }
-            }
-
-            DeliveryRecordsForSelectedPo = await Api.GetDeliveryRecordsByPurchaseOrderAsync(SelectedPurchaseOrder.PurchaseOrderID) ?? new List<DeliveryRecordDto>();
-
-            IsRecordingDelivery = false;
-            IsReviewingDelivery = false;
-            DeliverySuccessMessage = $"Delivery for PO-#{SelectedPurchaseOrder.PurchaseOrderID} confirmed successfully! Status updated to Delivered.";
-            
-            await LoadNotifications();
-        }
-        catch (Exception ex)
-        {
-            DeliveryFormError = $"An error occurred during delivery confirmation: {ex.Message}";
-        }
-        finally
-        {
-            IsSubmittingDelivery = false;
-            StateHasChanged();
-        }
+        return Task.CompletedTask;
     }
 
     private string GetDeliveryPerformanceText(PurchaseOrderDto? po, DeliveryRecordDto? dr)
@@ -837,6 +741,84 @@ public partial class OutletManagerDashboard : ComponentBase
             return "badge bg-success";
         }
         return "badge bg-danger";
+    }
+
+    private bool IsPoActionProcessing { get; set; }
+
+    private static bool IsAwaitingApproval(PurchaseOrderDto po)
+    {
+        return string.Equals(po.Status, "Awaiting Approval", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(po.Status, "AwaitingApproval", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool CanApprovePo(PurchaseOrderDto po)
+    {
+        if (!IsAwaitingApproval(po) || !Auth.IsOutletManager)
+        {
+            return false;
+        }
+
+        var requiredRole = string.IsNullOrWhiteSpace(po.ApproverRole)
+            ? "Organization Manager"
+            : po.ApproverRole;
+
+        return string.Equals(requiredRole, "Outlet Manager", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task HandleApprovePo(int poId)
+    {
+        var po = OrdersForMyOutlet.FirstOrDefault(p => p.PurchaseOrderID == poId) ?? SelectedPurchaseOrder;
+        if (po == null || !CanApprovePo(po)) return;
+
+        IsPoActionProcessing = true;
+        StateHasChanged();
+        try
+        {
+            var result = await Api.ApprovePurchaseOrderAsync(poId);
+            if (result != null)
+            {
+                DeliverySuccessMessage = "Purchase order approved and placed with the vendor.";
+                await LoadDashboardData();
+                await OpenPurchaseOrderDetails(poId);
+            }
+            else
+            {
+                PoErrorMessage = "Unable to approve this purchase order.";
+            }
+        }
+        finally
+        {
+            IsPoActionProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleRejectPo(int poId)
+    {
+        var po = OrdersForMyOutlet.FirstOrDefault(p => p.PurchaseOrderID == poId) ?? SelectedPurchaseOrder;
+        if (po == null || !CanApprovePo(po)) return;
+
+        IsPoActionProcessing = true;
+        StateHasChanged();
+        try
+        {
+            var result = await Api.RejectPurchaseOrderAsync(poId);
+            if (result != null)
+            {
+                DeliverySuccessMessage = "Purchase order rejected.";
+                await LoadDashboardData();
+                await OpenPurchaseOrderDetails(poId);
+            }
+            else
+            {
+                PoErrorMessage = "Unable to reject this purchase order.";
+            }
+        }
+        finally
+        {
+            IsPoActionProcessing = false;
+            StateHasChanged();
+        }
     }
 
     private void ClosePoDetailsModal()

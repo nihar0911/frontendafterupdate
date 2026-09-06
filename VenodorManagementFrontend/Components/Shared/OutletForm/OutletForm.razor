@@ -40,6 +40,14 @@
                 <label class="form-label small fw-bold">Longitude</label>
                 <input type="number" step="0.000001" class="form-control" @bind="Longitude" placeholder="73.9862" disabled="@IsSubmitting" />
             </div>
+            <div class="col-md-6">
+                <label class="form-label small fw-bold">Purchase order approval</label>
+                <select class="form-select" @bind="PurchaseOrderApproverRole" disabled="@IsSubmitting">
+                    <option value="Organization Manager">Organization Manager</option>
+                    <option value="Outlet Manager">Outlet Manager</option>
+                </select>
+                <small class="text-muted">Who must approve purchase orders for this outlet before they are placed with the vendor.</small>
+            </div>
         </div>
 
         @if (!string.IsNullOrEmpty(ValidationMessage))

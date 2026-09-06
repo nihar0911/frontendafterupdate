@@ -18,5 +18,6 @@ public class PurchaseOrderDto
     public decimal TotalAmount { get; set; }
     public string VendorName { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
+    public string? ApproverRole { get; set; }
     public List<PurchaseOrderItemDto> Items { get; set; } = new();
 }

@@ -273,7 +273,7 @@ else
                                         {
                                             <div class="dropdown-item-notif @(!n.IsRead ? "unread" : "")" @onclick="() => MarkNotificationRead(n.NotificationID)">
                                                 <div class="notif-text">@n.Message</div>
-                                                <div class="notif-time">@n.CreatedDate.ToString("g")</div>
+                                                <div class="notif-time">@n.CreatedDate.ToIst("dd MMM yyyy, hh:mm tt")</div>
                                             </div>
                                         }
                                     }
@@ -376,7 +376,7 @@ else
                                                         <span class="text-muted small">(@GetQualitativeRatingText(rev.Rating))</span>
                                                     </td>
                                                     <td>@(string.IsNullOrWhiteSpace(rev.RatedByUserName) ? "Manager" : rev.RatedByUserName)</td>
-                                                    <td>@rev.FeedbackDate.ToString("MMM dd, yyyy")</td>
+                                                    <td>@rev.FeedbackDate.ToIst("MMM dd, yyyy")</td>
                                                     <td>@(string.IsNullOrWhiteSpace(rev.Review) ? "—" : rev.Review)</td>
                                                 </tr>
                                             }
@@ -519,7 +519,7 @@ else
                                                     <span class="small">@(string.IsNullOrWhiteSpace(pr.OutletName) ? ConfirmedOutletName : pr.OutletName)</span>
                                                 </td>
                                                 <td>
-                                                    <span class="small text-muted">@pr.RequestDate.ToString("MMM dd, yyyy")</span>
+                                                    <span class="small text-muted">@pr.RequestDate.ToIst("MMM dd, yyyy")</span>
                                                 </td>
                                                 <td>
                                                     <span class="@GetStatusBadgeClass(pr.Status)">@pr.Status</span>

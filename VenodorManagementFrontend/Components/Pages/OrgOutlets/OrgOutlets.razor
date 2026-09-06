@@ -93,8 +93,10 @@ else
                         </button>
                     </li>
 
+                    @if (Auth.IsPurchaseManager || Auth.IsAdmin)
+                    {
                     <li class="nav-item">
-                        <button class="nav-link" @onclick='() => Nav.NavigateTo(Auth.IsPurchaseManager || Auth.IsAdmin ? "/procurement" : "/quotations")'>
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/procurement")'>
                             <span class="nav-icon">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -106,6 +108,7 @@ else
                             <span class="nav-label">Purchase Requests</span>
                         </button>
                     </li>
+                    }
 
                     <li class="nav-item">
                         <button class="nav-link" @onclick='() => Nav.NavigateTo("/quotations")'>
@@ -349,6 +352,9 @@ else
                                                     </svg>
                                                     <span>@(string.IsNullOrWhiteSpace(o.Address) ? "No address specified" : o.Address)</span>
                                                 </div>
+                                                <div class="card-outlet-location mt-1">
+                                                    <span>PO approval: @(string.Equals(o.PurchaseOrderApproverRole, "Outlet Manager", StringComparison.OrdinalIgnoreCase) ? "Outlet Manager" : "Organization Manager")</span>
+                                                </div>
 
                                                 @if (o.Latitude.HasValue && o.Longitude.HasValue)
                                                 {
@@ -409,6 +415,10 @@ else
                     </button>
                 </div>
                 <div class="modal-card-body">
+                    @if (!string.IsNullOrWhiteSpace(ActionMessage))
+                    {
+                        <div class="alert alert-success py-2 small mb-3">@ActionMessage</div>
+                    }
                     <!-- Row 1: Outlet Name & Organization -->
                     <div class="modal-grid-2">
                         <div class="modal-info-box">
@@ -453,6 +463,29 @@ else
                         <div class="modal-info-content">
                             <span class="modal-info-label">Physical Address</span>
                             <span class="modal-info-val">@(string.IsNullOrWhiteSpace(SelectedOutlet.Address) ? "No address specified" : SelectedOutlet.Address)</span>
+                        </div>
+                    </div>
+
+                    <div class="modal-info-box">
+                        <div class="modal-info-icon-box">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                        </div>
+                        <div class="modal-info-content">
+                            <span class="modal-info-label">Purchase order approval</span>
+                            @if (Auth.IsOrgManager)
+                            {
+                                <select class="form-select form-select-sm mt-1" value="@SelectedOutlet.PurchaseOrderApproverRole" @onchange="HandleApproverRoleChanged">
+                                    <option value="Organization Manager">Organization Manager</option>
+                                    <option value="Outlet Manager">Outlet Manager</option>
+                                </select>
+                            }
+                            else
+                            {
+                                <span class="modal-info-val">@(string.Equals(SelectedOutlet.PurchaseOrderApproverRole, "Outlet Manager", StringComparison.OrdinalIgnoreCase) ? "Outlet Manager" : "Organization Manager")</span>
+                            }
                         </div>
                     </div>
 

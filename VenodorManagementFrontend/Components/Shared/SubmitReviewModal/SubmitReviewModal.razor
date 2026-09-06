@@ -52,13 +52,13 @@
                             <div class="summary-col">
                                 <span class="summary-label">Expected Delivery</span>
                                 <span class="summary-val text-secondary">
-                                    @(Item.ExpectedDeliveryDate.HasValue ? Item.ExpectedDeliveryDate.Value.ToString("dd MMM yyyy") : "N/A")
+                                    @(Item.ExpectedDeliveryDate.HasValue ? Item.ExpectedDeliveryDate.Value.ToIst("dd MMM yyyy") : "N/A")
                                 </span>
                             </div>
                             <div class="summary-col">
                                 <span class="summary-label">Actual Delivery</span>
                                 <span class="summary-val text-secondary">
-                                    @(Item.ActualDeliveryDate.HasValue ? Item.ActualDeliveryDate.Value.ToString("dd MMM yyyy") : "N/A")
+                                    @(Item.ActualDeliveryDate.HasValue ? Item.ActualDeliveryDate.Value.ToIst("dd MMM yyyy") : "N/A")
                                 </span>
                             </div>
                         </div>

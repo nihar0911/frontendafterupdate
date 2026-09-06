@@ -18,6 +18,7 @@ public partial class OrgDashboard : ComponentBase
     private int PendingQuotationsCount { get; set; }
     private int ActiveContractsCount { get; set; }
     private int? PurchaseOrdersCount { get; set; }
+    private int POsAwaitingApprovalCount { get; set; }
     private int OutletsCount { get; set; }
 
     private bool IsSidebarCollapsed { get; set; } = false;
@@ -238,6 +239,9 @@ public partial class OrgDashboard : ComponentBase
 
             var orders = await ordersTask;
             PurchaseOrdersCount = orders?.Count;
+            POsAwaitingApprovalCount = orders?.Count(o =>
+                string.Equals(o.Status, "Awaiting Approval", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(o.Status, "AwaitingApproval", StringComparison.OrdinalIgnoreCase)) ?? 0;
 
             await LoadNotifications();
         }

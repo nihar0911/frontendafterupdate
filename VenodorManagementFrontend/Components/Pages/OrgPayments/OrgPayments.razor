@@ -93,6 +93,8 @@ else
                     <span class="nav-text">Dashboard</span>
                 </button>
 
+                @if (Auth.IsOrgManager || Auth.IsAdmin)
+                {
                 <button class="nav-item-btn" @onclick='() => Nav.NavigateTo("/organization/outlets")'>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
@@ -100,8 +102,11 @@ else
                     </svg>
                     <span class="nav-text">Outlets</span>
                 </button>
+                }
 
-                <button class="nav-item-btn" @onclick='() => Nav.NavigateTo("/quotations")'>
+                @if (Auth.IsPurchaseManager || Auth.IsAdmin)
+                {
+                <button class="nav-item-btn" @onclick='() => Nav.NavigateTo("/procurement")'>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                         <polyline points="14 2 14 8 20 8"></polyline>
@@ -110,6 +115,7 @@ else
                     </svg>
                     <span class="nav-text">Purchase Requests</span>
                 </button>
+                }
 
                 <button class="nav-item-btn" @onclick='() => Nav.NavigateTo("/quotations")'>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -119,6 +125,8 @@ else
                     <span class="nav-text">Quotations</span>
                 </button>
 
+                @if (Auth.IsOrgManager || Auth.IsAdmin)
+                {
                 <button class="nav-item-btn" @onclick='() => Nav.NavigateTo("/organization/contracts")'>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
@@ -127,6 +135,7 @@ else
                     </svg>
                     <span class="nav-text">Contracts</span>
                 </button>
+                }
 
                 <button class="nav-item-btn" @onclick='() => Nav.NavigateTo("/organization/purchase-orders")'>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -371,7 +380,7 @@ else
                                             <td class="vendor-name-cell">@p.VendorName</td>
                                             <td>@p.OutletName</td>
                                             <td class="fw-bold text-dark">Rs. @p.Amount.ToString("N2")</td>
-                                            <td>@p.PaymentDate.ToString("dd MMM yyyy")</td>
+                                            <td>@p.PaymentDate.ToIst("dd MMM yyyy")</td>
                                             <td>
                                                 <span class="badge-payment-method">@p.PaymentMethod</span>
                                             </td>
@@ -443,7 +452,7 @@ else
                                             <td>PO-@inv.PurchaseOrderID</td>
                                             <td class="vendor-name-cell">@inv.VendorName</td>
                                             <td>@inv.OutletName</td>
-                                            <td>@inv.InvoiceDate.ToString("dd MMM yyyy")</td>
+                                            <td>@inv.InvoiceDate.ToIst("dd MMM yyyy")</td>
                                             <td class="fw-bold text-success">Rs. @inv.TotalAmount.ToString("N2")</td>
                                             <td>
                                                 <span class="status-pill pill-approved">Approved</span>
@@ -527,7 +536,7 @@ else
                             </div>
                             <div class="meta-row">
                                 <span class="meta-label">Invoice Date:</span>
-                                <span class="meta-val">@SelectedInvoiceForPayment.InvoiceDate.ToString("dd MMM yyyy")</span>
+                                <span class="meta-val">@SelectedInvoiceForPayment.InvoiceDate.ToIst("dd MMM yyyy")</span>
                             </div>
                         </div>
 

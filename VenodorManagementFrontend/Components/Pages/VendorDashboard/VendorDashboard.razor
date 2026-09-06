@@ -284,7 +284,7 @@ else
                                                     <div class="vd-notif-content">
                                                         <span class="vd-notif-title text-dark">@notif.Title</span>
                                                         <p class="vd-notif-msg mb-0">@notif.Message</p>
-                                                        <span class="vd-notif-time">@notif.CreatedDate.ToString("dd MMM, hh:mm tt")</span>
+                                                        <span class="vd-notif-time">@notif.CreatedDate.ToIst("dd MMM, hh:mm tt")</span>
                                                     </div>
                                                     @if (!notif.IsRead)
                                                     {
@@ -436,7 +436,7 @@ else
                                             <line x1="8" y1="2" x2="8" y2="6"></line>
                                             <line x1="3" y1="10" x2="21" y2="10"></line>
                                         </svg>
-                                        <span>@SelectedQuotation.ValidUntil.ToString("dd MMM yyyy")</span>
+                                        <span>@SelectedQuotation.ValidUntil.ToIst("dd MMM yyyy")</span>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
@@ -474,7 +474,7 @@ else
                                         </div>
                                         <div class="d-flex justify-content-between align-items-center py-2.5">
                                             <span class="text-muted small">Request Date</span>
-                                            <span class="text-dark">@(SelectedQuotationPR?.RequestDate.ToString("dd MMM yyyy") ?? "N/A")</span>
+                                            <span class="text-dark">@(SelectedQuotationPR?.RequestDate.ToIst("dd MMM yyyy") ?? "N/A")</span>
                                         </div>
                                     </div>
                                 </div>
@@ -695,7 +695,7 @@ else
                                                             </span>
                                                         }
                                                     </td>
-                                                    <td class="text-muted">@q.ValidUntil.ToString("dd MMM yyyy")</td>
+                                                    <td class="text-muted">@q.ValidUntil.ToIst("dd MMM yyyy")</td>
                                                     <td class="text-end">
                                                         <button type="button" class="btn vd-btn-dark-green vd-btn-sm" @onclick='() => OpenQuotationDetails(q.QuotationID)'>
                                                             <span>View Details</span>
@@ -765,7 +765,7 @@ else
                                 <div class="col-md-3">
                                     <span class="text-muted small fw-bold text-uppercase d-block mb-1" style="font-size: 0.72rem; letter-spacing: 0.04em;">CONTRACT PERIOD</span>
                                     <div class="fw-bold text-dark fs-6">
-                                        @SelectedContract.StartDate.ToString("dd MMM yyyy") &ndash; @SelectedContract.EndDate.ToString("dd MMM yyyy")
+                                        @SelectedContract.StartDate.ToIst("dd MMM yyyy") &ndash; @SelectedContract.EndDate.ToIst("dd MMM yyyy")
                                     </div>
                                 </div>
                                 <div class="col-md-3">
@@ -1079,7 +1079,7 @@ else
                                                         <div class="fw-bold text-dark">@prodName</div>
                                                         <div class="text-muted small">@qtyStr</div>
                                                     </td>
-                                                    <td class="text-muted small">@po.OrderDate.ToString("dd MMM yyyy")</td>
+                                                    <td class="text-muted small">@po.OrderDate.ToIst("dd MMM yyyy")</td>
                                                     <td>
                                                         @if (po.Status == "Pending")
                                                         {
@@ -1094,7 +1094,7 @@ else
                                                             <span class="vd-status-pill status-dispatched">In Transit / Dispatched</span>
                                                             @if (po.DispatchDateTime.HasValue)
                                                             {
-                                                                <div class="text-muted small mt-1" style="font-size: 0.75rem;">Dispatched: @po.DispatchDateTime.Value.ToString("dd MMM yyyy, hh:mm tt")</div>
+                                                                <div class="text-muted small mt-1" style="font-size: 0.75rem;">Dispatched: @po.DispatchDateTime.Value.ToIst("dd MMM yyyy, hh:mm tt")</div>
                                                             }
                                                         }
                                                         else if (po.Status == "Delivered")
@@ -1248,7 +1248,7 @@ else
                                                                 <span class="text-dark">@outletName</span>
                                                             </td>
                                                             <td>
-                                                                <span class="text-muted">@(po.ActualDeliveryDate.HasValue ? po.ActualDeliveryDate.Value.ToString("dd MMM yyyy, hh:mm tt") : "Confirmed")</span>
+                                                                <span class="text-muted">@(po.ActualDeliveryDate.HasValue ? po.ActualDeliveryDate.Value.ToIst("dd MMM yyyy, hh:mm tt") : "Confirmed")</span>
                                                             </td>
                                                             <td>
                                                                 <span class="badge bg-light text-dark border">@(po.Items?.Count ?? 0) item(s)</span>
@@ -1322,7 +1322,7 @@ else
                                                                 <span class="text-dark">@outletName</span>
                                                             </td>
                                                             <td>
-                                                                <span class="text-muted">@inv.InvoiceDate.ToString("dd MMM yyyy")</span>
+                                                                <span class="text-muted">@inv.InvoiceDate.ToIst("dd MMM yyyy")</span>
                                                             </td>
                                                             <td>
                                                                 <span class="text-dark">Rs. @inv.Subtotal.ToString("N2")</span>
@@ -1522,7 +1522,7 @@ else
                                                 </div>
                                                 <div class="d-flex align-items-center gap-2">
                                                     <span class="badge bg-dark text-white px-2 py-1">Score: @rev.Rating.ToString("0.0") / 5</span>
-                                                    <span class="text-muted small">@rev.FeedbackDate.ToString("dd MMM yyyy")</span>
+                                                    <span class="text-muted small">@rev.FeedbackDate.ToIst("dd MMM yyyy")</span>
                                                 </div>
                                             </div>
 
@@ -1798,7 +1798,7 @@ else
                                                             PR-@opp.RequestID
                                                         </a>
                                                     </td>
-                                                    <td class="text-muted">@opp.RequestDate.ToString("dd MMM yyyy")</td>
+                                                    <td class="text-muted">@opp.RequestDate.ToIst("dd MMM yyyy")</td>
                                                     <td>
                                                         <div class="fw-bold text-dark">@opp.OutletName</div>
                                                         <div class="vd-sub-text">@opp.OrganizationName</div>
@@ -2033,7 +2033,7 @@ else
                                     <div class="p-3 border rounded bg-light">
                                         <div class="d-flex justify-content-between align-items-center mb-2">
                                             <span class="badge bg-secondary">PO-@SelectedReviewDetails.PurchaseOrderID</span>
-                                            <span class="text-muted small">@SelectedReviewDetails.FeedbackDate.ToString("dd MMM yyyy")</span>
+                                            <span class="text-muted small">@SelectedReviewDetails.FeedbackDate.ToIst("dd MMM yyyy")</span>
                                         </div>
                                         <div class="row g-2">
                                             <div class="col-sm-6">

@@ -12,20 +12,20 @@
     background-color: #F6F9F7;
     font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     color: #1F2937;
-    margin: -1.5rem -1.5rem -2.5rem -1.5rem;
+    margin: 0;
 }
 
 /* -----------------------------------------------------------------------------
    2. DARK GREEN SIDEBAR (#174F45)
    ----------------------------------------------------------------------------- */
 .om-sidebar {
-    width: 250px;
+    width: 220px;
     background-color: #174F45;
     color: #FFFFFF;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 1.5rem 1rem;
+    padding: 1rem 0.7rem;
     position: fixed;
     top: 0;
     bottom: 0;
@@ -43,12 +43,12 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.25rem 0.5rem 1.5rem 0.5rem;
+    padding: 0.15rem 0.4rem 0.85rem 0.4rem;
 }
 
 .om-brand-icon-box {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     background-color: rgba(255, 255, 255, 0.16);
     border-radius: 4px;
     display: flex;
@@ -59,7 +59,7 @@
 }
 
 .om-brand-text {
-    font-size: 0.88rem;
+    font-size: 0.78rem;
     font-weight: 800;
     letter-spacing: 0.05em;
     color: #FFFFFF;
@@ -75,14 +75,14 @@
 .om-nav-item {
     display: flex;
     align-items: center;
-    gap: 0.85rem;
+    gap: 0.6rem;
     width: 100%;
-    padding: 0.75rem 1rem;
+    padding: 0.45rem 0.7rem;
     border-radius: 4px;
     background: transparent;
     border: none;
     color: #D1E5DC;
-    font-size: 0.92rem;
+    font-size: 0.8rem;
     font-weight: 500;
     cursor: pointer;
     text-align: left;
@@ -178,7 +178,7 @@
    3. MAIN CONTENT CANVAS & TOP HEADER
    ----------------------------------------------------------------------------- */
 .om-main-canvas {
-    margin-left: 250px;
+    margin-left: 220px;
     flex: 1;
     min-height: 100vh;
     padding: 1.5rem 2rem 3rem 2rem;
