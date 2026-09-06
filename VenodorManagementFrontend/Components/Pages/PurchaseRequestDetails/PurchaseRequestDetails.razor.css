@@ -1,618 +1,780 @@
-/* =============================================================================
-   PURCHASE REQUEST DETAILS - OUTLET MANAGER REDESIGN
-   ============================================================================= */
+/* ==========================================================================
+   PURCHASE REQUEST DETAILS — PM PORTAL DESIGN SYSTEM
+   ========================================================================== */
 
-.prd-layout {
-    display: flex;
-    min-height: 100vh;
-    background-color: #F4F7F5;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+:root {
+    --pm-primary: #174F45;
+    --pm-primary-dark: #0D332D;
+    --pm-primary-light: #20685B;
+    --pm-accent-bg: #E6F4EA;
+    --pm-accent-border: #C6E7D1;
+    --pm-accent-text: #174F45;
+    --pm-bg: #F8FAFC;
+    --pm-card-bg: #FFFFFF;
+    --pm-border: #E5E7EB;
+    --pm-border-light: #F1F5F9;
+    --pm-text-main: #111827;
+    --pm-text-muted: #6B7280;
 }
 
-/* -----------------------------------------------------------------------------
-   1. LEFT SIDEBAR
-   ----------------------------------------------------------------------------- */
-.prd-sidebar {
-    width: 240px;
+.pm-app-layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: #F8FAFC;
+    color: #111827;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    align-items: stretch;
+}
+
+/* ==========================================================================
+   LEFT SIDEBAR (DARK GREEN)
+   ========================================================================== */
+.pm-sidebar {
+    width: 260px;
     background-color: #174F45;
     color: #FFFFFF;
     display: flex;
     flex-direction: column;
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 100;
-    padding: 1.5rem 1rem;
-}
-
-.prd-brand-area {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.5rem 0.5rem 1.75rem 0.5rem;
-}
-
-.prd-brand-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 4px;
-    background-color: rgba(255, 255, 255, 0.12);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #FFFFFF;
     flex-shrink: 0;
-}
-
-.prd-brand-text {
-    font-size: 0.82rem;
-    font-weight: 800;
-    letter-spacing: 0.06em;
-    color: #FFFFFF;
-}
-
-.prd-nav-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-    flex: 1;
-}
-
-.prd-nav-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
-    border-radius: 4px;
-    color: #C2D6D0;
-    background: transparent;
-    border: none;
-    font-size: 0.9rem;
-    font-weight: 600;
-    text-decoration: none;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    width: 100%;
-    text-align: left;
-}
-
-.prd-nav-item:hover {
-    background-color: rgba(255, 255, 255, 0.08);
-    color: #FFFFFF;
-}
-
-.prd-nav-item.active {
-    background-color: #24584D;
-    color: #FFFFFF;
-    font-weight: 700;
-}
-
-.prd-sidebar-footer {
-    display: flex;
-    flex-direction: column;
-    gap: 0.85rem;
-    padding-top: 1rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.prd-user-profile-pill {
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-    padding: 0.5rem;
-}
-
-.prd-avatar-circle {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background-color: rgba(255, 255, 255, 0.15);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #FFFFFF;
-    flex-shrink: 0;
-}
-
-.prd-user-meta {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-.prd-user-name {
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: #FFFFFF;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-}
-
-.prd-user-role {
-    font-size: 0.72rem;
-    color: #9ABCB2;
-}
-
-.prd-logout-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: transparent;
-    border: none;
-    color: #C2D6D0;
-    font-size: 0.85rem;
-    font-weight: 600;
-    padding: 0.4rem 0.5rem;
-    cursor: pointer;
-    transition: color 0.15s ease;
-}
-
-.prd-logout-btn:hover {
-    color: #EF4444;
-}
-
-/* -----------------------------------------------------------------------------
-   2. MAIN CANVAS & HEADER
-   ----------------------------------------------------------------------------- */
-.prd-main-canvas {
-    margin-left: 240px;
-    flex: 1;
+    align-self: stretch;
     min-height: 100vh;
+    transition: width 0.25s ease-in-out;
+    z-index: 1000;
+}
+
+.pm-app-layout.sidebar-collapsed .pm-sidebar {
+    width: 72px;
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+}
+
+.sidebar-branding {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.brand-emblem {
+    width: 36px;
+    height: 36px;
+    background-color: rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.brand-text {
     display: flex;
     flex-direction: column;
 }
 
-.prd-top-header {
-    height: 72px;
-    background-color: #FFFFFF;
-    border-bottom: 1px solid #E5E7EB;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 2rem;
-    position: sticky;
-    top: 0;
-    z-index: 90;
+.brand-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #FFFFFF;
 }
 
-.prd-hamburger-btn {
-    background: transparent;
-    border: none;
-    color: #374151;
-    cursor: pointer;
+.brand-sub {
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.pm-app-layout.sidebar-collapsed .brand-text {
     display: none;
 }
 
-.prd-greeting {
-    font-size: 1.12rem;
-    font-weight: 800;
-    color: #111827;
+.sidebar-collapse-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    padding: 0.4rem;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.sidebar-collapse-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #FFFFFF;
+}
+
+.sidebar-nav {
+    flex: 1;
+    padding: 1rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.nav-section-title {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.75rem 0.75rem 0.25rem 0.75rem;
+}
+
+.pm-app-layout.sidebar-collapsed .nav-section-title {
+    display: none;
+}
+
+.nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.nav-item {
     margin: 0;
-    line-height: 1.2;
 }
 
-.prd-header-sub {
-    font-size: 0.78rem;
-    color: #6B7280;
-    margin: 0.15rem 0 0 0;
+.sidebar-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 0.75rem;
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 0.88rem;
+    font-weight: 500;
+    background: transparent;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+    white-space: nowrap;
 }
 
-.text-green {
-    color: #174F45;
+.sidebar-nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #FFFFFF;
 }
 
-.prd-header-right {
+.sidebar-nav-link.active {
+    background-color: #0D332D;
+    color: #FFFFFF;
+    font-weight: 600;
+}
+
+.nav-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 20px;
+}
+
+.pm-app-layout.sidebar-collapsed .nav-label {
+    display: none;
+}
+
+.nav-section-account {
+    margin-top: auto;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ==========================================================================
+   MAIN WRAPPER & TOPBAR
+   ========================================================================== */
+.pm-main-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    background-color: #F8FAFC;
+}
+
+.pm-topbar {
+    height: 64px;
+    background-color: #FFFFFF;
+    border-bottom: 1px solid #E5E7EB;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    position: sticky;
+    top: 0;
+    z-index: 900;
+}
+
+.topbar-left {
     display: flex;
     align-items: center;
     gap: 1rem;
 }
 
-.prd-notif-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    background-color: #F9FAFB;
-    border: 1px solid #E5E7EB;
-    border-radius: 4px;
-    padding: 0.45rem 0.9rem;
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: #374151;
+.topbar-menu-toggle {
+    background: transparent;
+    border: none;
+    color: #6B7280;
     cursor: pointer;
-    transition: background-color 0.15s ease;
-}
-
-.prd-notif-btn:hover {
-    background-color: #F3F4F6;
-}
-
-.prd-notif-badge {
-    background-color: #174F45;
-    color: #FFFFFF;
-    font-size: 0.68rem;
-    font-weight: 800;
-    border-radius: 50%;
-    width: 18px;
-    height: 18px;
-    display: inline-flex;
+    padding: 0.4rem;
+    border-radius: 6px;
+    display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.prd-dropdown-panel {
+.topbar-menu-toggle:hover {
+    background-color: #F1F5F9;
+    color: #111827;
+}
+
+.topbar-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+}
+
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Notifications Button & Dropdown */
+.notification-wrapper {
+    position: relative;
+}
+
+.notification-btn {
+    background: transparent;
+    border: 1px solid #E5E7EB;
+    color: #4B5563;
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    transition: background-color 0.15s, border-color 0.15s;
+}
+
+.notification-btn:hover {
+    background-color: #F9FAFB;
+    border-color: #D1D5DB;
+}
+
+.notification-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background-color: #174F45;
+    color: #FFFFFF;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.1rem 0.35rem;
+    border-radius: 10px;
+    border: 2px solid #FFFFFF;
+}
+
+.notification-dropdown {
     position: absolute;
     top: calc(100% + 8px);
     right: 0;
     width: 320px;
     background-color: #FFFFFF;
     border: 1px solid #E5E7EB;
-    border-radius: 4px;
-    z-index: 1000;
+    border-radius: 8px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    z-index: 1050;
     overflow: hidden;
 }
 
-.prd-dropdown-header {
-    padding: 0.75rem 1rem;
-    background-color: #F9FAFB;
+.dropdown-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.85rem 1rem;
     border-bottom: 1px solid #E5E7EB;
+    font-weight: 600;
+    font-size: 0.88rem;
 }
 
-.prd-dropdown-list {
+.dropdown-list {
     max-height: 280px;
     overflow-y: auto;
 }
 
-.prd-dropdown-item {
+.dropdown-item-notif {
     padding: 0.75rem 1rem;
-    border-bottom: 1px solid #F3F4F6;
+    border-bottom: 1px solid #F1F5F9;
     cursor: pointer;
+    transition: background-color 0.15s;
 }
 
-.prd-dropdown-item.unread {
+.dropdown-item-notif:hover {
+    background-color: #F8FAFC;
+}
+
+.dropdown-item-notif.unread {
     background-color: #F0FDF4;
 }
 
-.prd-outlet-pill {
+.notif-text {
+    font-size: 0.82rem;
+    color: #1F2937;
+    margin-bottom: 0.2rem;
+}
+
+.notif-time {
+    font-size: 0.72rem;
+    color: #9CA3AF;
+}
+
+/* User Profile Pill & Dropdown */
+.profile-wrapper {
+    position: relative;
+}
+
+.profile-pill-btn {
     display: flex;
     align-items: center;
-    gap: 0.45rem;
-    background-color: #F9FAFB;
+    gap: 0.65rem;
+    background: transparent;
     border: 1px solid #E5E7EB;
-    border-radius: 4px;
-    padding: 0.45rem 0.9rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: background-color 0.15s, border-color 0.15s;
+}
+
+.profile-pill-btn:hover {
+    background-color: #F9FAFB;
+    border-color: #D1D5DB;
+}
+
+.profile-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: #174F45;
+    color: #FFFFFF;
+    font-weight: 700;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.profile-info {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+.profile-name {
     font-size: 0.82rem;
     font-weight: 600;
-    color: #374151;
+    color: #111827;
+    line-height: 1.1;
 }
 
-/* -----------------------------------------------------------------------------
-   3. CONTENT CONTAINER & CARDS
-   ----------------------------------------------------------------------------- */
-.prd-content-wrapper {
-    padding: 1.75rem 2rem;
-    flex: 1;
-    max-width: 1200px;
-    width: 100%;
+.profile-role {
+    font-size: 0.68rem;
+    color: #6B7280;
 }
 
-.prd-back-link {
-    display: inline-flex;
+.profile-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 200px;
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    z-index: 1050;
+    padding: 0.5rem 0;
+}
+
+.profile-menu-item {
+    display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.6rem 1rem;
+    font-size: 0.84rem;
+    color: #374151;
     background: transparent;
     border: none;
-    color: #2E7D61;
-    font-size: 0.88rem;
-    font-weight: 700;
+    text-align: left;
     cursor: pointer;
-    padding: 0;
-    transition: color 0.15s ease;
+    transition: background-color 0.15s;
 }
 
-.prd-back-link:hover {
+.profile-menu-item:hover {
+    background-color: #F3F4F6;
+    color: #111827;
+}
+
+.profile-menu-item.logout {
+    color: #374151;
+    border-top: 1px solid #E5E7EB;
+    margin-top: 0.25rem;
+}
+
+.profile-menu-item.logout:hover {
+    background-color: #F3F4F6;
     color: #174F45;
-    text-decoration: underline;
 }
 
-.prd-page-title {
+/* ==========================================================================
+   PAGE BODY CONTAINER & HEADERS
+   ========================================================================== */
+.pm-page-container {
+    padding: 1.75rem 2rem;
+    flex: 1;
+}
+
+.pm-header-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.greeting-title {
     font-size: 1.55rem;
     font-weight: 800;
     color: #111827;
     margin: 0 0 0.25rem 0;
+    letter-spacing: -0.02em;
 }
 
-.prd-page-subtitle {
-    font-size: 0.92rem;
+.greeting-subtitle {
+    font-size: 0.9rem;
     color: #6B7280;
     margin: 0;
 }
 
-.prd-card {
-    background-color: #FFFFFF;
-    border: 1px solid #E5E7EB;
-    border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
-}
-
-/* -----------------------------------------------------------------------------
-   4. SUMMARY CARD
-   ----------------------------------------------------------------------------- */
-.prd-summary-card {
-    padding: 1.5rem 1.75rem;
-}
-
-.prd-summary-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-bottom: 1.15rem;
-    border-bottom: 1px solid #F3F4F6;
-    margin-bottom: 1.25rem;
-}
-
-.prd-summary-code {
-    font-size: 1.25rem;
-    font-weight: 800;
-    color: #111827;
-    margin: 0;
-}
-
-.prd-status-pill {
-    font-size: 0.78rem;
-    font-weight: 750;
-    padding: 0.35rem 0.95rem;
-    border-radius: 4px;
-    text-transform: capitalize;
-}
-
-.status-approved {
-    background-color: #E8F6EF;
-    color: #15803D;
-}
-
-.status-pending {
-    background-color: #FEF3C7;
-    color: #B45309;
-}
-
-.status-rejected {
-    background-color: #FEE2E2;
-    color: #B91C1C;
-}
-
-.status-neutral {
-    background-color: #F3F4F6;
-    color: #4B5563;
-}
-
-.prd-summary-metrics-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
-}
-
-.prd-summary-metric {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-}
-
-.prd-metric-label {
-    font-size: 0.74rem;
-    font-weight: 750;
-    color: #6B7280;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-}
-
-.prd-metric-val {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: #111827;
-}
-
-/* -----------------------------------------------------------------------------
-   5. TWO-COLUMN MIDDLE GRID
-   ----------------------------------------------------------------------------- */
-.prd-section-title {
-    font-size: 1.08rem;
-    font-weight: 750;
-    color: #111827;
-    margin: 0 0 1.25rem 0;
-}
-
-.prd-info-row {
-    display: flex;
-    flex-direction: column;
-    gap: 1.15rem;
-}
-
-.prd-info-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-}
-
-.prd-info-label {
-    font-size: 0.74rem;
-    font-weight: 750;
-    color: #6B7280;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-}
-
-.prd-info-val {
-    display: flex;
-    align-items: center;
-    gap: 0.55rem;
-    font-size: 0.95rem;
-    color: #111827;
-}
-
-.prd-quotation-notice-box {
+.outlet-badge-card {
     display: flex;
     align-items: center;
     gap: 0.85rem;
-    background-color: #F0FDF4;
-    border: 1px solid #DCFCE7;
-    border-radius: 4px;
-    padding: 0.9rem 1.15rem;
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    padding: 0.55rem 1rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
-.prd-notice-icon {
+.outlet-badge-icon {
     width: 36px;
     height: 36px;
-    border-radius: 50%;
-    background-color: #DCFCE7;
+    border-radius: 8px;
+    background-color: #E6F4EA;
+    color: #174F45;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
 }
 
-.prd-notice-title {
-    font-size: 0.92rem;
-    font-weight: 750;
-    color: #166534;
-    margin: 0 0 0.15rem 0;
+.outlet-badge-text {
+    display: flex;
+    flex-direction: column;
 }
 
-.prd-notice-desc {
-    font-size: 0.82rem;
-    color: #4B5563;
-    margin: 0;
-    line-height: 1.35;
+.outlet-name-label {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #111827;
 }
 
-.prd-quotation-active-box {
-    background-color: #F9FAFB;
-    border: 1px solid #E5E7EB;
-    border-radius: 4px;
-    padding: 1rem 1.25rem;
-}
-
-/* -----------------------------------------------------------------------------
-   6. REQUESTED ITEMS TABLE
-   ----------------------------------------------------------------------------- */
-.prd-items-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-}
-
-.prd-items-table thead th {
-    background-color: #F9FAFB;
-    color: #6B7280;
+.org-name-sub {
     font-size: 0.74rem;
-    font-weight: 750;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    padding: 0.85rem 1.25rem;
+    color: #6B7280;
+    font-weight: 500;
+}
+
+.btn-primary-action {
+    background-color: #174F45;
+    color: #FFFFFF;
+    border: 1px solid #174F45;
+    padding: 0.6rem 1.25rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+    text-decoration: none;
+}
+
+.btn-primary-action:hover {
+    background-color: #0D332D;
+    border-color: #0D332D;
+    color: #FFFFFF;
+}
+
+.btn-back-link {
+    background: transparent;
+    border: none;
+    color: #174F45;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0;
+    cursor: pointer;
+}
+
+.btn-back-link:hover {
+    text-decoration: underline;
+}
+
+/* ==========================================================================
+   PANELS & TABLES
+   ========================================================================== */
+.pm-panel {
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    overflow: hidden;
+}
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.15rem 1.25rem;
     border-bottom: 1px solid #E5E7EB;
 }
 
-.prd-items-table tbody td {
-    padding: 1rem 1.25rem;
-    border-bottom: 1px solid #F3F4F6;
+.panel-title-wrap {
+    display: flex;
+    flex-direction: column;
+}
+
+.panel-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 0.15rem 0;
+}
+
+.panel-subtitle {
+    font-size: 0.78rem;
+    color: #6B7280;
+    margin: 0;
+}
+
+/* Data Tables */
+.pm-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.84rem;
+}
+
+.pm-table th {
+    padding: 0.75rem 1.25rem;
+    background-color: #F9FAFB;
+    color: #6B7280;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #E5E7EB;
+    text-align: left;
+}
+
+.pm-table td {
+    padding: 0.85rem 1.25rem;
+    border-bottom: 1px solid #F1F5F9;
+    color: #374151;
     vertical-align: middle;
 }
 
-.prd-col-product {
-    font-weight: 750;
-    color: #111827;
+.pm-table tr:last-child td {
+    border-bottom: none;
 }
 
-.prd-col-qty {
-    font-weight: 750;
-    color: #111827;
+.pm-table tr:hover td {
+    background-color: #F8FAFC;
 }
 
-.prd-col-unit {
+.ref-pill {
+    display: inline-block;
+    padding: 0.2rem 0.55rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 4px;
+    background-color: #E6F4EA;
+    color: #174F45;
+    border: 1px solid #C6E7D1;
+    font-family: monospace;
+}
+
+.review-summary-card {
+    background-color: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+}
+
+/* Status Badges */
+.status-badge-green {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.72rem;
     font-weight: 600;
-    color: #6B7280;
+    background-color: #E6F4EA;
+    color: #174F45;
+    border: 1px solid #C6E7D1;
 }
 
-/* -----------------------------------------------------------------------------
-   7. LOADING & WARNING STATES
-   ----------------------------------------------------------------------------- */
-.prd-loading-state {
-    padding: 5rem 0;
-    text-align: center;
+.status-badge-neutral {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    background-color: #F1F5F9;
+    color: #475569;
+    border: 1px solid #E2E8F0;
 }
 
-.prd-auth-warning-wrap {
-    min-height: 80vh;
+/* ==========================================================================
+   MODAL DIALOGS
+   ========================================================================== */
+.pm-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(17, 24, 39, 0.6);
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 2rem;
+    z-index: 2000;
+    padding: 1rem;
 }
 
-.prd-auth-warning-card {
+.pm-modal-card {
     background-color: #FFFFFF;
-    border: 1px solid #E5E7EB;
-    border-radius: 4px;
-    padding: 2.5rem;
-    text-align: center;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-    max-width: 440px;
+    border-radius: 12px;
+    max-width: 500px;
     width: 100%;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
 }
 
-.prd-btn-primary {
-    background-color: #174F45;
-    border: 1px solid #174F45;
-    color: #FFFFFF;
+.pm-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.pm-modal-title {
+    font-size: 1.1rem;
     font-weight: 700;
+    color: #111827;
+    margin: 0;
+}
+
+.pm-modal-close-btn {
+    background: transparent;
+    border: none;
+    color: #9CA3AF;
+    cursor: pointer;
+    padding: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border-radius: 4px;
-    padding: 0.65rem 1.5rem;
 }
 
-.prd-btn-primary:hover {
-    background-color: #113B34;
+.pm-modal-close-btn:hover {
+    color: #111827;
+    background-color: #F3F4F6;
+}
+
+.pm-modal-body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.profile-meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.65rem 0.85rem;
+    background-color: #F9FAFB;
+    border-radius: 6px;
+    border: 1px solid #F1F5F9;
+}
+
+.meta-label {
+    font-size: 0.78rem;
+    color: #6B7280;
+    font-weight: 600;
+}
+
+.meta-val {
+    font-size: 0.84rem;
+    color: #111827;
+    font-weight: 700;
+}
+
+.pm-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #E5E7EB;
+    background-color: #FAFAFA;
+}
+
+.btn-modal-close {
+    background-color: #174F45;
     color: #FFFFFF;
+    border: none;
+    padding: 0.5rem 1.35rem;
+    font-size: 0.84rem;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
 }
 
-/* -----------------------------------------------------------------------------
-   8. RESPONSIVE BREAKPOINTS
-   ----------------------------------------------------------------------------- */
-@media (max-width: 992px) {
-    .prd-sidebar {
-        width: 200px;
-    }
-    .prd-main-canvas {
-        margin-left: 200px;
-    }
-    .prd-summary-metrics-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 768px) {
-    .prd-layout {
-        flex-direction: column;
-    }
-    .prd-sidebar {
-        position: static;
-        width: 100%;
-        min-height: auto;
-    }
-    .prd-main-canvas {
-        margin-left: 0;
-    }
-    .prd-content-wrapper {
-        padding: 1rem 0.75rem;
-    }
-    .prd-top-header {
-        flex-direction: column;
-        align-items: flex-start;
-        height: auto;
-        padding: 1rem;
-        gap: 1rem;
-    }
+.btn-modal-close:hover {
+    background-color: #0D332D;
 }

@@ -17,7 +17,7 @@
         </div>
     </div>
 }
-else if (!Auth.IsOrgManager && !Auth.IsAdmin && !Auth.IsPurchaseManager)
+else if (!Auth.IsOrgManager && !Auth.IsAdmin && !Auth.IsPurchaseManager && !Auth.IsOutletManager)
 {
     <div class="unauth-container">
         <div class="unauth-card">
@@ -94,7 +94,7 @@ else
                     </li>
 
                     <li class="nav-item">
-                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/procurement")'>
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo(Auth.IsPurchaseManager || Auth.IsAdmin ? "/procurement" : "/quotations")'>
                             <span class="nav-icon">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -477,27 +477,46 @@ else
                                                         </svg>
                                                         <span>Quotation Accepted — Ready for Purchase Order</span>
                                                     </div>
-                                                    <div class="d-flex align-items-center gap-2">
-                                                        <button type="button" class="btn-create-contract" style="background-color: #174F45;"
-                                                                @onclick='() => Nav.NavigateTo("/organization/purchase-orders")'>
-                                                            <span>Issue Purchase Order</span>
-                                                        </button>
-                                                        <button type="button" class="btn-back-dashboard" @onclick='() => Nav.NavigateTo("/quotations")'>
-                                                            <span>&larr; Back to Quotations</span>
-                                                        </button>
-                                                    </div>
+                                                    @if (Auth.IsPurchaseManager || Auth.IsAdmin)
+                                                    {
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <button type="button" class="btn-create-contract" style="background-color: #174F45;"
+                                                                    @onclick='() => Nav.NavigateTo("/organization/purchase-orders")'>
+                                                                <span>Issue Purchase Order</span>
+                                                            </button>
+                                                            <button type="button" class="btn-back-dashboard" @onclick='() => Nav.NavigateTo("/quotations")'>
+                                                                <span>&larr; Back to Quotations</span>
+                                                            </button>
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <button type="button" class="btn-back-dashboard" @onclick='() => Nav.NavigateTo("/quotations")'>
+                                                                <span>&larr; Back to Quotations</span>
+                                                            </button>
+                                                        </div>
+                                                    }
                                                 </div>
                                             }
-                                            else
+                                            else if (Auth.IsPurchaseManager || Auth.IsAdmin)
                                             {
                                                 <button type="button" class="btn-create-contract"
                                                         @onclick='() => Nav.NavigateTo($"/contract/create/{Quotation.QuotationID}")' disabled="@IsProcessing">
                                                     <span>Create Contract</span>
                                                 </button>
                                             }
+                                            else
+                                            {
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <button type="button" class="btn-back-dashboard" @onclick='() => Nav.NavigateTo("/quotations")'>
+                                                        <span>&larr; Back to Quotations</span>
+                                                    </button>
+                                                </div>
+                                            }
                                         </div>
                                     }
-                                    else if (IsActionable && !IsExpired)
+                                    else if (IsActionable && !IsExpired && (Auth.IsPurchaseManager || Auth.IsAdmin))
                                     {
                                         @if (string.IsNullOrEmpty(ConfirmAction))
                                         {

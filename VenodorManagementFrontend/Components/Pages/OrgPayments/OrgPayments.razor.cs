@@ -64,7 +64,7 @@ public partial class OrgPayments : ComponentBase
             catch { }
         }
 
-        if (Auth.IsPurchaseManager && Auth.OutletID.HasValue && Auth.OutletID.Value > 0)
+        if ((Auth.IsPurchaseManager || Auth.IsOutletManager) && Auth.OutletID.HasValue && Auth.OutletID.Value > 0)
         {
             try
             {
@@ -101,8 +101,19 @@ public partial class OrgPayments : ComponentBase
 
             await Task.WhenAll(paymentsTask, invoicesTask);
 
-            Payments = await paymentsTask ?? new List<PaymentDto>();
-            Invoices = await invoicesTask ?? new List<InvoiceDto>();
+            var rawPayments = await paymentsTask ?? new List<PaymentDto>();
+            var rawInvoices = await invoicesTask ?? new List<InvoiceDto>();
+
+            if ((Auth.IsPurchaseManager || Auth.IsOutletManager) && Auth.OutletID.HasValue && Auth.OutletID.Value > 0)
+            {
+                Payments = rawPayments.Where(p => p.OutletID == Auth.OutletID.Value).ToList();
+                Invoices = rawInvoices.Where(i => i.OutletID == Auth.OutletID.Value).ToList();
+            }
+            else
+            {
+                Payments = rawPayments;
+                Invoices = rawInvoices;
+            }
         }
         catch (Exception ex)
         {

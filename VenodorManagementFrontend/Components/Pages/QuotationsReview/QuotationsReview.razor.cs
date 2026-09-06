@@ -100,20 +100,20 @@ public partial class QuotationsReview : ComponentBase
                 ? outlets.Where(o => o.OrganizationID == userOrgId).Select(o => o.OutletID).ToHashSet()
                 : new HashSet<int>();
 
-            if (Auth.IsPurchaseManager)
+            if (Auth.IsPurchaseManager || Auth.IsOutletManager)
             {
                 if (Auth.OutletID.HasValue && Auth.OutletID.Value > 0)
                 {
-                    int pmOutletId = Auth.OutletID.Value;
+                    int outletId = Auth.OutletID.Value;
                     Quotations = allQuotations
-                        .Where(q => RequestDict.TryGetValue(q.RequestID, out var pr) && pr.OutletID == pmOutletId)
+                        .Where(q => RequestDict.TryGetValue(q.RequestID, out var pr) && pr.OutletID == outletId)
                         .OrderByDescending(q => q.QuotationID)
                         .ToList();
                 }
                 else
                 {
                     Quotations = new List<QuotationDto>();
-                    ErrorMessage = "No assigned outlet found for this Purchase Manager account.";
+                    ErrorMessage = "No assigned outlet found for this account.";
                 }
             }
             else if (isScopedToOrg)
@@ -288,6 +288,7 @@ public partial class QuotationsReview : ComponentBase
 
     private void OpenConfirmation(QuotationDto q, string action)
     {
+        if (!Auth.IsPurchaseManager && !Auth.IsAdmin) return;
         if (q.ValidUntil < DateTime.Now && action == "Accepted")
         {
             ErrorMessage = "This quotation has expired and cannot be accepted because its validity period has ended.";
@@ -310,6 +311,7 @@ public partial class QuotationsReview : ComponentBase
 
     private async Task ExecuteResponse()
     {
+        if (!Auth.IsPurchaseManager && !Auth.IsAdmin) return;
         if (SelectedQuotation == null || string.IsNullOrEmpty(ConfirmationAction)) return;
 
         IsProcessing = true;

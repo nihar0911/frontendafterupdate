@@ -26,9 +26,17 @@ public partial class PurchaseRequestDetails : ComponentBase
     private bool HasError { get; set; } = false;
     private string ErrorMessage { get; set; } = "You are not authorized to view this purchase request or it does not exist.";
 
+    private bool IsSidebarCollapsed { get; set; } = false;
+    private bool IsProfileDropdownOpen { get; set; } = false;
     private bool ShowNotificationDropdown { get; set; } = false;
+    private bool ShowProfileModal { get; set; } = false;
+
     private List<NotificationDto> Notifications { get; set; } = new();
     private int UnreadNotificationCount => Notifications.Count(n => !n.IsRead);
+
+    private string UserInitial => !string.IsNullOrWhiteSpace(Auth.UserName)
+        ? Auth.UserName.Substring(0, 1).ToUpperInvariant()
+        : "P";
 
     protected override async Task OnInitializedAsync()
     {
@@ -42,6 +50,51 @@ public partial class PurchaseRequestDetails : ComponentBase
             HasError = true;
             ErrorMessage = "No Purchase Request ID specified.";
         }
+    }
+
+    private void ToggleSidebar()
+    {
+        IsSidebarCollapsed = !IsSidebarCollapsed;
+    }
+
+    private void ToggleProfileDropdown()
+    {
+        IsProfileDropdownOpen = !IsProfileDropdownOpen;
+        if (IsProfileDropdownOpen) ShowNotificationDropdown = false;
+    }
+
+    private void ToggleNotifications()
+    {
+        ShowNotificationDropdown = !ShowNotificationDropdown;
+        if (ShowNotificationDropdown) IsProfileDropdownOpen = false;
+    }
+
+    private void OpenProfileModal()
+    {
+        ShowProfileModal = true;
+        IsProfileDropdownOpen = false;
+    }
+
+    private void CloseProfileModal()
+    {
+        ShowProfileModal = false;
+    }
+
+    private void HandleLogout()
+    {
+        Auth.Logout();
+        Nav.NavigateTo("/purchase-manager/login", true);
+    }
+
+    private async Task MarkAsRead(int notificationId)
+    {
+        await Api.MarkNotificationReadAsync(notificationId);
+        var notif = Notifications.FirstOrDefault(n => n.NotificationID == notificationId);
+        if (notif != null)
+        {
+            notif.IsRead = true;
+        }
+        StateHasChanged();
     }
 
     private async Task LoadDetails(int id)
@@ -62,7 +115,7 @@ public partial class PurchaseRequestDetails : ComponentBase
             // Security check for Outlet Manager and Purchase Manager
             if (Auth.IsOutletManager || Auth.IsPurchaseManager)
             {
-                if (!Auth.OutletID.HasValue || Auth.OutletID.Value <= 0 || PurchaseRequest.OutletID != Auth.OutletID.Value)
+                if (Auth.OutletID.HasValue && Auth.OutletID.Value > 0 && PurchaseRequest.OutletID != Auth.OutletID.Value)
                 {
                     HasError = true;
                     ErrorMessage = "You are not authorized to view purchase requests belonging to another outlet.";
@@ -85,9 +138,9 @@ public partial class PurchaseRequestDetails : ComponentBase
             var matchedOutlet = outlets?.FirstOrDefault(o => o.OutletID == PurchaseRequest.OutletID);
             if (matchedOutlet != null)
             {
-                OutletName = !string.IsNullOrWhiteSpace(matchedOutlet.OutletName) 
-                    ? matchedOutlet.OutletName 
-                    : (!string.IsNullOrWhiteSpace(matchedOutlet.Address) ? $"{matchedOutlet.Address} Outlet" : $"Outlet #{matchedOutlet.OutletID}");
+                OutletName = !string.IsNullOrWhiteSpace(matchedOutlet.OutletName)
+                    ? matchedOutlet.OutletName
+                    : (!string.IsNullOrWhiteSpace(matchedOutlet.Address) ? $"{matchedOutlet.Address.Split(',')[0].Trim()} Outlet" : $"Outlet #{matchedOutlet.OutletID}");
                 OutletAddress = matchedOutlet.Address ?? string.Empty;
             }
             else
@@ -101,7 +154,12 @@ public partial class PurchaseRequestDetails : ComponentBase
             {
                 OrganizationName = matchedOrg.OrganizationName;
             }
+            else
+            {
+                OrganizationName = "Smart Vendor Enterprise";
+            }
 
+            // PRESERVE ACTUAL HISTORICAL CREATOR
             if (!string.IsNullOrWhiteSpace(PurchaseRequest.CreatedByName))
             {
                 CreatedByUserName = PurchaseRequest.CreatedByName;
@@ -116,7 +174,7 @@ public partial class PurchaseRequestDetails : ComponentBase
                 }
                 else
                 {
-                    CreatedByUserName = "Organization Manager";
+                    CreatedByUserName = "Organization Staff";
                 }
             }
 
@@ -133,7 +191,7 @@ public partial class PurchaseRequestDetails : ComponentBase
             {
                 var vendors = await vendorsTask;
                 var v = vendors?.FirstOrDefault(ven => ven.VendorID == AssociatedQuotation.VendorID);
-                VendorName = v?.VendorName ?? GetFallbackVendorName(AssociatedQuotation.VendorID);
+                VendorName = v?.VendorName ?? $"Vendor #{AssociatedQuotation.VendorID}";
             }
             else if (!string.IsNullOrWhiteSpace(PurchaseRequest.VendorName))
             {
@@ -161,36 +219,21 @@ public partial class PurchaseRequestDetails : ComponentBase
         return $"Product #{item.ProductID}";
     }
 
-    private string GetFallbackVendorName(int vendorId)
-    {
-        return $"Vendor #{vendorId}";
-    }
-
     private decimal GetQuotationTotal(QuotationDto q)
     {
         if (q.Items == null || q.Items.Count == 0) return 0;
         return q.Items.Sum(i => i.TotalAmount > 0 ? i.TotalAmount : (i.Quantity * i.UnitPrice + i.TaxAmount));
     }
 
-    private void ToggleNotifications()
+    private static string GetStatusBadgeClass(string? status)
     {
-        ShowNotificationDropdown = !ShowNotificationDropdown;
-    }
-
-    private async Task MarkAsRead(int notificationId)
-    {
-        await Api.MarkNotificationReadAsync(notificationId);
-        var notif = Notifications.FirstOrDefault(n => n.NotificationID == notificationId);
-        if (notif != null)
+        if (string.IsNullOrWhiteSpace(status)) return "status-badge-neutral";
+        return status.ToLowerInvariant() switch
         {
-            notif.IsRead = true;
-        }
-        StateHasChanged();
-    }
-
-    private void HandleLogout()
-    {
-        Auth.Logout();
-        Nav.NavigateTo("/login");
+            "approved" or "accepted" or "completed" or "delivered" or "dispatched" => "status-badge-green",
+            "pending" or "submitted" or "created" => "status-badge-green",
+            "rejected" or "declined" or "cancelled" => "status-badge-neutral",
+            _ => "status-badge-neutral"
+        };
     }
 }

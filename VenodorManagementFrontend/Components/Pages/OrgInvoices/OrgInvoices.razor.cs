@@ -102,7 +102,7 @@ public partial class OrgInvoices : ComponentBase
                 }
             }
 
-            if (Auth.IsPurchaseManager && Auth.OutletID.HasValue && Auth.OutletID.Value > 0)
+            if ((Auth.IsPurchaseManager || Auth.IsOutletManager) && Auth.OutletID.HasValue && Auth.OutletID.Value > 0)
             {
                 try
                 {
@@ -116,7 +116,15 @@ public partial class OrgInvoices : ComponentBase
                 catch { }
             }
 
-            AllInvoices = await Api.GetInvoicesAsync() ?? new List<InvoiceDto>();
+            var rawInvoices = await Api.GetInvoicesAsync() ?? new List<InvoiceDto>();
+            if ((Auth.IsPurchaseManager || Auth.IsOutletManager) && Auth.OutletID.HasValue && Auth.OutletID.Value > 0)
+            {
+                AllInvoices = rawInvoices.Where(i => i.OutletID == Auth.OutletID.Value).ToList();
+            }
+            else
+            {
+                AllInvoices = rawInvoices;
+            }
 
             if (InvoiceId.HasValue && InvoiceId.Value > 0)
             {

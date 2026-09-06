@@ -558,6 +558,7 @@ public partial class OrgPurchaseOrders : ComponentBase
 
     private void OpenCreateModal()
     {
+        if (!Auth.IsPurchaseManager && !Auth.IsAdmin) return;
         ModalErrorMessage = null;
         if (EligiblePoOptions.Count > 0)
         {
@@ -579,6 +580,7 @@ public partial class OrgPurchaseOrders : ComponentBase
 
     private async Task HandleSubmitPo()
     {
+        if (!Auth.IsPurchaseManager && !Auth.IsAdmin) return;
         if (SelectedQuotationId <= 0)
         {
             ModalErrorMessage = "Please select an accepted quotation to issue a Purchase Order.";

@@ -15,7 +15,7 @@
         </div>
     </div>
 }
-else if (!Auth.IsOrgManager && !Auth.IsAdmin && !Auth.IsPurchaseManager)
+else if (!Auth.IsOrgManager && !Auth.IsAdmin && !Auth.IsPurchaseManager && !Auth.IsOutletManager)
 {
     <div class="org-po-warning-wrap">
         <div class="org-po-warning-card">
@@ -25,13 +25,13 @@ else if (!Auth.IsOrgManager && !Auth.IsAdmin && !Auth.IsPurchaseManager)
         </div>
     </div>
 }
-else if (Auth.IsPurchaseManager && (!Auth.OutletID.HasValue || Auth.OutletID.Value <= 0))
+else if ((Auth.IsPurchaseManager || Auth.IsOutletManager) && (!Auth.OutletID.HasValue || Auth.OutletID.Value <= 0))
 {
     <div class="org-po-warning-wrap">
         <div class="org-po-warning-card">
             <h4 class="fw-bold mb-2 text-warning">No Outlet Assigned</h4>
-            <p class="text-muted mb-3">No outlet is assigned to this Purchase Manager.</p>
-            <button class="btn btn-outline-secondary" @onclick='() => Nav.NavigateTo("/purchase-manager")'>Return to Dashboard</button>
+            <p class="text-muted mb-3">No outlet is assigned to this account.</p>
+            <button class="btn btn-outline-secondary" @onclick='() => Nav.NavigateTo(Auth.IsPurchaseManager ? "/purchase-manager" : "/outlet-manager")'>Return to Dashboard</button>
         </div>
     </div>
 }
@@ -44,7 +44,7 @@ else
              ======================================================================= -->
         <aside class="org-sidebar">
             <div class="sidebar-header">
-                <div class="sidebar-branding" @onclick='() => Nav.NavigateTo(Auth.IsPurchaseManager ? "/purchase-manager" : "/org-dashboard")'>
+                <div class="sidebar-branding" @onclick='() => Nav.NavigateTo(Auth.IsPurchaseManager ? "/purchase-manager" : (Auth.IsOutletManager ? "/outlet-manager" : "/org-dashboard"))'>
                     <div class="brand-emblem">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -78,12 +78,12 @@ else
             <!-- Portal Badge -->
             <div class="sidebar-portal-badge">
                 <span class="portal-dot"></span>
-                <span class="portal-label">@(Auth.IsPurchaseManager ? "Purchase Manager Portal" : "Organization Portal")</span>
+                <span class="portal-label">@(Auth.IsPurchaseManager ? "Purchase Manager Portal" : (Auth.IsOutletManager ? "Outlet Manager Portal" : "Organization Portal"))</span>
             </div>
 
             <!-- Navigation Links -->
             <nav class="sidebar-nav">
-                <button class="nav-item-btn" @onclick='() => Nav.NavigateTo(Auth.IsPurchaseManager ? "/purchase-manager" : "/org-dashboard")'>
+                <button class="nav-item-btn" @onclick='() => Nav.NavigateTo(Auth.IsPurchaseManager ? "/purchase-manager" : (Auth.IsOutletManager ? "/outlet-manager" : "/org-dashboard"))'>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="3" width="7" height="7"></rect>
                         <rect x="14" y="3" width="7" height="7"></rect>
@@ -101,7 +101,7 @@ else
                     <span class="nav-text">Outlets</span>
                 </button>
 
-                <button class="nav-item-btn" @onclick='() => Nav.NavigateTo("/organization/purchase-requests")'>
+                <button class="nav-item-btn" @onclick='() => Nav.NavigateTo("/quotations")'>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                         <polyline points="14 2 14 8 20 8"></polyline>
@@ -111,7 +111,7 @@ else
                     <span class="nav-text">Purchase Requests</span>
                 </button>
 
-                <button class="nav-item-btn" @onclick='() => Nav.NavigateTo("/organization/quotations-review")'>
+                <button class="nav-item-btn" @onclick='() => Nav.NavigateTo("/quotations")'>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
                         <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>

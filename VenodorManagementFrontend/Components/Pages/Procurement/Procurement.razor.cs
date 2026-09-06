@@ -10,20 +10,38 @@ namespace VenodorManagementFrontend.Components.Pages.Procurement;
 
 public partial class Procurement : ComponentBase
 {
+    // Mode & View States
+    private bool IsCreateMode { get; set; } = false;
+    private int CurrentStep { get; set; } = 1; // 1: Outlet, 2: Product, 3: Quantity & Recs, 4: Review
+
+    // List View State
+    private List<PurchaseRequestDto> AllPurchaseRequests { get; set; } = new();
+    private List<PurchaseRequestDto> ScopedPurchaseRequests { get; set; } = new();
+    private string SearchListQuery { get; set; } = string.Empty;
+    private string StatusFilter { get; set; } = "All";
+    private bool IsLoadingList { get; set; } = true;
+    private bool HasListError { get; set; } = false;
+
+    // Dictionaries for lookups
+    private Dictionary<int, string> ProductNamesDict { get; set; } = new();
+    private Dictionary<int, string> VendorNamesDict { get; set; } = new();
+    private Dictionary<int, string> OutletNamesDict { get; set; } = new();
+    private Dictionary<int, QuotationDto> QuotationsByPrDict { get; set; } = new();
+
+    // Data for Creation Wizard
     private List<OutletDto> Outlets { get; set; } = new();
     private List<ProductDto> AllProducts { get; set; } = new();
 
     private int SelectedOutletId { get; set; } = 0;
-    private string? ConfirmedOutletName { get; set; }
-    private string? OrganizationName { get; set; }
+    private string ConfirmedOutletName { get; set; } = string.Empty;
+    private string OrganizationName { get; set; } = string.Empty;
+    private string OutletAddress { get; set; } = string.Empty;
     private bool IsOutletConfirmed { get; set; } = false;
 
     private ProductDto? SelectedProduct { get; set; }
-    private string SearchQuery { get; set; } = string.Empty;
+    private string SearchProductQuery { get; set; } = string.Empty;
 
-    private decimal? QuantityInput { get; set; }
-    private bool IsQuantityConfirmed { get; set; } = false;
-
+    private decimal? QuantityInput { get; set; } = 10;
     private string ValidationMessage { get; set; } = string.Empty;
     private string QuantityValidationMessage { get; set; } = string.Empty;
 
@@ -39,12 +57,72 @@ public partial class Procurement : ComponentBase
     private string? RecommendationsError { get; set; }
     private string? DispatchSuccessMessage { get; set; }
 
+    // Navigation & Shell State
     private bool IsSidebarCollapsed { get; set; } = false;
     private bool IsProfileDropdownOpen { get; set; } = false;
+    private bool ShowNotificationDropdown { get; set; } = false;
+    private bool ShowProfileModal { get; set; } = false;
 
     private PurchaseRequestDto? CreatedPurchaseRequest { get; set; }
     private List<VendorRecommendationDto>? VendorRecommendations { get; set; }
     private List<VendorRecommendationDto> SelectedVendors { get; set; } = new();
+
+    // Notifications
+    private List<NotificationDto> Notifications { get; set; } = new();
+    private int UnreadNotificationCount => Notifications.Count(n => !n.IsRead);
+
+    private string UserInitial => !string.IsNullOrWhiteSpace(Auth.UserName)
+        ? Auth.UserName.Substring(0, 1).ToUpperInvariant()
+        : "P";
+
+    private List<ProductDto> FilteredProducts
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(SearchProductQuery))
+            {
+                return AllProducts;
+            }
+            return AllProducts.Where(p => p.ProductName.Contains(SearchProductQuery, StringComparison.OrdinalIgnoreCase) ||
+                                          (p.Category != null && p.Category.Contains(SearchProductQuery, StringComparison.OrdinalIgnoreCase))).ToList();
+        }
+    }
+
+    private List<PurchaseRequestDto> FilteredPurchaseRequests
+    {
+        get
+        {
+            var list = ScopedPurchaseRequests.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(StatusFilter) && StatusFilter != "All")
+            {
+                list = list.Where(r => string.Equals(r.Status, StatusFilter, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (!string.IsNullOrWhiteSpace(SearchListQuery))
+            {
+                list = list.Where(r =>
+                    $"PR-{r.RequestID}".Contains(SearchListQuery, StringComparison.OrdinalIgnoreCase) ||
+                    (r.Items != null && r.Items.Any(i => i.ProductName != null && i.ProductName.Contains(SearchListQuery, StringComparison.OrdinalIgnoreCase))) ||
+                    (r.OutletName != null && r.OutletName.Contains(SearchListQuery, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            return list.OrderByDescending(r => r.RequestDate).ToList();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Auth.IsAuthenticated && (Auth.IsPurchaseManager || Auth.IsAdmin))
+        {
+            await LoadInitialDataAsync();
+        }
+        else
+        {
+            IsLoadingList = false;
+            IsLoadingOutlets = false;
+        }
+    }
 
     private void ToggleSidebar()
     {
@@ -54,177 +132,183 @@ public partial class Procurement : ComponentBase
     private void ToggleProfileDropdown()
     {
         IsProfileDropdownOpen = !IsProfileDropdownOpen;
+        if (IsProfileDropdownOpen) ShowNotificationDropdown = false;
     }
 
-    private string GetUserInitial()
+    private void ToggleNotifications()
     {
-        if (!string.IsNullOrWhiteSpace(Auth.UserName))
-        {
-            return Auth.UserName.Substring(0, 1).ToUpperInvariant();
-        }
-        return "O";
+        ShowNotificationDropdown = !ShowNotificationDropdown;
+        if (ShowNotificationDropdown) IsProfileDropdownOpen = false;
+    }
+
+    private void OpenProfileModal()
+    {
+        ShowProfileModal = true;
+        IsProfileDropdownOpen = false;
+    }
+
+    private void CloseProfileModal()
+    {
+        ShowProfileModal = false;
     }
 
     private void HandleLogout()
     {
         Auth.Logout();
-        Nav.NavigateTo("/login");
+        Nav.NavigateTo("/purchase-manager/login", true);
     }
 
-    private List<ProductDto> FilteredProducts
+    private async Task MarkNotificationRead(int notificationId)
     {
-        get
-        {
-            if (string.IsNullOrWhiteSpace(SearchQuery))
-            {
-                return AllProducts;
-            }
-            return AllProducts.Where(p => p.ProductName.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase) ||
-                                          (p.Category != null && p.Category.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase))).ToList();
-        }
+        await Api.MarkNotificationReadAsync(notificationId);
+        var notif = Notifications.FirstOrDefault(n => n.NotificationID == notificationId);
+        if (notif != null) notif.IsRead = true;
+        StateHasChanged();
     }
 
-    protected override async Task OnInitializedAsync()
+    private async Task LoadInitialDataAsync()
     {
-        if (Auth.IsAuthenticated && (Auth.IsOrgManager || Auth.IsOutletManager || Auth.IsPurchaseManager || Auth.IsAdmin))
-        {
-            await LoadOutlets();
-        }
-        else
-        {
-            IsLoadingOutlets = false;
-        }
-    }
-
-    private async Task LoadOutlets()
-    {
-        IsLoadingOutlets = true;
-        HasErrorOutlets = false;
+        IsLoadingList = true;
+        HasListError = false;
         StateHasChanged();
 
         try
         {
-            if ((Auth.IsOutletManager || Auth.IsPurchaseManager) && Auth.OutletID.HasValue)
-            {
-                var rawOutlets = await Api.GetOutletsAsync() ?? new List<OutletDto>();
-                var matched = rawOutlets.FirstOrDefault(o => o.OutletID == Auth.OutletID.Value);
+            var requestsTask = Api.GetPurchaseRequestsAsync();
+            var productsTask = Api.GetProductsAsync();
+            var vendorsTask = Api.GetVendorsAsync();
+            var outletsTask = Api.GetOutletsAsync();
+            var orgsTask = Api.GetOrganizationsAsync();
+            var quotationsTask = Api.GetQuotationsAsync();
+            var notifsTask = Api.GetMyNotificationsAsync();
 
+            await Task.WhenAll(requestsTask, productsTask, vendorsTask, outletsTask, orgsTask, quotationsTask, notifsTask);
+
+            AllPurchaseRequests = await requestsTask ?? new List<PurchaseRequestDto>();
+            AllProducts = await productsTask ?? new List<ProductDto>();
+            var allVendors = await vendorsTask ?? new List<VendorDto>();
+            Outlets = await outletsTask ?? new List<OutletDto>();
+            var allOrgs = await orgsTask ?? new List<OrganizationDto>();
+            var allQuotations = await quotationsTask ?? new List<QuotationDto>();
+            Notifications = await notifsTask ?? new List<NotificationDto>();
+
+            // Build Dictionaries
+            ProductNamesDict = AllProducts.ToDictionary(p => p.ProductID, p => p.ProductName);
+            VendorNamesDict = allVendors.ToDictionary(v => v.VendorID, v => v.VendorName);
+            OutletNamesDict = Outlets.ToDictionary(o => o.OutletID, o => GetDisplayOutletName(o));
+            QuotationsByPrDict = allQuotations.GroupBy(q => q.RequestID).ToDictionary(g => g.Key, g => g.First());
+
+            // Scope Requests to PM's outlet
+            if (Auth.OutletID.HasValue && Auth.OutletID.Value > 0)
+            {
+                ScopedPurchaseRequests = AllPurchaseRequests.Where(r => r.OutletID == Auth.OutletID.Value).ToList();
+                var matched = Outlets.FirstOrDefault(o => o.OutletID == Auth.OutletID.Value);
                 if (matched != null)
                 {
-                    Outlets = new List<OutletDto> { matched };
                     SelectedOutletId = matched.OutletID;
                     ConfirmedOutletName = GetDisplayOutletName(matched);
-                    OrganizationName = Auth.OrganizationID.HasValue ? $"Organization #{Auth.OrganizationID.Value}" : "Assigned Organization";
+                    OutletAddress = matched.Address ?? string.Empty;
                 }
                 else
                 {
                     SelectedOutletId = Auth.OutletID.Value;
                     ConfirmedOutletName = $"Outlet #{Auth.OutletID.Value}";
-                    OrganizationName = Auth.OrganizationID.HasValue ? $"Organization #{Auth.OrganizationID.Value}" : "Assigned Organization";
                 }
             }
             else
             {
-                var orgsTask = Api.GetOrganizationsAsync();
-                var outletsTask = Auth.OrganizationID.HasValue
-                    ? Api.GetOutletsByOrgIdAsync(Auth.OrganizationID.Value)
-                    : Api.GetOutletsAsync();
-
-                await Task.WhenAll(orgsTask, outletsTask);
-
-                var orgs = await orgsTask;
-                if (Auth.OrganizationID.HasValue && orgs != null)
+                ScopedPurchaseRequests = AllPurchaseRequests;
+                if (Outlets.Count > 0)
                 {
-                    var matchingOrg = orgs.FirstOrDefault(o => o.OrganizationID == Auth.OrganizationID.Value);
-                    OrganizationName = matchingOrg?.OrganizationName ?? $"Organization #{Auth.OrganizationID.Value}";
-                }
-                else if (orgs != null && orgs.Count > 0)
-                {
-                    OrganizationName = orgs[0].OrganizationName;
-                }
-
-                var rawOutlets = await outletsTask;
-                if (Auth.OrganizationID.HasValue && rawOutlets != null)
-                {
-                    Outlets = rawOutlets.Where(o => o.OrganizationID == Auth.OrganizationID.Value).ToList();
-                }
-                else
-                {
-                    Outlets = rawOutlets ?? new List<OutletDto>();
+                    SelectedOutletId = Outlets[0].OutletID;
+                    ConfirmedOutletName = GetDisplayOutletName(Outlets[0]);
+                    OutletAddress = Outlets[0].Address ?? string.Empty;
                 }
             }
+
+            // Resolve Org Name
+            if (Auth.OrganizationID.HasValue && Auth.OrganizationID.Value > 0)
+            {
+                var matchedOrg = allOrgs.FirstOrDefault(o => o.OrganizationID == Auth.OrganizationID.Value);
+                OrganizationName = matchedOrg?.OrganizationName ?? $"Organization #{Auth.OrganizationID.Value}";
+            }
+            else if (allOrgs.Count > 0)
+            {
+                OrganizationName = allOrgs[0].OrganizationName;
+            }
+            else
+            {
+                OrganizationName = "Smart Vendor Enterprise";
+            }
+
+            IsOutletConfirmed = SelectedOutletId > 0;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[Procurement] Error loading outlets: {ex.Message}");
-            HasErrorOutlets = true;
+            Console.WriteLine($"[Procurement] Error loading initial data: {ex.Message}");
+            HasListError = true;
         }
         finally
         {
+            IsLoadingList = false;
             IsLoadingOutlets = false;
             StateHasChanged();
         }
     }
 
-    private void OnOutletSelected()
+    // --- MODE SWITCHING ---
+    private void StartCreateRequest()
     {
-        ValidationMessage = string.Empty;
-    }
-
-    private async Task HandleContinue()
-    {
-        ValidationMessage = string.Empty;
-        if (SelectedOutletId <= 0)
-        {
-            ValidationMessage = "Please select an outlet.";
-            ConfirmedOutletName = null;
-            IsOutletConfirmed = false;
-            return;
-        }
-
-        var selected = Outlets.FirstOrDefault(o => o.OutletID == SelectedOutletId);
-        if (selected != null)
-        {
-            ConfirmedOutletName = GetDisplayOutletName(selected);
-        }
-        else if ((Auth.IsOutletManager || Auth.IsPurchaseManager) && Auth.OutletID.HasValue)
-        {
-            ConfirmedOutletName = $"Outlet #{Auth.OutletID.Value}";
-        }
-
-        IsOutletConfirmed = true;
-        await LoadProducts();
-    }
-
-    private void ChangeOutlet()
-    {
-        if (Auth.IsOutletManager || Auth.IsPurchaseManager)
-        {
-            return;
-        }
-        IsOutletConfirmed = false;
+        IsCreateMode = true;
+        CurrentStep = 1;
         SelectedProduct = null;
-        QuantityInput = null;
-        IsQuantityConfirmed = false;
+        QuantityInput = 10;
         CreatedPurchaseRequest = null;
         VendorRecommendations = null;
         SelectedVendors.Clear();
-        ValidationMessage = string.Empty;
-        QuantityValidationMessage = string.Empty;
+        PurchaseRequestError = null;
+        RecommendationsError = null;
+        DispatchSuccessMessage = null;
+        SearchProductQuery = string.Empty;
+    }
+
+    private void CancelCreateRequest()
+    {
+        IsCreateMode = false;
+        CurrentStep = 1;
+        SelectedProduct = null;
+        CreatedPurchaseRequest = null;
+        VendorRecommendations = null;
+        SelectedVendors.Clear();
         PurchaseRequestError = null;
         RecommendationsError = null;
         DispatchSuccessMessage = null;
     }
 
-    private async Task LoadProducts()
+    private async Task GoToStep2Product()
+    {
+        ValidationMessage = string.Empty;
+        if (SelectedOutletId <= 0)
+        {
+            ValidationMessage = "Assigned outlet not detected. Please contact your administrator.";
+            return;
+        }
+        CurrentStep = 2;
+        if (AllProducts.Count == 0)
+        {
+            await LoadProductsAsync();
+        }
+    }
+
+    private async Task LoadProductsAsync()
     {
         IsLoadingProducts = true;
         HasErrorProducts = false;
         StateHasChanged();
-
         try
         {
-            AllProducts = await Api.GetProductsAsync();
+            AllProducts = await Api.GetProductsAsync() ?? new List<ProductDto>();
+            ProductNamesDict = AllProducts.ToDictionary(p => p.ProductID, p => p.ProductName);
         }
         catch (Exception)
         {
@@ -244,7 +328,7 @@ public partial class Procurement : ComponentBase
         {
             QuantityInput = 10;
         }
-        IsQuantityConfirmed = false;
+        CurrentStep = 3;
         CreatedPurchaseRequest = null;
         VendorRecommendations = null;
         SelectedVendors.Clear();
@@ -261,45 +345,32 @@ public partial class Procurement : ComponentBase
         }
     }
 
-    private void ChangeProduct()
+    private void GoToStep4Review()
     {
-        SelectedProduct = null;
-        QuantityInput = null;
-        IsQuantityConfirmed = false;
-        CreatedPurchaseRequest = null;
-        VendorRecommendations = null;
-        SelectedVendors.Clear();
         QuantityValidationMessage = string.Empty;
+        if (!QuantityInput.HasValue || QuantityInput.Value <= 0)
+        {
+            QuantityValidationMessage = "Please enter a valid quantity greater than 0.";
+            return;
+        }
+        if (SelectedVendors.Count == 0)
+        {
+            QuantityValidationMessage = "Please select at least one vendor to receive this purchase request.";
+            return;
+        }
+        CurrentStep = 4;
+    }
+
+    private void GoBackToStep(int step)
+    {
+        CurrentStep = step;
         PurchaseRequestError = null;
-        RecommendationsError = null;
-        DispatchSuccessMessage = null;
+        QuantityValidationMessage = string.Empty;
     }
 
     private void OnQuantityChanged()
     {
         QuantityValidationMessage = string.Empty;
-        IsQuantityConfirmed = false;
-    }
-
-    private async Task HandleFindVendors()
-    {
-        QuantityValidationMessage = string.Empty;
-        PurchaseRequestError = null;
-        RecommendationsError = null;
-        DispatchSuccessMessage = null;
-
-        if (!QuantityInput.HasValue || QuantityInput.Value <= 0)
-        {
-            QuantityValidationMessage = "Quantity must be greater than 0.";
-            return;
-        }
-
-        if (SelectedProduct == null || SelectedOutletId <= 0)
-        {
-            return;
-        }
-
-        await FetchVendorRecommendations();
     }
 
     private async Task FetchVendorRecommendations()
@@ -312,187 +383,166 @@ public partial class Procurement : ComponentBase
 
         try
         {
-            if (CreatedPurchaseRequest != null)
+            var vendorProducts = await Api.GetVendorProductsAsync();
+            var vendors = await Api.GetVendorsAsync();
+            var contracts = await Api.GetContractsAsync();
+            var performances = await Api.GetVendorPerformanceSummariesAsync();
+
+            var matchingVP = vendorProducts?.Where(vp =>
+                vp.ProductID == SelectedProduct.ProductID &&
+                string.Equals(vp.Status, "Active", StringComparison.OrdinalIgnoreCase)).ToList() ?? new();
+
+            var vendorDict = vendors?.ToDictionary(v => v.VendorID, v => v.VendorName) ?? new();
+            var perfDict = performances?.ToDictionary(p => p.VendorID) ?? new();
+
+            var recs = new List<VendorRecommendationDto>();
+            decimal minPrice = matchingVP.Count > 0 ? matchingVP.Min(vp => vp.UnitPrice) : 0m;
+
+            foreach (var vp in matchingVP)
             {
-                var response = await Api.GetVendorRecommendationsAsync(CreatedPurchaseRequest.RequestID);
-                if (response != null && response.Recommendations != null)
+                string vName = vendorDict.TryGetValue(vp.VendorID, out var name) ? name : $"Vendor #{vp.VendorID}";
+                var matchingContract = contracts?.FirstOrDefault(c =>
+                    (c.VendorID == vp.VendorID || (c.Allocations != null && c.Allocations.Any(a => a.VendorID == vp.VendorID))) &&
+                    c.ProductID == SelectedProduct.ProductID &&
+                    c.OutletID == SelectedOutletId &&
+                    string.Equals(c.Status, "Active", StringComparison.OrdinalIgnoreCase));
+
+                bool hasContract = matchingContract != null;
+                decimal remainingQty = 0m;
+                if (matchingContract != null)
                 {
-                    VendorRecommendations = response.Recommendations.OrderBy(r => r.Rank).ToList();
-                }
-            }
-            else
-            {
-                // Query eligible vendors for this product and outlet directly without creating a premature 10kg draft
-                var vendorProducts = await Api.GetVendorProductsAsync();
-                var vendors = await Api.GetVendorsAsync();
-                var contracts = await Api.GetContractsAsync();
-
-                var matchingVP = vendorProducts?.Where(vp => 
-                    vp.ProductID == SelectedProduct.ProductID && 
-                    string.Equals(vp.Status, "Active", StringComparison.OrdinalIgnoreCase)).ToList() ?? new();
-
-                var vendorDict = vendors?.ToDictionary(v => v.VendorID, v => v.VendorName) ?? new();
-
-                var recs = new List<VendorRecommendationDto>();
-                decimal minPrice = matchingVP.Count > 0 ? matchingVP.Min(vp => vp.UnitPrice) : 0m;
-
-                // Fetch performance profiles for all active vendors to display verified ratings
-                var performances = await Api.GetVendorPerformanceSummariesAsync();
-                var perfDict = performances?.ToDictionary(p => p.VendorID) ?? new();
-
-                foreach (var vp in matchingVP)
-                {
-                    string vName = vendorDict.TryGetValue(vp.VendorID, out var name) ? name : $"Vendor #{vp.VendorID}";
-                    var matchingContract = contracts?.FirstOrDefault(c => 
-                        (c.VendorID == vp.VendorID || (c.Allocations != null && c.Allocations.Any(a => a.VendorID == vp.VendorID))) &&
-                        c.ProductID == SelectedProduct.ProductID &&
-                        c.OutletID == SelectedOutletId &&
-                        string.Equals(c.Status, "Active", StringComparison.OrdinalIgnoreCase));
-
-                    bool hasContract = matchingContract != null;
-                    decimal remainingQty = 0m;
-                    if (matchingContract != null)
+                    if (matchingContract.Allocations != null && matchingContract.Allocations.Count > 0)
                     {
-                        if (matchingContract.Allocations != null && matchingContract.Allocations.Count > 0)
+                        var alloc = matchingContract.Allocations.FirstOrDefault(a => a.VendorID == vp.VendorID);
+                        if (alloc != null)
                         {
-                            var alloc = matchingContract.Allocations.FirstOrDefault(a => a.VendorID == vp.VendorID);
-                            if (alloc != null)
-                            {
-                                remainingQty = Math.Max(0m, alloc.AllocatedQuantity - alloc.UsedQuantity);
-                            }
+                            remainingQty = Math.Max(0m, alloc.AllocatedQuantity - alloc.UsedQuantity);
                         }
-                        else
-                        {
-                            remainingQty = Math.Max(0m, matchingContract.TotalQuantity - matchingContract.UsedQuantity);
-                        }
-                    }
-
-                    bool hasUsableContract = hasContract && remainingQty > 0;
-
-                    // Pull real rating metrics & delivery history
-                    perfDict.TryGetValue(vp.VendorID, out var perf);
-                    int feedbackCount = perf?.TotalReviews ?? 0;
-                    int completedDeliveries = perf?.CompletedDeliveries ?? 0;
-                    decimal? spoilageRate = perf?.SpoilageRate;
-                    decimal avgRating = (perf != null && perf.AverageRating.HasValue) ? perf.AverageRating.Value : 0m;
-                    decimal avgQuality = (perf != null && perf.AverageQualityRating.HasValue) ? perf.AverageQualityRating.Value : 0m;
-                    decimal avgDelivery = (perf != null && perf.AverageDeliveryRating.HasValue) ? perf.AverageDeliveryRating.Value : 0m;
-
-                    // Compute 100-point multi-factor score
-                    decimal qualityScore = feedbackCount > 0 ? (avgQuality / 5.0m) * 100m : 70m;
-                    decimal deliveryScore = feedbackCount > 0 ? (avgDelivery / 5.0m) * 100m : 70m;
-                    decimal priceScore = (vp.UnitPrice > 0 && minPrice > 0)
-                        ? Math.Round((minPrice / vp.UnitPrice) * 100m, 1)
-                        : 70m;
-                    decimal reliabilityBonus = Math.Min(15m, feedbackCount * 3m);
-
-                    decimal overallCompositeScore = Math.Round(
-                        (qualityScore * 0.35m) +
-                        (deliveryScore * 0.25m) +
-                        (priceScore * 0.25m) +
-                        reliabilityBonus,
-                        1
-                    );
-
-                    recs.Add(new VendorRecommendationDto
-                    {
-                        VendorID = vp.VendorID,
-                        VendorName = vName,
-                        ProductID = SelectedProduct.ProductID,
-                        ProductName = SelectedProduct.ProductName,
-                        UnitPrice = vp.UnitPrice,
-                        EstimatedDeliveryDays = vp.EstimatedDeliveryDays,
-                        OverallScore = overallCompositeScore,
-                        AverageRating = avgRating,
-                        AverageQualityRating = avgQuality,
-                        AverageDeliveryRating = avgDelivery,
-                        TotalFeedbackCount = feedbackCount,
-                        CompletedDeliveries = completedDeliveries,
-                        SpoilageRate = spoilageRate,
-                        HasActiveContract = hasUsableContract,
-                        RemainingQuantity = remainingQty
-                    });
-                }
-
-                VendorRecommendations = recs
-                    .OrderByDescending(r => r.HasActiveContract && r.RemainingQuantity > 0)
-                    .ThenByDescending(r => r.OverallScore)
-                    .ThenBy(r => r.UnitPrice)
-                    .ThenBy(r => r.EstimatedDeliveryDays)
-                    .ThenBy(r => r.VendorID)
-                    .ToList();
-
-                for (int i = 0; i < VendorRecommendations.Count; i++)
-                {
-                    var rec = VendorRecommendations[i];
-                    rec.Rank = i + 1;
-                    if (i == 0)
-                    {
-                        rec.SmartBadge = "Top Recommended";
-                    }
-                    else if (rec.AverageQualityRating >= 4.5m)
-                    {
-                        rec.SmartBadge = "Best Quality";
-                    }
-                    else if (rec.UnitPrice == minPrice)
-                    {
-                        rec.SmartBadge = "Best Price";
-                    }
-                    else if (rec.AverageDeliveryRating >= 4.5m)
-                    {
-                        rec.SmartBadge = "Fastest Delivery";
-                    }
-
-                    if (i == 0)
-                    {
-                        // Generate rich comparative AI recommendation from database metrics
-                        var competitors = VendorRecommendations.Where(r => r.VendorID != rec.VendorID).ToList();
-                        string compNames = competitors.Count > 0
-                            ? string.Join(", ", competitors.Select(c => c.VendorName))
-                            : "other suppliers";
-
-                        decimal minOtherPrice = competitors.Count > 0 ? competitors.Min(c => c.UnitPrice) : rec.UnitPrice;
-                        decimal priceDiff = rec.UnitPrice - minOtherPrice;
-
-                        string spoilageText = rec.SpoilageRate.HasValue
-                            ? $"{rec.SpoilageRate.Value:0.0}% spoilage"
-                            : "0% reported spoilage";
-
-                        int deliveredCount = rec.CompletedDeliveries > 0 ? rec.CompletedDeliveries : Math.Max(1, rec.TotalFeedbackCount);
-
-                        if (priceDiff > 0 && competitors.Count > 0)
-                        {
-                            rec.Recommendation = $"{rec.VendorName} is recommended over other suppliers ({compNames}) because, despite a Rs. {priceDiff:N2} / {SelectedProduct.Unit} price difference, {rec.VendorName} has a proven {rec.AverageQualityRating:0.0}/5 Quality rating across {deliveredCount} delivered orders with {spoilageText}, ensuring maximum product freshness and dependable kitchen operations.";
-                        }
-                        else if (rec.HasActiveContract && rec.RemainingQuantity > 0)
-                        {
-                            rec.Recommendation = $"{rec.VendorName} is recommended with priority active contract allocation ({rec.RemainingQuantity:N0} {SelectedProduct.Unit} remaining) and a verified {rec.AverageQualityRating:0.0}/5 Quality rating across {deliveredCount} delivered orders with {spoilageText}.";
-                        }
-                        else
-                        {
-                            rec.Recommendation = $"{rec.VendorName} is recommended over competitors ({compNames}) with the highest overall performance score, verified {rec.AverageQualityRating:0.0}/5 Quality rating across {deliveredCount} delivered orders with {spoilageText}.";
-                        }
-                    }
-                    else if (rec.HasActiveContract && rec.RemainingQuantity > 0)
-                    {
-                        rec.Recommendation = "Active Contract";
-                    }
-                    else if (rec.UnitPrice == minPrice)
-                    {
-                        rec.Recommendation = rec.TotalFeedbackCount > 0
-                            ? $"Alternative — Best Price: Lowest unit price (Rs. {rec.UnitPrice:N2}) with {rec.AverageRating:0.0}★ customer rating."
-                            : $"Alternative — Best Price: Lowest unit price (Rs. {rec.UnitPrice:N2}).";
                     }
                     else
                     {
-                        rec.Recommendation = rec.TotalFeedbackCount > 0 && rec.AverageQualityRating >= 4.0m
-                            ? $"Alternative: High quality rating ({rec.AverageQualityRating:0.0}/5★) across {rec.TotalFeedbackCount} past deliveries."
-                            : "Alternative";
+                        remainingQty = Math.Max(0m, matchingContract.TotalQuantity - matchingContract.UsedQuantity);
                     }
+                }
+
+                bool hasUsableContract = hasContract && remainingQty > 0;
+
+                perfDict.TryGetValue(vp.VendorID, out var perf);
+                int feedbackCount = perf?.TotalReviews ?? 0;
+                int completedDeliveries = perf?.CompletedDeliveries ?? 0;
+                decimal? spoilageRate = perf?.SpoilageRate;
+                decimal avgRating = (perf != null && perf.AverageRating.HasValue) ? perf.AverageRating.Value : 0m;
+                decimal avgQuality = (perf != null && perf.AverageQualityRating.HasValue) ? perf.AverageQualityRating.Value : 0m;
+                decimal avgDelivery = (perf != null && perf.AverageDeliveryRating.HasValue) ? perf.AverageDeliveryRating.Value : 0m;
+
+                decimal qualityScore = feedbackCount > 0 ? (avgQuality / 5.0m) * 100m : 70m;
+                decimal deliveryScore = feedbackCount > 0 ? (avgDelivery / 5.0m) * 100m : 70m;
+                decimal priceScore = (vp.UnitPrice > 0 && minPrice > 0)
+                    ? Math.Round((minPrice / vp.UnitPrice) * 100m, 1)
+                    : 70m;
+                decimal reliabilityBonus = Math.Min(15m, feedbackCount * 3m);
+
+                decimal overallCompositeScore = Math.Round(
+                    (qualityScore * 0.35m) +
+                    (deliveryScore * 0.25m) +
+                    (priceScore * 0.25m) +
+                    reliabilityBonus,
+                    1
+                );
+
+                recs.Add(new VendorRecommendationDto
+                {
+                    VendorID = vp.VendorID,
+                    VendorName = vName,
+                    ProductID = SelectedProduct.ProductID,
+                    ProductName = SelectedProduct.ProductName,
+                    UnitPrice = vp.UnitPrice,
+                    EstimatedDeliveryDays = vp.EstimatedDeliveryDays,
+                    OverallScore = overallCompositeScore,
+                    AverageRating = avgRating,
+                    AverageQualityRating = avgQuality,
+                    AverageDeliveryRating = avgDelivery,
+                    TotalFeedbackCount = feedbackCount,
+                    CompletedDeliveries = completedDeliveries,
+                    SpoilageRate = spoilageRate,
+                    HasActiveContract = hasUsableContract,
+                    RemainingQuantity = remainingQty
+                });
+            }
+
+            VendorRecommendations = recs
+                .OrderByDescending(r => r.HasActiveContract && r.RemainingQuantity > 0)
+                .ThenByDescending(r => r.OverallScore)
+                .ThenBy(r => r.UnitPrice)
+                .ThenBy(r => r.EstimatedDeliveryDays)
+                .ThenBy(r => r.VendorID)
+                .ToList();
+
+            for (int i = 0; i < VendorRecommendations.Count; i++)
+            {
+                var rec = VendorRecommendations[i];
+                rec.Rank = i + 1;
+                if (i == 0)
+                {
+                    rec.SmartBadge = "Top Recommended";
+                }
+                else if (rec.AverageQualityRating >= 4.5m)
+                {
+                    rec.SmartBadge = "Best Quality";
+                }
+                else if (rec.UnitPrice == minPrice)
+                {
+                    rec.SmartBadge = "Best Price";
+                }
+                else if (rec.AverageDeliveryRating >= 4.5m)
+                {
+                    rec.SmartBadge = "Fastest Delivery";
+                }
+
+                if (i == 0)
+                {
+                    var competitors = VendorRecommendations.Where(r => r.VendorID != rec.VendorID).ToList();
+                    string compNames = competitors.Count > 0
+                        ? string.Join(", ", competitors.Select(c => c.VendorName))
+                        : "other suppliers";
+
+                    decimal minOtherPrice = competitors.Count > 0 ? competitors.Min(c => c.UnitPrice) : rec.UnitPrice;
+                    decimal priceDiff = rec.UnitPrice - minOtherPrice;
+
+                    string spoilageText = rec.SpoilageRate.HasValue
+                        ? $"{rec.SpoilageRate.Value:0.0}% spoilage"
+                        : "0% reported spoilage";
+
+                    int deliveredCount = rec.CompletedDeliveries > 0 ? rec.CompletedDeliveries : Math.Max(1, rec.TotalFeedbackCount);
+
+                    if (priceDiff > 0 && competitors.Count > 0)
+                    {
+                        rec.Recommendation = $"{rec.VendorName} is recommended over other suppliers ({compNames}) with a verified {rec.AverageQualityRating:0.0}/5 Quality rating across {deliveredCount} delivered orders with {spoilageText}.";
+                    }
+                    else if (rec.HasActiveContract && rec.RemainingQuantity > 0)
+                    {
+                        rec.Recommendation = $"{rec.VendorName} is recommended with priority active contract allocation ({rec.RemainingQuantity:N0} {SelectedProduct.Unit} remaining) and a verified {rec.AverageQualityRating:0.0}/5 Quality rating.";
+                    }
+                    else
+                    {
+                        rec.Recommendation = $"{rec.VendorName} is recommended with the highest overall performance score and verified {rec.AverageQualityRating:0.0}/5 Quality rating.";
+                    }
+                }
+                else if (rec.HasActiveContract && rec.RemainingQuantity > 0)
+                {
+                    rec.Recommendation = "Active Contract Allocation";
+                }
+                else if (rec.UnitPrice == minPrice)
+                {
+                    rec.Recommendation = $"Lowest unit price (Rs. {rec.UnitPrice:N2}) with {rec.AverageRating:0.0}★ customer rating.";
+                }
+                else
+                {
+                    rec.Recommendation = "Alternative supplier candidate.";
                 }
             }
 
-            if (VendorRecommendations != null && SelectedVendors.Count == 0 && VendorRecommendations.Count > 0)
+            if (VendorRecommendations.Count > 0 && SelectedVendors.Count == 0)
             {
                 SelectedVendors.Add(VendorRecommendations[0]);
             }
@@ -524,13 +574,9 @@ public partial class Procurement : ComponentBase
         }
     }
 
-    private void ClearSelectedVendors()
-    {
-        SelectedVendors.Clear();
-    }
-
     private async Task DispatchToSelectedVendors()
     {
+        if (!Auth.IsPurchaseManager && !Auth.IsAdmin) return;
         if (SelectedProduct == null || SelectedVendors.Count == 0 || !QuantityInput.HasValue || QuantityInput.Value <= 0) return;
 
         IsDispatching = true;
@@ -540,7 +586,6 @@ public partial class Procurement : ComponentBase
 
         try
         {
-            // Create the single official purchase request with the exact typed quantity
             var command = new CreatePurchaseRequestCommand
             {
                 OutletID = SelectedOutletId,
@@ -560,7 +605,7 @@ public partial class Procurement : ComponentBase
             CreatedPurchaseRequest = await Api.CreatePurchaseRequestAsync(command);
             if (CreatedPurchaseRequest == null)
             {
-                PurchaseRequestError = "Unable to create Purchase Request with the specified quantity.";
+                PurchaseRequestError = "Unable to create Purchase Request.";
                 IsDispatching = false;
                 StateHasChanged();
                 return;
@@ -572,7 +617,25 @@ public partial class Procurement : ComponentBase
             if (result != null && result.Success)
             {
                 string vendorNames = string.Join(", ", SelectedVendors.Select(v => $"'{v.VendorName}'"));
-                DispatchSuccessMessage = $"Purchase Request PR-{CreatedPurchaseRequest.RequestID} has been successfully sent to {vendorNames}. The respective Vendor Manager(s) have been notified and can now accept or reject the opportunity.";
+                DispatchSuccessMessage = $"Purchase Request PR-{CreatedPurchaseRequest.RequestID} has been successfully created and sent to {vendorNames}.";
+
+                // Refresh the local purchase requests list in background
+                _ = Task.Run(async () =>
+                {
+                    var updated = await Api.GetPurchaseRequestsAsync();
+                    if (updated != null)
+                    {
+                        AllPurchaseRequests = updated;
+                        if (Auth.OutletID.HasValue && Auth.OutletID.Value > 0)
+                        {
+                            ScopedPurchaseRequests = AllPurchaseRequests.Where(r => r.OutletID == Auth.OutletID.Value).ToList();
+                        }
+                        else
+                        {
+                            ScopedPurchaseRequests = AllPurchaseRequests;
+                        }
+                    }
+                });
             }
             else
             {
@@ -599,45 +662,83 @@ public partial class Procurement : ComponentBase
         }
         if (!string.IsNullOrWhiteSpace(outlet.Address))
         {
-            return $"{outlet.Address} Outlet";
+            return $"{outlet.Address.Split(',')[0].Trim()} Outlet";
         }
         return $"Outlet #{outlet.OutletID}";
+    }
+
+    private string GetPrProductDisplay(PurchaseRequestDto pr)
+    {
+        if (pr.Items != null && pr.Items.Count > 0)
+        {
+            var first = pr.Items[0];
+            string pName = !string.IsNullOrWhiteSpace(first.ProductName)
+                ? first.ProductName
+                : (ProductNamesDict.TryGetValue(first.ProductID, out var n) ? n : "Item");
+
+            if (pr.Items.Count > 1)
+            {
+                return $"{pName} (+{pr.Items.Count - 1} more)";
+            }
+            return pName;
+        }
+        return "Procurement Items";
+    }
+
+    private string GetPrQuantityDisplay(PurchaseRequestDto pr)
+    {
+        if (pr.Items != null && pr.Items.Count > 0)
+        {
+            var first = pr.Items[0];
+            return $"{first.Quantity:G29} {first.Unit}".Trim();
+        }
+        return "—";
+    }
+
+    private string GetPrVendorDisplay(PurchaseRequestDto pr)
+    {
+        if (QuotationsByPrDict.TryGetValue(pr.RequestID, out var q))
+        {
+            string vName = VendorNamesDict.TryGetValue(q.VendorID, out var n) ? n : "Supplier";
+            return $"{vName} ({q.Status})";
+        }
+        if (!string.IsNullOrWhiteSpace(pr.VendorName))
+        {
+            return pr.VendorName;
+        }
+        return "Awaiting Quotation";
+    }
+
+    private static string GetStatusBadgeClass(string? status)
+    {
+        if (string.IsNullOrWhiteSpace(status)) return "status-badge-neutral";
+        return status.ToLowerInvariant() switch
+        {
+            "approved" or "accepted" or "completed" or "delivered" or "dispatched" => "status-badge-green",
+            "pending" or "submitted" or "created" => "status-badge-green",
+            "rejected" or "declined" or "cancelled" => "status-badge-neutral",
+            _ => "status-badge-neutral"
+        };
     }
 
     // --- VENDOR REVIEWS MODAL ---
     private bool IsReviewsModalOpen { get; set; } = false;
     private bool IsLoadingVendorReviews { get; set; } = false;
-    private bool IsLoadingAiInsights { get; set; } = false;
     private VendorRecommendationDto? SelectedVendorForReviews { get; set; }
     private List<VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto> CurrentVendorReviews { get; set; } = new();
-    private VenodorManagementFrontend.Models.VendorPerformance.VendorAiInsightsDto? CurrentAiInsights { get; set; }
 
     private async Task OpenVendorReviewsModal(VendorRecommendationDto vendor)
     {
         SelectedVendorForReviews = vendor;
         IsReviewsModalOpen = true;
         IsLoadingVendorReviews = true;
-        IsLoadingAiInsights = true;
         CurrentVendorReviews.Clear();
-        CurrentAiInsights = null;
         StateHasChanged();
 
         try
         {
             var reviews = await Api.GetVendorReviewsAsync(vendor.VendorID);
             CurrentVendorReviews = reviews ?? new();
-            IsLoadingVendorReviews = false;
-            StateHasChanged();
-
-            // Fetch Gemini AI analysis securely via Backend API
-            try
-            {
-                CurrentAiInsights = await Api.GetVendorAiInsightsAsync(vendor.VendorID);
-            }
-            catch (Exception aiEx)
-            {
-                Console.WriteLine($"[Procurement] AI Insights load error: {aiEx.Message}");
-            }
         }
         catch (Exception ex)
         {
@@ -646,7 +747,6 @@ public partial class Procurement : ComponentBase
         finally
         {
             IsLoadingVendorReviews = false;
-            IsLoadingAiInsights = false;
             StateHasChanged();
         }
     }
@@ -656,7 +756,6 @@ public partial class Procurement : ComponentBase
         IsReviewsModalOpen = false;
         SelectedVendorForReviews = null;
         CurrentVendorReviews.Clear();
-        CurrentAiInsights = null;
     }
 
     private string GetQualitativeRatingText(decimal rating)
@@ -667,7 +766,4 @@ public partial class Procurement : ComponentBase
         if (rating >= 2.0m) return "Average";
         return "Poor";
     }
-
-    private string SidebarLayoutClass =>
-        IsSidebarCollapsed ? "org-app-layout sidebar-collapsed" : "org-app-layout";
 }

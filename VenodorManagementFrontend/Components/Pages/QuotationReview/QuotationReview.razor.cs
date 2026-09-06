@@ -214,6 +214,7 @@ public partial class QuotationReview : ComponentBase
 
     private async Task ProcessResponse()
     {
+        if (!Auth.IsPurchaseManager && !Auth.IsAdmin) return;
         if (Quotation == null || string.IsNullOrEmpty(ConfirmAction)) return;
 
         IsProcessing = true;
