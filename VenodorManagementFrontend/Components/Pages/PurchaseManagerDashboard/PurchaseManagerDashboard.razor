@@ -1,0 +1,752 @@
+@page "/purchase-manager"
+@rendermode InteractiveServer
+@inject ApiService Api
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+<PageTitle>Purchase Manager Portal - Smart Vendor Management System</PageTitle>
+
+@if (!Auth.IsAuthenticated)
+{
+    <div class="container py-5">
+        <div class="alert alert-warning text-center py-4 my-5 shadow-sm rounded-3">
+            <h4 class="fw-bold mb-2">Authentication Required</h4>
+            <p class="text-muted mb-3">Please log in as a Purchase Manager to view this portal.</p>
+            <button class="btn btn-primary fw-bold px-4" @onclick='() => Nav.NavigateTo("/purchase-manager/login")'>Go to Login</button>
+        </div>
+    </div>
+}
+else if (!Auth.IsPurchaseManager && !Auth.IsAdmin)
+{
+    <div class="container py-5">
+        <div class="alert alert-danger text-center py-4 my-5 shadow-sm rounded-3">
+            <h4 class="fw-bold mb-2">Access Denied</h4>
+            <p class="text-muted mb-3">You do not have Purchase Manager privileges to access this portal.</p>
+            <button class="btn btn-outline-secondary fw-bold px-4" @onclick='() => Nav.NavigateTo("/")'>Return to Home</button>
+        </div>
+    </div>
+}
+else
+{
+    <div class="pm-app-layout @(IsSidebarCollapsed ? "sidebar-collapsed" : "")">
+
+        <!-- =======================================================================
+             LEFT SIDEBAR NAVIGATION (ENTERPRISE DARK GREEN)
+             ======================================================================= -->
+        <aside class="pm-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-branding" @onclick='() => Nav.NavigateTo("/purchase-manager")'>
+                    <div class="brand-emblem">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="brand-text">
+                        <span class="brand-name">Smart Vendor</span>
+                        <span class="brand-sub">Management</span>
+                    </div>
+                </div>
+                <button class="sidebar-collapse-btn" @onclick="ToggleSidebar" title="Toggle Sidebar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        @if (IsSidebarCollapsed)
+                        {
+                            <polyline points="13 17 18 12 13 7"></polyline>
+                            <polyline points="6 17 11 12 6 7"></polyline>
+                        }
+                        else
+                        {
+                            <polyline points="11 17 6 12 11 7"></polyline>
+                            <polyline points="18 17 13 12 18 7"></polyline>
+                        }
+                    </svg>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <!-- MAIN -->
+                <div class="nav-section-title">MAIN</div>
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <button class="sidebar-nav-link active" @onclick='() => Nav.NavigateTo("/purchase-manager")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Dashboard</span>
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- PROCUREMENT -->
+                <div class="nav-section-title">PROCUREMENT</div>
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <button class="sidebar-nav-link" @onclick='() => Nav.NavigateTo("/procurement")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Purchase Requests</span>
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="sidebar-nav-link" @onclick='() => Nav.NavigateTo("/quotations")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Vendor Quotations</span>
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="sidebar-nav-link" @onclick='() => Nav.NavigateTo("/organization/purchase-orders")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="9" cy="21" r="1"></circle>
+                                    <circle cx="20" cy="21" r="1"></circle>
+                                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Purchase Orders</span>
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="sidebar-nav-link" @onclick='() => Nav.NavigateTo("/organization/purchase-orders")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="1" y="3" width="15" height="13"></rect>
+                                    <polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon>
+                                    <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                    <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Deliveries</span>
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- FINANCE -->
+                <div class="nav-section-title">FINANCE</div>
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <button class="sidebar-nav-link" @onclick='() => Nav.NavigateTo("/organization/invoices")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    <polyline points="10 9 9 9 8 9"></polyline>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Invoices &amp; Billing</span>
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="sidebar-nav-link" @onclick='() => Nav.NavigateTo("/organization/payments")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                    <line x1="1" y1="10" x2="23" y2="10"></line>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Payments &amp; Settlements</span>
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- ACCOUNT -->
+                <div class="nav-section-account">
+                    <div class="nav-section-title">ACCOUNT</div>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <button class="sidebar-nav-link" @onclick="OpenProfileModal">
+                                <span class="nav-icon">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="12" cy="7" r="4"></circle>
+                                    </svg>
+                                </span>
+                                <span class="nav-label">My Profile</span>
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="sidebar-nav-link" @onclick="HandleLogout">
+                                <span class="nav-icon">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                        <polyline points="16 17 21 12 16 7"></polyline>
+                                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                                    </svg>
+                                </span>
+                                <span class="nav-label">Logout</span>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- =======================================================================
+             MAIN WRAPPER & TOPBAR
+             ======================================================================= -->
+        <div class="pm-main-wrapper">
+            <!-- Topbar -->
+            <header class="pm-topbar">
+                <div class="topbar-left">
+                    <button class="topbar-menu-toggle" @onclick="ToggleSidebar" title="Toggle Sidebar">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <h1 class="topbar-title">Purchase Manager Portal</h1>
+                </div>
+
+                <div class="topbar-right">
+                    <!-- Notifications -->
+                    <div class="notification-wrapper">
+                        <button class="notification-btn" @onclick="ToggleNotifications" title="Notifications">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                            </svg>
+                            @if (UnreadNotificationCount > 0)
+                            {
+                                <span class="notification-badge">@UnreadNotificationCount</span>
+                            }
+                        </button>
+
+                        @if (ShowNotificationDropdown)
+                        {
+                            <div class="notification-dropdown">
+                                <div class="dropdown-header">
+                                    <span>Notifications</span>
+                                    <span class="badge bg-light text-dark">@UnreadNotificationCount unread</span>
+                                </div>
+                                <div class="dropdown-list">
+                                    @if (Notifications.Count == 0)
+                                    {
+                                        <div class="p-3 text-center text-muted small">No notifications</div>
+                                    }
+                                    else
+                                    {
+                                        @foreach (var n in Notifications)
+                                        {
+                                            <div class="dropdown-item-notif @(!n.IsRead ? "unread" : "")" @onclick="() => MarkNotificationRead(n.NotificationID)">
+                                                <div class="notif-text">@n.Message</div>
+                                                <div class="notif-time">@n.CreatedDate.ToString("g")</div>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- User Profile Dropdown -->
+                    <div class="profile-wrapper">
+                        <button class="profile-pill-btn" @onclick="ToggleProfileDropdown">
+                            <div class="profile-avatar">@UserInitial</div>
+                            <div class="profile-info">
+                                <span class="profile-name">@Auth.UserName</span>
+                                <span class="profile-role">Purchase Manager</span>
+                            </div>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+
+                        @if (IsProfileDropdownOpen)
+                        {
+                            <div class="profile-dropdown-menu">
+                                <button class="profile-menu-item" @onclick="OpenProfileModal">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="12" cy="7" r="4"></circle>
+                                    </svg>
+                                    <span>My Profile</span>
+                                </button>
+                                <button class="profile-menu-item logout" @onclick="HandleLogout">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                        <polyline points="16 17 21 12 16 7"></polyline>
+                                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                                    </svg>
+                                    <span>Logout</span>
+                                </button>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Body -->
+            <main class="pm-page-container">
+                @if (IsLoading)
+                {
+                    <div class="d-flex flex-column align-items-center justify-content-center py-5">
+                        <div class="spinner-border text-success" role="status" style="width: 3rem; height: 3rem; color: #174F45 !important;">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-3 text-muted fw-semibold">Loading your procurement dashboard...</p>
+                    </div>
+                }
+                else if (HasError)
+                {
+                    <div class="alert alert-danger py-4 px-4 rounded-3 shadow-sm">
+                        <h5 class="fw-bold mb-1">Failed to load dashboard data</h5>
+                        <p class="mb-3 small">@(string.IsNullOrWhiteSpace(ErrorMessage) ? "An error occurred while loading dashboard metrics." : ErrorMessage)</p>
+                        <button class="btn btn-outline-danger btn-sm fw-semibold" @onclick="LoadDashboardDataAsync">
+                            Retry
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <!-- =======================================================================
+                         HEADER: GREETING & OUTLET PILL (CLEAN BUSINESS IDENTITY)
+                         ======================================================================= -->
+                    <div class="pm-header-banner">
+                        <div>
+                            <h2 class="greeting-title">@Greeting, @Auth.UserName!</h2>
+                            <p class="greeting-subtitle">Here's what's happening at your outlet today.</p>
+                        </div>
+                        <div class="outlet-badge-card">
+                            <div class="outlet-badge-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                    <circle cx="12" cy="10" r="3"></circle>
+                                </svg>
+                            </div>
+                            <div class="outlet-badge-text">
+                                <span class="outlet-name-label">@OutletName</span>
+                                <span class="org-name-sub">@OrganizationName</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- =======================================================================
+                         KPI METRICS GRID (100% UNIFORM ENTERPRISE GREEN)
+                         ======================================================================= -->
+                    <div class="pm-kpi-grid">
+                        <!-- 1. Purchase Requests -->
+                        <div class="kpi-card" @onclick='() => Nav.NavigateTo("/procurement")'>
+                            <div class="kpi-icon-box">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                </svg>
+                            </div>
+                            <div class="kpi-content">
+                                <span class="kpi-label">Purchase Requests</span>
+                                <span class="kpi-value">@PurchaseRequestsCount</span>
+                            </div>
+                            <svg class="kpi-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </div>
+
+                        <!-- 2. Vendor Quotations -->
+                        <div class="kpi-card" @onclick='() => Nav.NavigateTo("/quotations")'>
+                            <div class="kpi-icon-box">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                </svg>
+                            </div>
+                            <div class="kpi-content">
+                                <span class="kpi-label">Vendor Quotations</span>
+                                <span class="kpi-value">@VendorQuotationsCount</span>
+                            </div>
+                            <svg class="kpi-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </div>
+
+                        <!-- 3. Purchase Orders -->
+                        <div class="kpi-card" @onclick='() => Nav.NavigateTo("/organization/purchase-orders")'>
+                            <div class="kpi-icon-box">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="9" cy="21" r="1"></circle>
+                                    <circle cx="20" cy="21" r="1"></circle>
+                                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                                </svg>
+                            </div>
+                            <div class="kpi-content">
+                                <span class="kpi-label">Purchase Orders</span>
+                                <span class="kpi-value">@PurchaseOrdersCount</span>
+                            </div>
+                            <svg class="kpi-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </div>
+
+                        <!-- 4. Deliveries -->
+                        <div class="kpi-card" @onclick='() => Nav.NavigateTo("/organization/purchase-orders")'>
+                            <div class="kpi-icon-box">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="1" y="3" width="15" height="13"></rect>
+                                    <polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon>
+                                    <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                    <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                                </svg>
+                            </div>
+                            <div class="kpi-content">
+                                <span class="kpi-label">Deliveries</span>
+                                <span class="kpi-value">@DeliveriesCount</span>
+                            </div>
+                            <svg class="kpi-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </div>
+
+                        <!-- 5. Invoices & Billing -->
+                        <div class="kpi-card" @onclick='() => Nav.NavigateTo("/organization/invoices")'>
+                            <div class="kpi-icon-box">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    <polyline points="10 9 9 9 8 9"></polyline>
+                                </svg>
+                            </div>
+                            <div class="kpi-content">
+                                <span class="kpi-label">Pending Invoices</span>
+                                <span class="kpi-value">@PendingInvoicesCount</span>
+                            </div>
+                            <svg class="kpi-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </div>
+
+                        <!-- 6. Payments & Settlements -->
+                        <div class="kpi-card" @onclick='() => Nav.NavigateTo("/organization/payments")'>
+                            <div class="kpi-icon-box">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                    <line x1="1" y1="10" x2="23" y2="10"></line>
+                                </svg>
+                            </div>
+                            <div class="kpi-content">
+                                <span class="kpi-label">Awaiting Payment</span>
+                                <span class="kpi-value">@AwaitingPaymentCount</span>
+                            </div>
+                            <svg class="kpi-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- =======================================================================
+                         MIDDLE SPLIT SECTION: RECENT ACTIVITY (65%) & MY TASKS (35%)
+                         ======================================================================= -->
+                    <div class="pm-split-layout">
+                        <!-- Left Panel: Recent Activity Table -->
+                        <div class="pm-panel">
+                            <div class="panel-header">
+                                <div class="panel-title-wrap">
+                                    <h3 class="panel-title">Recent Procurement Activity</h3>
+                                    <p class="panel-subtitle">Live tracking across requests, orders, invoices and settlements</p>
+                                </div>
+                                <button class="panel-view-all-link" @onclick='() => Nav.NavigateTo("/procurement")'>
+                                    View All &rarr;
+                                </button>
+                            </div>
+
+                            @if (RecentActivities.Count == 0)
+                            {
+                                <div class="p-4 text-center text-muted small">
+                                    No recent procurement activity recorded for this outlet yet.
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="table-responsive">
+                                    <table class="pm-table">
+                                        <thead>
+                                            <tr>
+                                                <th>TYPE</th>
+                                                <th>ITEM &amp; DETAILS</th>
+                                                <th>REFERENCE</th>
+                                                <th>DATE</th>
+                                                <th>STATUS</th>
+                                                <th>ACTION</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var item in RecentActivities)
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <span class="type-pill">@item.Type</span>
+                                                    </td>
+                                                    <td>
+                                                        <div class="item-main-title">@item.PrimaryTitle</div>
+                                                        <div class="item-sub-title">@item.Subtitle</div>
+                                                    </td>
+                                                    <td>
+                                                        <span class="ref-pill">@item.ReferenceCode</span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="text-muted small">@item.Timestamp.ToString("MMM dd, yyyy")</span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="@item.StatusClass">@item.Status</span>
+                                                    </td>
+                                                    <td>
+                                                        <button class="btn-action-table" @onclick="() => Nav.NavigateTo(item.ActionUrl)">
+                                                            View &rarr;
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Right Panel: Actionable Tasks Queue -->
+                        <div class="pm-panel">
+                            <div class="panel-header">
+                                <div class="panel-title-wrap">
+                                    <h3 class="panel-title">My Tasks</h3>
+                                    <p class="panel-subtitle">Items requiring your attention</p>
+                                </div>
+                            </div>
+
+                            <div class="tasks-list">
+                                <!-- Task 1: Review Quotations -->
+                                <div class="task-item-row" @onclick='() => Nav.NavigateTo("/quotations")'>
+                                    <div class="task-left">
+                                        <div class="task-icon-box">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                            </svg>
+                                        </div>
+                                        <span class="task-title">Quotations to Review</span>
+                                    </div>
+                                    <div class="task-right">
+                                        <span class="task-count-pill @(PendingQuotationsCount > 0 ? "urgent" : "")">@PendingQuotationsCount</span>
+                                        <svg class="task-arrow-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="9 18 15 12 9 6"></polyline>
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                <!-- Task 2: Deliveries to Confirm -->
+                                <div class="task-item-row" @onclick='() => Nav.NavigateTo("/organization/purchase-orders")'>
+                                    <div class="task-left">
+                                        <div class="task-icon-box">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="1" y="3" width="15" height="13"></rect>
+                                                <polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon>
+                                                <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                                <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                                            </svg>
+                                        </div>
+                                        <span class="task-title">Deliveries to Confirm</span>
+                                    </div>
+                                    <div class="task-right">
+                                        <span class="task-count-pill @(DeliveriesToConfirmCount > 0 ? "urgent" : "")">@DeliveriesToConfirmCount</span>
+                                        <svg class="task-arrow-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="9 18 15 12 9 6"></polyline>
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                <!-- Task 3: Invoices to Approve -->
+                                <div class="task-item-row" @onclick='() => Nav.NavigateTo("/organization/invoices")'>
+                                    <div class="task-left">
+                                        <div class="task-icon-box">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                            </svg>
+                                        </div>
+                                        <span class="task-title">Invoices to Approve</span>
+                                    </div>
+                                    <div class="task-right">
+                                        <span class="task-count-pill @(InvoicesToApproveCount > 0 ? "urgent" : "")">@InvoicesToApproveCount</span>
+                                        <svg class="task-arrow-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="9 18 15 12 9 6"></polyline>
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                <!-- Task 4: Invoices Ready for Payment -->
+                                <div class="task-item-row" @onclick='() => Nav.NavigateTo("/organization/payments")'>
+                                    <div class="task-left">
+                                        <div class="task-icon-box">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                                <line x1="1" y1="10" x2="23" y2="10"></line>
+                                            </svg>
+                                        </div>
+                                        <span class="task-title">Ready for Payment</span>
+                                    </div>
+                                    <div class="task-right">
+                                        <span class="task-count-pill @(ApprovedInvoicesToPayCount > 0 ? "urgent" : "")">@ApprovedInvoicesToPayCount</span>
+                                        <svg class="task-arrow-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="9 18 15 12 9 6"></polyline>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- =======================================================================
+                         BOTTOM SECTION: QUICK ACTIONS (100% UNIFORM PRIMARY GREEN BUTTONS)
+                         ======================================================================= -->
+                    <div class="quick-actions-section">
+                        <h4 class="section-heading">Quick Actions</h4>
+                        <div class="quick-actions-grid">
+                            <!-- Action 1: Create PR -->
+                            <div class="action-card">
+                                <div>
+                                    <div class="action-card-header">
+                                        <div class="action-icon-circle">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                            </svg>
+                                        </div>
+                                        <h5 class="action-card-title">Create Purchase Request</h5>
+                                    </div>
+                                    <p class="action-card-desc">Raise a new purchase request for items needed at your outlet.</p>
+                                </div>
+                                <button class="btn-quick-action" @onclick='() => Nav.NavigateTo("/procurement")'>
+                                    + Create Request
+                                </button>
+                            </div>
+
+                            <!-- Action 2: Review Quotations -->
+                            <div class="action-card">
+                                <div>
+                                    <div class="action-card-header">
+                                        <div class="action-icon-circle">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                            </svg>
+                                        </div>
+                                        <h5 class="action-card-title">Review Quotations</h5>
+                                    </div>
+                                    <p class="action-card-desc">Compare supplier quotations and approve best value proposals.</p>
+                                </div>
+                                <button class="btn-quick-action" @onclick='() => Nav.NavigateTo("/quotations")'>
+                                    Review Quotes &rarr;
+                                </button>
+                            </div>
+
+                            <!-- Action 3: Purchase Orders -->
+                            <div class="action-card">
+                                <div>
+                                    <div class="action-card-header">
+                                        <div class="action-icon-circle">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="9" cy="21" r="1"></circle>
+                                                <circle cx="20" cy="21" r="1"></circle>
+                                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                                            </svg>
+                                        </div>
+                                        <h5 class="action-card-title">Purchase Orders</h5>
+                                    </div>
+                                    <p class="action-card-desc">Track active orders, confirm receipts, and record deliveries.</p>
+                                </div>
+                                <button class="btn-quick-action" @onclick='() => Nav.NavigateTo("/organization/purchase-orders")'>
+                                    View Orders &rarr;
+                                </button>
+                            </div>
+
+                            <!-- Action 4: Process Payments -->
+                            <div class="action-card">
+                                <div>
+                                    <div class="action-card-header">
+                                        <div class="action-icon-circle">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                                <line x1="1" y1="10" x2="23" y2="10"></line>
+                                            </svg>
+                                        </div>
+                                        <h5 class="action-card-title">Process Payments</h5>
+                                    </div>
+                                    <p class="action-card-desc">Disburse settlements for approved supplier invoices.</p>
+                                </div>
+                                <button class="btn-quick-action" @onclick='() => Nav.NavigateTo("/organization/payments")'>
+                                    Process Payments &rarr;
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </main>
+        </div>
+    </div>
+
+    <!-- =======================================================================
+         MY PROFILE MODAL DIALOG (CLEAN BUSINESS IDENTITY)
+         ======================================================================= -->
+    @if (ShowProfileModal)
+    {
+        <div class="pm-modal-backdrop" @onclick="CloseProfileModal">
+            <div class="pm-modal-card" @onclick:stopPropagation="true">
+                <div class="pm-modal-header">
+                    <h5 class="pm-modal-title">My Profile &mdash; Purchase Manager</h5>
+                    <button class="pm-modal-close-btn" @onclick="CloseProfileModal" title="Close">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="pm-modal-body">
+                    <div class="profile-meta-row">
+                        <span class="meta-label">Full Name</span>
+                        <span class="meta-val">@Auth.UserName</span>
+                    </div>
+                    <div class="profile-meta-row">
+                        <span class="meta-label">Email Address</span>
+                        <span class="meta-val">@Auth.Email</span>
+                    </div>
+                    <div class="profile-meta-row">
+                        <span class="meta-label">Assigned Role</span>
+                        <span class="meta-val text-success">Purchase Manager</span>
+                    </div>
+                    <div class="profile-meta-row">
+                        <span class="meta-label">Assigned Outlet</span>
+                        <span class="meta-val">@OutletName</span>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(OutletAddress))
+                    {
+                        <div class="profile-meta-row">
+                            <span class="meta-label">Outlet Address</span>
+                            <span class="meta-val">@OutletAddress</span>
+                        </div>
+                    }
+                    <div class="profile-meta-row">
+                        <span class="meta-label">Organization</span>
+                        <span class="meta-val">@OrganizationName</span>
+                    </div>
+                </div>
+                <div class="pm-modal-footer">
+                    <button class="btn-modal-close" @onclick="CloseProfileModal">Close</button>
+                </div>
+            </div>
+        </div>
+    }
+}

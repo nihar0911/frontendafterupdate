@@ -1,0 +1,161 @@
+@rendermode InteractiveServer
+
+<div class="card border-primary shadow mb-4 bg-white">
+    <div class="card-header bg-primary text-white py-3">
+        <h5 class="fw-bold mb-0">@(EditingUser != null ? $"Edit User: {EditingUser.Name}" : "+ Add New User")</h5>
+    </div>
+    <div class="card-body p-4">
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label class="form-label small fw-bold">Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" @bind="Name" placeholder="e.g. Rahul Sharma" disabled="@IsSubmitting" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label small fw-bold">Email <span class="text-danger">*</span></label>
+                <input type="email" class="form-control" @bind="Email" placeholder="user@goafresh.com" disabled="@IsSubmitting" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label small fw-bold">Password @(EditingUser != null ? "(Leave blank to keep unchanged)" : "") <span class="text-danger">@(EditingUser == null ? "*" : "")</span></label>
+                <input type="password" class="form-control" @bind="Password" placeholder="••••••••" disabled="@IsSubmitting" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label small fw-bold">Role <span class="text-danger">*</span></label>
+                <select class="form-select" @bind="Role" disabled="@IsSubmitting">
+                    <option value="Admin">Admin</option>
+                    <option value="Organization Manager">Organization Manager</option>
+                    <option value="Outlet Manager">Outlet Manager</option>
+                    <option value="Vendor Manager">Vendor Manager</option>
+                    <option value="Purchase Manager">Purchase Manager</option>
+                </select>
+            </div>
+
+            <!-- CONDITIONAL MAPPING FOR ORGANIZATION MANAGER -->
+            @if (Role == "Organization Manager")
+            {
+                <div class="col-md-12">
+                    <label class="form-label small fw-bold">Organization <span class="text-danger">*</span></label>
+                    <select class="form-select" @bind="SelectedOrgId" disabled="@IsSubmitting">
+                        @if (Organizations == null || Organizations.Count == 0)
+                        {
+                            <option value="0">-- No Organizations Available --</option>
+                        }
+                        else
+                        {
+                            <option value="0">-- Select Organization --</option>
+                            @foreach (var org in Organizations)
+                            {
+                                <option value="@org.OrganizationID">@org.OrganizationName</option>
+                            }
+                        }
+                    </select>
+                </div>
+            }
+
+            <!-- CONDITIONAL MAPPING FOR OUTLET MANAGER -->
+            @if (Role == "Outlet Manager")
+            {
+                <div class="col-md-12">
+                    <label class="form-label small fw-bold">Outlet <span class="text-danger">*</span></label>
+                    <select class="form-select" @bind="SelectedOutletId" disabled="@IsSubmitting">
+                        @if (Outlets == null || Outlets.Count == 0)
+                        {
+                            <option value="0">-- No Outlets Available --</option>
+                        }
+                        else
+                        {
+                            <option value="0">-- Select Outlet --</option>
+                            @foreach (var outlet in Outlets)
+                            {
+                                string name = string.IsNullOrWhiteSpace(outlet.OutletName) 
+                                    ? (!string.IsNullOrWhiteSpace(outlet.Address) ? $"{outlet.Address.Split(',')[0].Trim()} Outlet" : "Outlet Branch") 
+                                    : outlet.OutletName;
+                                <option value="@outlet.OutletID">@name</option>
+                            }
+                        }
+                    </select>
+                </div>
+            }
+
+            <!-- CONDITIONAL MAPPING FOR PURCHASE MANAGER -->
+            @if (Role == "Purchase Manager")
+            {
+                <div class="col-md-12">
+                    <label class="form-label small fw-bold">Assigned Outlet <span class="text-danger">*</span></label>
+                    <select class="form-select" @bind="SelectedOutletId" disabled="@IsSubmitting">
+                        @if (Outlets == null || Outlets.Count == 0)
+                        {
+                            <option value="0">-- No Outlets Available --</option>
+                        }
+                        else
+                        {
+                            <option value="0">-- Select Outlet --</option>
+                            @foreach (var outlet in Outlets)
+                            {
+                                string name = string.IsNullOrWhiteSpace(outlet.OutletName) 
+                                    ? (!string.IsNullOrWhiteSpace(outlet.Address) ? $"{outlet.Address.Split(',')[0].Trim()} Outlet" : $"Outlet #{outlet.OutletID}") 
+                                    : outlet.OutletName;
+                                string orgInfo = !string.IsNullOrWhiteSpace(outlet.OrganizationName)
+                                    ? $" ({outlet.OrganizationName})"
+                                    : "";
+                                <option value="@outlet.OutletID">@($"{name}{orgInfo}")</option>
+                            }
+                        }
+                    </select>
+                    <small class="text-muted mt-1 d-block">
+                        The Purchase Manager is assigned to this outlet. The organization is derived automatically from the selected outlet.
+                    </small>
+                </div>
+            }
+
+            <!-- CONDITIONAL MAPPING FOR VENDOR MANAGER -->
+            @if (Role == "Vendor Manager")
+            {
+                <div class="col-md-12">
+                    <label class="form-label small fw-bold">Assigned Vendor <span class="text-danger">*</span></label>
+                    <select class="form-select" @bind="SelectedVendorId" disabled="@IsSubmitting">
+                        @if (Vendors == null || Vendors.Count == 0)
+                        {
+                            <option value="0">-- No Vendors Available --</option>
+                        }
+                        else
+                        {
+                            <option value="0">-- Select Vendor --</option>
+                            @foreach (var vendor in Vendors)
+                            {
+                                <option value="@vendor.VendorID">@vendor.VendorName</option>
+                            }
+                        }
+                    </select>
+
+                    <small class="text-muted mt-1 d-block">
+                        The Vendor Manager will dynamically receive procurement requests and submit quotations for products mapped to this vendor.
+                    </small>
+                </div>
+            }
+        </div>
+
+        @if (!string.IsNullOrEmpty(ValidationMessage))
+        {
+            <div class="alert alert-warning py-2 small mb-3">
+                @ValidationMessage
+            </div>
+        }
+
+        <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-outline-secondary fw-bold px-4" @onclick="HandleCancel" disabled="@IsSubmitting">
+                Cancel
+            </button>
+            <button type="button" class="btn btn-primary fw-bold px-4 shadow-sm" @onclick="HandleSubmit" disabled="@IsSubmitting">
+                @if (IsSubmitting)
+                {
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    <span>Saving User...</span>
+                }
+                else
+                {
+                    <span>@(EditingUser != null ? "Save Changes" : "Create User")</span>
+                }
+            </button>
+        </div>
+    </div>
+</div>

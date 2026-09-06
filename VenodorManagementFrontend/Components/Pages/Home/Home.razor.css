@@ -1,0 +1,345 @@
+/* =============================================================================
+   HOME / LOGIN PAGE — SCOPED STYLES (Home.razor.css)
+   Clean, Professional, Enterprise Design with Demo Quick Access
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   1. PAGE CONTAINER & AMBIENT BACKGROUND
+   ----------------------------------------------------------------------------- */
+.svm-login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #F4F7F5;
+    padding: 2.5rem 1.25rem;
+    position: relative;
+    overflow: hidden;
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #1F2933;
+    margin: -1.5rem -1.5rem -2.5rem -1.5rem;
+}
+
+/* Ambient Top-Right Soft Mint Glow */
+.svm-login-page::before {
+    content: "";
+    position: absolute;
+    top: -120px;
+    right: -120px;
+    width: 580px;
+    height: 580px;
+    background: radial-gradient(circle at center, rgba(162, 214, 190, 0.65) 0%, rgba(162, 214, 190, 0.32) 42%, rgba(244, 247, 245, 0) 72%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Ambient Bottom-Left Soft Peach/Blush Glow */
+.svm-login-page::after {
+    content: "";
+    position: absolute;
+    bottom: -120px;
+    left: -120px;
+    width: 560px;
+    height: 560px;
+    background: radial-gradient(circle at center, rgba(226, 148, 130, 0.52) 0%, rgba(226, 148, 130, 0.26) 42%, rgba(246, 249, 247, 0) 72%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.svm-login-wrapper {
+    width: 100%;
+    max-width: 460px;
+    position: relative;
+    z-index: 1;
+}
+
+/* -----------------------------------------------------------------------------
+   2. BRANDING (LOGO & TYPOGRAPHY)
+   ----------------------------------------------------------------------------- */
+.svm-branding {
+    text-align: center;
+    margin-bottom: 1.75rem;
+}
+
+.svm-brand-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    background-color: #134E48;
+    border-radius: 4px;
+    margin-bottom: 0.95rem;
+    box-shadow: 0 6px 16px rgba(19, 78, 72, 0.28);
+}
+
+.svm-brand-title {
+    font-size: 1.85rem;
+    font-weight: 750;
+    color: #111827;
+    letter-spacing: -0.02em;
+    margin: 0 0 0.35rem 0;
+    line-height: 1.25;
+}
+
+.svm-brand-subtitle {
+    font-size: 0.92rem;
+    font-weight: 450;
+    color: #6B7280;
+    margin: 0;
+    line-height: 1.45;
+}
+
+/* -----------------------------------------------------------------------------
+   3. MAIN SIGN IN CARD
+   ----------------------------------------------------------------------------- */
+.svm-card {
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 4px;
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 4px 12px -2px rgba(0, 0, 0, 0.025);
+}
+
+.svm-login-card {
+    padding: 2.35rem 2.6rem;
+    margin-bottom: 0.95rem;
+}
+
+/* -----------------------------------------------------------------------------
+   4. CARD HEADING & SUBTITLE
+   ----------------------------------------------------------------------------- */
+.svm-card-heading {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.svm-signin-title {
+    font-size: 1.65rem;
+    font-weight: 800;
+    color: #111827;
+    text-align: center;
+    margin: 0;
+    letter-spacing: -0.01em;
+}
+
+/* -----------------------------------------------------------------------------
+   5. ERROR ALERT
+   ----------------------------------------------------------------------------- */
+.svm-error-alert {
+    display: flex;
+    align-items: center;
+    background-color: #FEF2F2;
+    border: 1px solid #FECACA;
+    border-radius: 4px;
+    color: #991B1B;
+    font-size: 0.88rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.25rem;
+}
+
+/* -----------------------------------------------------------------------------
+   6. FORM & INPUT FIELDS WITH ICONS
+   ----------------------------------------------------------------------------- */
+.svm-field {
+    margin-bottom: 1.25rem;
+}
+
+.svm-label {
+    display: block;
+    font-size: 0.88rem;
+    font-weight: 650;
+    color: #374151;
+    margin-bottom: 0.45rem;
+}
+
+.svm-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.svm-input-icon {
+    position: absolute;
+    left: 14px;
+    color: #134E48;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.svm-input {
+    display: block;
+    width: 100%;
+    height: 48px;
+    padding-left: 42px;
+    padding-right: 14px;
+    font-size: 0.95rem;
+    font-weight: 450;
+    color: #1F2937;
+    background-color: #EDF5F2;
+    border: 1px solid #D1E2DB;
+    border-radius: 4px;
+    outline: none;
+    appearance: none;
+    transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.svm-input:focus {
+    background-color: #FFFFFF;
+    border-color: #134E48;
+    box-shadow: 0 0 0 3px rgba(19, 78, 72, 0.15);
+}
+
+.svm-input-password {
+    padding-right: 44px;
+}
+
+.svm-password-toggle {
+    position: absolute;
+    right: 12px;
+    background: transparent;
+    border: none;
+    padding: 4px;
+    color: #6B7280;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: color 0.15s ease, background-color 0.15s ease;
+    z-index: 3;
+}
+
+.svm-password-toggle:hover {
+    color: #134E48;
+    background-color: rgba(19, 78, 72, 0.08);
+}
+
+.svm-input::placeholder {
+    color: #9CA3AF;
+}
+
+/* -----------------------------------------------------------------------------
+   7. SIGN IN BUTTON
+   ----------------------------------------------------------------------------- */
+.svm-signin-btn {
+    margin-top: 0.65rem;
+}
+
+.svm-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 48px;
+    background-color: #134E48;
+    border: 1px solid #134E48;
+    border-radius: 4px;
+    color: #FFFFFF;
+    font-size: 0.95rem;
+    font-weight: 650;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(19, 78, 72, 0.22);
+    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.08s ease, box-shadow 0.15s ease;
+}
+
+.svm-btn-primary:hover:not(:disabled) {
+    background-color: #0F3F3A;
+    border-color: #0F3F3A;
+    color: #FFFFFF;
+    box-shadow: 0 6px 16px rgba(19, 78, 72, 0.30);
+}
+
+.svm-btn-primary:active:not(:disabled) {
+    background-color: #0B2F2B;
+    border-color: #0B2F2B;
+    transform: translateY(1px);
+}
+
+.svm-btn-primary:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.svm-btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 42px;
+    background-color: transparent;
+    border: 1px solid #D1DDD6;
+    border-radius: 4px;
+    color: #6B7280;
+    font-size: 0.9rem;
+    font-weight: 550;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.svm-btn-ghost:hover {
+    background-color: #F4F7F5;
+    border-color: #BDCEC5;
+    color: #134E48;
+}
+
+/* -----------------------------------------------------------------------------
+   8. ALREADY SIGNED IN STATE
+   ----------------------------------------------------------------------------- */
+.svm-already-signed-in {
+    text-align: center;
+}
+
+.svm-session-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    background-color: #ECFDF5;
+    color: #065F46;
+    border: 1px solid #A7F3D0;
+    border-radius: 4px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    padding: 0.6rem 1rem;
+    margin-bottom: 1.1rem;
+}
+
+.svm-session-info {
+    font-size: 0.92rem;
+    color: #1F2933;
+    margin-bottom: 0.35rem;
+}
+
+.svm-label-inline {
+    color: #6B7280;
+}
+
+/* -----------------------------------------------------------------------------
+   9. FOOTER
+   ----------------------------------------------------------------------------- */
+.svm-footer-text {
+    text-align: center;
+    font-size: 0.82rem;
+    color: #6B7280;
+    margin: 0;
+}
+
+/* -----------------------------------------------------------------------------
+   11. RESPONSIVE
+   ----------------------------------------------------------------------------- */
+@media (max-width: 576px) {
+    .svm-login-page {
+        padding: 1.5rem 0.75rem;
+    }
+
+    .svm-login-wrapper {
+        max-width: 100%;
+    }
+
+    .svm-login-card {
+        padding: 1.75rem 1.35rem;
+    }
+}

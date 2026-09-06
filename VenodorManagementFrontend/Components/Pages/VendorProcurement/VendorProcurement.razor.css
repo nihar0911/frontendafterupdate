@@ -1,0 +1,431 @@
+/* ==========================================================================
+   VENDOR PROCUREMENT OPPORTUNITY DETAILS - SCOPED STYLES
+   Design System: Dark Green (#174F45), Clean White (#FFFFFF), Modern Enterprise
+   Border-radius: 4px (crisp rectangular)
+   ========================================================================== */
+
+.vd-layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: #F4F7F5;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    color: #1F2933;
+}
+
+/* 1. FIXED FULL-HEIGHT DARK GREEN SIDEBAR */
+.vd-sidebar {
+    width: 250px;
+    background-color: #174F45;
+    color: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 1.5rem 1rem;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    height: 100vh;
+    min-height: 100vh;
+    z-index: 100;
+    box-shadow: 2px 0 12px rgba(19, 78, 72, 0.12);
+    box-sizing: border-box;
+}
+
+.vd-sidebar-top {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.vd-sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.25rem 0.5rem 1.5rem 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.vd-brand-icon-box {
+    width: 34px;
+    height: 34px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFFFFF;
+    flex-shrink: 0;
+}
+
+.vd-brand-text {
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: #FFFFFF;
+}
+
+.vd-nav-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 1.25rem 0;
+    flex: 1;
+}
+
+.vd-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    color: #D1E0D9;
+    background: transparent;
+    border: none;
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    width: 100%;
+}
+
+.vd-nav-item:hover, .vd-nav-item.active {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: #FFFFFF;
+}
+
+.vd-sidebar-bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.vd-user-profile-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.vd-avatar-circle {
+    width: 34px;
+    height: 34px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFFFFF;
+    flex-shrink: 0;
+}
+
+.vd-user-info-text {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.vd-user-name {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.vd-user-role {
+    font-size: 0.72rem;
+    color: #A3C2B6;
+}
+
+.vd-logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.6rem 0.85rem;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #F87171;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.vd-logout-btn:hover {
+    background: rgba(239, 68, 68, 0.15);
+    color: #FFFFFF;
+}
+
+/* 2. MAIN CONTENT AREA */
+.vd-main-canvas {
+    flex: 1;
+    margin-left: 250px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #F4F7F5;
+}
+
+.vd-top-header {
+    height: 68px;
+    background-color: #FFFFFF;
+    border-bottom: 1px solid #E2E8E5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 90;
+    box-shadow: 0 1px 3px rgba(31, 41, 51, 0.03);
+}
+
+.vd-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.vd-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #FFFFFF;
+    border: 1px solid #D2DCD6;
+    border-radius: 4px;
+    padding: 0.45rem 0.85rem;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #26312B;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.vd-back-btn:hover {
+    background-color: #EEF3F0;
+}
+
+.vd-header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.vd-vendor-pill {
+    background-color: #F0F5F2;
+    border: 1px solid #D2E0D8;
+    color: #174F45;
+    padding: 0.4rem 0.85rem;
+    border-radius: 4px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+/* 3. CONTENT CONTAINER */
+.vd-content-container {
+    padding: 2rem;
+    max-width: 1300px;
+    width: 100%;
+}
+
+.vd-page-heading-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.75rem;
+}
+
+.vd-page-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #1F2933;
+    margin-bottom: 0.25rem;
+}
+
+.vd-page-subtitle {
+    font-size: 0.88rem;
+    color: #66736B;
+    margin-bottom: 0;
+}
+
+/* 4. DETAILS CARD */
+.procurement-card {
+    background-color: #FFFFFF;
+    border: 1px solid #D2DCD6;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(38, 49, 43, 0.04);
+    padding: 1.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.card-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #E5ECE8;
+}
+
+.card-section-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #26312B;
+    margin: 0;
+}
+
+/* Clean Label / Value Grid */
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem 2rem;
+    margin-bottom: 1.5rem;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.detail-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #66736B;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.detail-value {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #26312B;
+}
+
+.detail-sub {
+    font-size: 0.82rem;
+    color: #66736B;
+    font-weight: normal;
+}
+
+/* Supply Terms Box */
+.supply-terms-box {
+    background-color: #F8FAF9;
+    border: 1px solid #D2DCD6;
+    border-radius: 4px;
+    padding: 1.25rem 1.5rem;
+    margin-top: 1rem;
+}
+
+.supply-terms-title {
+    font-size: 0.85rem;
+    font-weight: 750;
+    color: #174F45;
+    margin-bottom: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.supply-terms-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem 2rem;
+}
+
+/* Action Area */
+.actions-area-panel {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1.75rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #E5ECE8;
+}
+
+.btn-procurement-accept {
+    background-color: #174F45;
+    color: #FFFFFF;
+    border: 1px solid #174F45;
+    border-radius: 4px;
+    padding: 0.65rem 1.5rem;
+    font-size: 0.92rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.btn-procurement-accept:hover:not(:disabled) {
+    background-color: #113c34;
+}
+
+.btn-procurement-reject {
+    background-color: #FFFFFF;
+    color: #DC2626;
+    border: 1px solid #DC2626;
+    border-radius: 4px;
+    padding: 0.65rem 1.5rem;
+    font-size: 0.92rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-procurement-reject:hover:not(:disabled) {
+    background-color: #FEF2F2;
+}
+
+.btn-procurement-accept:disabled, .btn-procurement-reject:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Status Badges */
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.status-pill-pending {
+    background-color: #FFF8E6;
+    color: #92400E;
+    border: 1px solid #F5DFB8;
+}
+
+.status-pill-accepted {
+    background-color: #EEF8F1;
+    color: #166534;
+    border: 1px solid #C9E5D2;
+}
+
+.status-pill-rejected {
+    background-color: #FEF2F2;
+    color: #991B1B;
+    border: 1px solid #FECACA;
+}
+
+/* Responsive adjustment */
+@media (max-width: 991px) {
+    .vd-sidebar {
+        display: none;
+    }
+    .vd-main-canvas {
+        margin-left: 0;
+    }
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+}

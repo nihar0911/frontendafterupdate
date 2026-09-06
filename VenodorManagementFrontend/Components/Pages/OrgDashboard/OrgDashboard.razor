@@ -1,0 +1,816 @@
+@page "/org-dashboard"
+@rendermode InteractiveServer
+@inject ApiService Api
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+<PageTitle>Organization Manager Dashboard - Smart Vendor Management System</PageTitle>
+
+@if (!Auth.IsAuthenticated)
+{
+    <div class="container py-5">
+        <div class="alert alert-warning text-center py-4 my-5 shadow-sm rounded-3">
+            <h4 class="fw-bold mb-2">Authentication Required</h4>
+            <p class="text-muted mb-3">Please log in as an Organization Manager to view this page.</p>
+            <button class="btn btn-primary fw-bold px-4" @onclick='() => Nav.NavigateTo("/login")'>Go to Login</button>
+        </div>
+    </div>
+}
+else if (!Auth.IsOrgManager && !Auth.IsAdmin)
+{
+    <div class="container py-5">
+        <div class="alert alert-danger text-center py-4 my-5 shadow-sm rounded-3">
+            <h4 class="fw-bold mb-2">Access Denied</h4>
+            <p class="text-muted mb-3">You do not have Organization Manager privileges to view this dashboard.</p>
+            <button class="btn btn-outline-secondary fw-bold px-4" @onclick='() => Nav.NavigateTo("/")'>Return to Home</button>
+        </div>
+    </div>
+}
+else
+{
+    <div class="org-app-layout @(IsSidebarCollapsed ? "sidebar-collapsed" : "")">
+
+        <!-- =======================================================================
+             LEFT SIDEBAR NAVIGATION
+             ======================================================================= -->
+        <aside class="org-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-branding" @onclick='() => Nav.NavigateTo("/org-dashboard")'>
+                    <div class="brand-emblem">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="brand-text">
+                        <span class="brand-name">Smart Vendor</span>
+                        <span class="brand-sub">Management</span>
+                    </div>
+                </div>
+                <button class="sidebar-collapse-btn" @onclick="ToggleSidebar" title="Toggle Sidebar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        @if (IsSidebarCollapsed)
+                        {
+                            <polyline points="13 17 18 12 13 7"></polyline>
+                            <polyline points="6 17 11 12 6 7"></polyline>
+                        }
+                        else
+                        {
+                            <polyline points="11 17 6 12 11 7"></polyline>
+                            <polyline points="18 17 13 12 18 7"></polyline>
+                        }
+                    </svg>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <button class="nav-link active" @onclick='() => Nav.NavigateTo("/org-dashboard")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Dashboard</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/organization/outlets")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                    <path d="M9 22V12h6v10"></path>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Outlets</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/procurement")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Purchase Requests</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/quotations")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="9" y1="15" x2="15" y2="15"></line>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Quotations</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick="NavigateToContracts">
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <path d="M9 12l2 2 4-4"></path>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Contracts</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/organization/purchase-orders")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="1" y="3" width="15" height="13"></rect>
+                                    <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                                    <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                    <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Purchase Orders</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/organization/invoices")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    <polyline points="10 9 9 9 8 9"></polyline>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Invoices</span>
+                    </button>
+                </li>
+
+                <li class="nav-item">
+                    <button class="nav-link" @onclick='() => Nav.NavigateTo("/organization/payments")'>
+                        <span class="nav-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                <line x1="1" y1="10" x2="23" y2="10"></line>
+                            </svg>
+                        </span>
+                        <span class="nav-label">Payments</span>
+                    </button>
+                </li>
+            </ul>
+
+            <ul class="nav-list">
+                <li class="sidebar-divider"></li>
+                <li class="nav-item">
+                    <button class="nav-link" @onclick='() => Nav.NavigateTo("/org-dashboard")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </span>
+                            <span class="nav-label">My Profile</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick="HandleLogout">
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                    <polyline points="16 17 21 12 16 7"></polyline>
+                                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Logout</span>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- =======================================================================
+             MAIN BODY WRAPPER
+             ======================================================================= -->
+        <div class="org-main-wrapper">
+
+            <!-- TOP HEADER (No notification bell) -->
+            <header class="org-top-header">
+                <button class="menu-toggle-btn" @onclick="ToggleSidebar" title="Toggle Menu">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+
+                <div class="header-right">
+                    <!-- NOTIFICATIONS POPUP -->
+                    <div class="position-relative">
+                        <button class="btn btn-light border shadow-sm px-3 py-1.5 fw-semibold d-flex align-items-center gap-2" @onclick="ToggleNotifications" title="Notifications">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                            </svg>
+                            <span>Notifications</span>
+                            @if (UnreadNotificationCount > 0)
+                            {
+                                <span class="badge bg-danger rounded-pill">@UnreadNotificationCount</span>
+                            }
+                        </button>
+
+                        @if (ShowNotificationDropdown)
+                        {
+                            <div class="card position-absolute end-0 mt-2 shadow-lg border-0 rounded-3 p-3 bg-white" style="width: 360px; z-index: 1050;">
+                                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                                    <h6 class="fw-bold text-dark mb-0">Organization Notifications</h6>
+                                    @if (UnreadNotificationCount > 0)
+                                    {
+                                        <span class="badge bg-danger">@UnreadNotificationCount new</span>
+                                    }
+                                </div>
+                                @if (Notifications.Count == 0)
+                                {
+                                    <p class="text-muted small mb-0 py-2 text-center">No notifications.</p>
+                                }
+                                else
+                                {
+                                    <div style="max-height: 320px; overflow-y: auto;">
+                                        @foreach (var notif in Notifications.Take(6))
+                                        {
+                                            <div class="p-2.5 border-bottom small rounded-2 mb-1 @(notif.IsRead ? "bg-light" : "bg-warning bg-opacity-10 border-warning")">
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <strong class="@(notif.NotificationType == "OpportunityRejected" ? "text-danger" : "text-primary")">
+                                                        @(notif.NotificationType == "OpportunityRejected" ? "Opportunity Declined" : notif.Title)
+                                                    </strong>
+                                                    <small class="text-muted" style="font-size: 0.7rem;">@notif.CreatedDate.ToString("dd MMM, hh:mm tt")</small>
+                                                </div>
+                                                <p class="text-dark mb-1" style="font-size: 0.8rem; line-height: 1.3;">
+                                                    @notif.Message
+                                                </p>
+                                                <div class="d-flex justify-content-between align-items-center mt-1">
+                                                    @if (notif.NotificationType.StartsWith("PurchaseOrder", StringComparison.OrdinalIgnoreCase) || notif.Title.Contains("Purchase Order", StringComparison.OrdinalIgnoreCase) || notif.Title.Contains("Delivery", StringComparison.OrdinalIgnoreCase))
+                                                    {
+                                                        if (notif.RelatedRequestID.HasValue && notif.RelatedRequestID.Value > 0)
+                                                        {
+                                                            <button class="btn btn-link btn-sm p-0 text-success fw-bold text-decoration-none" style="font-size: 0.72rem;" @onclick='() => Nav.NavigateTo($"/organization/purchase-orders?id={notif.RelatedRequestID.Value}")'>
+                                                                View PO Details &rarr;
+                                                            </button>
+                                                        }
+                                                        else
+                                                        {
+                                                            <button class="btn btn-link btn-sm p-0 text-success fw-bold text-decoration-none" style="font-size: 0.72rem;" @onclick='() => Nav.NavigateTo("/organization/purchase-orders")'>
+                                                                View Purchase Orders &rarr;
+                                                            </button>
+                                                        }
+                                                    }
+                                                    else if (notif.NotificationType == "QuotationSubmitted")
+                                                    {
+                                                        <button class="btn btn-link btn-sm p-0 text-primary fw-bold text-decoration-none" style="font-size: 0.72rem;" @onclick='() => Nav.NavigateTo("/quotations")'>
+                                                            Review Quotation &rarr;
+                                                        </button>
+                                                    }
+                                                    else if (notif.NotificationType == "InvoiceSubmitted" || notif.Title.Contains("Invoice", StringComparison.OrdinalIgnoreCase))
+                                                    {
+                                                        <button class="btn btn-link btn-sm p-0 text-success fw-bold text-decoration-none" style="font-size: 0.72rem;" @onclick='() => Nav.NavigateTo("/organization/invoices")'>
+                                                            Review Invoice &rarr;
+                                                        </button>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span></span>
+                                                    }
+
+                                                    @if (!notif.IsRead)
+                                                    {
+                                                        <button class="btn btn-link btn-sm p-0 text-muted" style="font-size: 0.72rem;" @onclick='() => MarkAsRead(notif.NotificationID)'>
+                                                            Mark as read
+                                                        </button>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <div class="profile-capsule-wrapper">
+                        <div class="profile-capsule" @onclick="ToggleProfileDropdown">
+                            <div class="profile-avatar">@GetUserInitial()</div>
+                            <div class="profile-meta">
+                                <span class="profile-name">@(string.IsNullOrWhiteSpace(Auth.UserName) ? "Organization Manager" : Auth.UserName)</span>
+                                <span class="profile-role">Organization Manager</span>
+                            </div>
+                            <svg class="dropdown-arrow @(IsProfileDropdownOpen ? "open" : "")" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <button class="header-logout-btn" @onclick="HandleLogout" title="Sign out">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        <span>Logout</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- MAIN CONTENT CANVAS -->
+            <main class="org-main-content">
+                <div class="content-container">
+
+                    <!-- PAGE TITLE SECTION (WITH TOP-RIGHT START PROCUREMENT BUTTON) -->
+                    <div class="page-title-section">
+                        <div class="page-title-row">
+                            <div>
+                                <h1 class="page-heading">Organization Manager Dashboard</h1>
+                                <p class="page-subheading">Procurement, outlets &amp; contract overview</p>
+                            </div>
+                            <button type="button" class="btn-start-procurement-top" @onclick='() => Nav.NavigateTo("/procurement")'>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                                <span>Start Procurement &rarr;</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- WELCOME CARD -->
+                    <div class="welcome-card">
+                        <div class="welcome-icon-circle">
+                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            </svg>
+                        </div>
+                        <div class="welcome-content">
+                            <h2 class="welcome-greeting">Welcome, @(string.IsNullOrWhiteSpace(Auth.UserName) ? "Organization Manager" : Auth.UserName)</h2>
+                            <span class="org-label">Organization</span>
+                            <span class="org-name">@(string.IsNullOrWhiteSpace(OrganizationName) ? "Loading organization..." : OrganizationName)</span>
+                        </div>
+                    </div>
+
+                    @if (IsLoading)
+                    {
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-success mb-3" role="status" style="width: 3rem; height: 3rem;">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <h5 class="text-muted fw-bold">Loading dashboard...</h5>
+                        </div>
+                    }
+                    else if (HasError)
+                    {
+                        <div class="alert alert-danger p-4 text-center my-4 shadow-sm rounded-3">
+                            <h5 class="fw-bold text-danger mb-2">Unable to load dashboard data.</h5>
+                            <p class="text-muted small mb-3">An error occurred while connecting to the server. Please check your connection and try again.</p>
+                            <button class="btn btn-danger fw-bold px-4" @onclick="LoadDashboardData">Try Again</button>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- 4 EQUAL KPI SUMMARY CARDS -->
+                        <div class="metrics-grid">
+                            <!-- CARD 1: ORGANIZATION OUTLETS -->
+                            <div class="metric-card" @onclick='() => Nav.NavigateTo("/organization/outlets")'>
+                                <div>
+                                    <div class="metric-header">
+                                        <div class="metric-icon-circle icon-green">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                                <path d="M9 22V12h6v10"></path>
+                                            </svg>
+                                        </div>
+                                        <span class="metric-label">Organization Outlets</span>
+                                    </div>
+                                    <div class="metric-value metric-value-green">@OutletsCount</div>
+                                    <div class="metric-sub">Active outlets</div>
+                                </div>
+                                <div class="metric-action">View outlet details &rarr;</div>
+                            </div>
+
+                            <!-- CARD 2: PURCHASE REQUESTS -->
+                            <div class="metric-card" @onclick='() => Nav.NavigateTo("/procurement")'>
+                                <div>
+                                    <div class="metric-header">
+                                        <div class="metric-icon-circle icon-teal">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                                <polyline points="14 2 14 8 20 8"></polyline>
+                                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                            </svg>
+                                        </div>
+                                        <span class="metric-label">Purchase Requests</span>
+                                    </div>
+                                    <div class="metric-value metric-value-green">@PurchaseRequestsCount</div>
+                                    <div class="metric-sub">Total requests</div>
+                                </div>
+                                <div class="metric-action">Manage requests &rarr;</div>
+                            </div>
+
+                            <!-- CARD 3: PENDING QUOTATIONS -->
+                            <div class="metric-card" @onclick='() => Nav.NavigateTo("/quotations")'>
+                                <div>
+                                    <div class="metric-header">
+                                        <div class="metric-icon-circle @(PendingQuotationsCount > 0 ? "icon-amber" : "icon-green")">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                                <polyline points="14 2 14 8 20 8"></polyline>
+                                                <line x1="9" y1="15" x2="15" y2="15"></line>
+                                            </svg>
+                                        </div>
+                                        <span class="metric-label">Pending Quotations</span>
+                                    </div>
+                                    <div class="metric-value @(PendingQuotationsCount > 0 ? "metric-value-amber" : "metric-value-green")">@PendingQuotationsCount</div>
+                                    <div class="metric-sub">@(PendingQuotationsCount == 0 ? "No pending quotations" : $"{PendingQuotationsCount} pending review")</div>
+                                </div>
+                                <div class="metric-action @(PendingQuotationsCount > 0 ? "metric-action-amber" : "")">Review quotations &rarr;</div>
+                            </div>
+
+                            <!-- CARD 4: ACTIVE CONTRACTS -->
+                            <div class="metric-card" @onclick="NavigateToContracts">
+                                <div>
+                                    <div class="metric-header">
+                                        <div class="metric-icon-circle icon-emerald">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                                <polyline points="14 2 14 8 20 8"></polyline>
+                                                <path d="M9 12l2 2 4-4"></path>
+                                            </svg>
+                                        </div>
+                                        <span class="metric-label">Active Contracts</span>
+                                    </div>
+                                    <div class="metric-value metric-value-green">@ActiveContractsCount</div>
+                                    <div class="metric-sub">Active contracts</div>
+                                </div>
+                                <div class="metric-action">View contracts &rarr;</div>
+                            </div>
+                        </div>
+
+                        <!-- SECTION 1: ORGANIZATION OUTLETS -->
+                        <div class="section-card" id="outlets-section">
+                            <div class="section-header-row">
+                                <div class="section-title-wrap">
+                                    <h3 class="section-title">Organization Outlets</h3>
+                                    <p class="section-subtitle">Registered branches and operational locations for @OrganizationName</p>
+                                </div>
+                                <span class="badge-active-count">@OrganizationOutletsList.Count Active Outlets</span>
+                            </div>
+
+                            @if (OrganizationOutletsList == null || OrganizationOutletsList.Count == 0)
+                            {
+                                <div class="alert alert-light text-center py-4 mb-0 rounded-3 text-muted">
+                                    <p class="mb-0">No outlets registered under this organization.</p>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="table-responsive">
+                                    <table class="org-table">
+                                        <thead>
+                                            <tr>
+                                                <th>OUTLET NAME</th>
+                                                <th>ADDRESS / LOCATION</th>
+                                                <th>COORDINATES (LAT, LNG)</th>
+                                                <th>ACTIVE CONTRACTS</th>
+                                                <th>PURCHASE REQUESTS</th>
+                                                <th>DETAILS</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var o in OrganizationOutletsList)
+                                            {
+                                                int contractCount = GetOutletContractCount(o.OutletID);
+                                                int prCount = GetOutletPrCount(o.OutletID);
+
+                                                <tr>
+                                                    <td>
+                                                        <div class="cell-outlet-name">
+                                                            <svg class="outlet-icon-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                                                <path d="M9 22V12h6v10"></path>
+                                                            </svg>
+                                                            <span class="outlet-title">@o.OutletName</span>
+                                                        </div>
+                                                    </td>
+                                                    <td>@(string.IsNullOrWhiteSpace(o.Address) ? "Not specified" : o.Address)</td>
+                                                    <td>
+                                                        @if (o.Latitude.HasValue && o.Longitude.HasValue)
+                                                        {
+                                                            <div class="cell-coords">
+                                                                <svg class="coords-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                                                    <circle cx="12" cy="10" r="3"></circle>
+                                                                </svg>
+                                                                <span>@o.Latitude.Value.ToString("F4"), @o.Longitude.Value.ToString("F4")</span>
+                                                            </div>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="coords-unmapped">Not mapped</span>
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge-contract-count">@contractCount Contract@(contractCount == 1 ? "" : "s")</span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge-request-count">@prCount Request@(prCount == 1 ? "" : "s")</span>
+                                                    </td>
+                                                    <td>
+                                                        <button type="button" class="btn-details-action" @onclick="() => OpenOutletDetails(o)" title="View outlet details">
+                                                            View Details &rarr;
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="table-pagination-footer">
+                                    <span>Showing 1 to @OrganizationOutletsList.Count of @OrganizationOutletsList.Count outlets</span>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- SECTION 2: PENDING QUOTATIONS FOR REVIEW -->
+                        <div class="section-card">
+                            <div class="section-header-row">
+                                <div class="section-title-wrap">
+                                    <h3 class="section-title">Pending Quotations for Review</h3>
+                                    <p class="section-subtitle">Quotations awaiting your review and approval</p>
+                                </div>
+                                <button type="button" class="btn-section-link" @onclick='() => Nav.NavigateTo("/quotations")'>
+                                    View All Quotations &rarr;
+                                </button>
+                            </div>
+
+                            @if (PendingQuotationsList == null || PendingQuotationsList.Count == 0)
+                            {
+                                <div class="empty-state-compact">
+                                    <div class="empty-state-icon">
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                        </svg>
+                                    </div>
+                                    <div class="empty-state-text">
+                                        <h4 class="empty-state-title">No pending quotations</h4>
+                                        <p class="empty-state-sub">All submitted quotations have been reviewed and processed.</p>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="table-responsive">
+                                    <table class="org-table">
+                                        <thead>
+                                            <tr>
+                                                <th>PRODUCT</th>
+                                                <th>QUANTITY</th>
+                                                <th>OUTLET</th>
+                                                <th>VENDOR</th>
+                                                <th>TOTAL AMOUNT</th>
+                                                <th>STATUS</th>
+                                                <th>ACTION</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var q in PendingQuotationsList)
+                                            {
+                                                var item = q.Items?.FirstOrDefault();
+                                                decimal totalAmount = q.Items != null && q.Items.Count > 0 ? q.Items.Sum(i => i.TotalAmount > 0 ? i.TotalAmount : (i.Quantity * i.UnitPrice + i.TaxAmount)) : 0;
+                                                int productId = item?.ProductID ?? 0;
+                                                decimal quantity = item?.Quantity ?? 0;
+                                                int outletId = GetPrOutletId(q.RequestID);
+
+                                                <tr>
+                                                    <td><strong>@GetProductName(productId)</strong></td>
+                                                    <td>@quantity</td>
+                                                    <td>@GetOutletName(outletId)</td>
+                                                    <td><strong>@GetVendorName(q.VendorID)</strong></td>
+                                                    <td class="fw-bold text-success">Rs. @totalAmount.ToString("N2")</td>
+                                                    <td><span class="status-pill-active">@q.Status</span></td>
+                                                    <td>
+                                                        <button class="btn-details-action" @onclick='() => Nav.NavigateTo($"/quotation-review/{q.QuotationID}")'>
+                                                            Review &rarr;
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- SECTION 3: ACTIVE ORGANIZATION CONTRACTS -->
+                        <div class="section-card" id="contracts-section">
+                            <div class="section-header-row">
+                                <div class="section-title-wrap">
+                                    <h3 class="section-title">Active Organization Contracts</h3>
+                                    <p class="section-subtitle">Contracts currently active for your organization</p>
+                                </div>
+                                <span class="badge-active-count">@ActiveContractsList.Count Active</span>
+                            </div>
+
+                            @if (ActiveContractsList == null || ActiveContractsList.Count == 0)
+                            {
+                                <div class="alert alert-light text-center py-4 mb-0 rounded-3 text-muted">
+                                    <p class="mb-0">No active contracts found for your organization. Contracts are created when quotations are accepted.</p>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="table-responsive">
+                                    <table class="org-table">
+                                        <thead>
+                                            <tr>
+                                                <th>OUTLET</th>
+                                                <th>VENDOR</th>
+                                                <th>PRODUCT</th>
+                                                <th>QUANTITY</th>
+                                                <th>EFFECTIVE DATES</th>
+                                                <th>STATUS</th>
+                                                <th>DETAILS</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var c in ActiveContractsList)
+                                            {
+                                                <tr>
+                                                    <td>@(string.IsNullOrWhiteSpace(c.OutletName) ? GetOutletName(c.OutletID) : c.OutletName)</td>
+                                                    <td><strong>@(string.IsNullOrWhiteSpace(c.VendorName) ? GetVendorName(c.VendorID ?? 0) : c.VendorName)</strong></td>
+                                                    <td><strong>@(string.IsNullOrWhiteSpace(c.ProductName) ? GetProductName(c.ProductID) : c.ProductName)</strong></td>
+                                                    <td><strong>@c.TotalQuantity.ToString("F2") @c.Unit</strong></td>
+                                                    <td>@c.StartDate.ToString("dd MMM yyyy") &mdash; @c.EndDate.ToString("dd MMM yyyy")</td>
+                                                    <td><span class="status-pill-active">@(string.IsNullOrWhiteSpace(c.Status) ? "Active" : c.Status)</span></td>
+                                                    <td>
+                                                        <button type="button" class="btn-details-action" @onclick='() => Nav.NavigateTo($"/contract/{c.ContractID}")'>
+                                                            View Details &rarr;
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                        </div>
+
+
+                    }
+
+                </div>
+            </main>
+
+        </div>
+
+    </div>
+
+    <!-- OUTLET DETAILS MODAL -->
+    @if (SelectedOutletForModal != null)
+    {
+        <div class="modal-overlay" @onclick="CloseOutletDetails">
+            <div class="modal-card" @onclick:stopPropagation="true">
+                <div class="modal-card-header">
+                    <h5 class="modal-title">Outlet Details &mdash; @SelectedOutletForModal.OutletName</h5>
+                    <button type="button" class="modal-close-btn" @onclick="CloseOutletDetails" title="Close">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="modal-card-body">
+                    <!-- Row 1: Outlet Name & Organization -->
+                    <div class="modal-grid-2">
+                        <div class="modal-info-box">
+                            <div class="modal-info-icon-box">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                    <path d="M9 22V12h6v10"></path>
+                                </svg>
+                            </div>
+                            <div class="modal-info-content">
+                                <span class="modal-info-label">Outlet Name</span>
+                                <span class="modal-info-val">@SelectedOutletForModal.OutletName</span>
+                            </div>
+                        </div>
+
+                        <div class="modal-info-box">
+                            <div class="modal-info-icon-box">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                                    <path d="M9 22v-4h6v4"></path>
+                                    <line x1="8" y1="6" x2="8.01" y2="6"></line>
+                                    <line x1="16" y1="6" x2="16.01" y2="6"></line>
+                                    <line x1="8" y1="10" x2="8.01" y2="10"></line>
+                                    <line x1="16" y1="10" x2="16.01" y2="10"></line>
+                                </svg>
+                            </div>
+                            <div class="modal-info-content">
+                                <span class="modal-info-label">Organization</span>
+                                <span class="modal-info-val">@OrganizationName</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Physical Address -->
+                    <div class="modal-info-box">
+                        <div class="modal-info-icon-box">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                        </div>
+                        <div class="modal-info-content">
+                            <span class="modal-info-label">Physical Address</span>
+                            <span class="modal-info-val">@(string.IsNullOrWhiteSpace(SelectedOutletForModal.Address) ? "No address specified" : SelectedOutletForModal.Address)</span>
+                        </div>
+                    </div>
+
+                    <!-- Row 3: Coordinates & Active Contracts -->
+                    <div class="modal-grid-2">
+                        <div class="modal-info-box">
+                            <div class="modal-info-icon-box">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="2" y1="12" x2="22" y2="12"></line>
+                                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                                </svg>
+                            </div>
+                            <div class="modal-info-content">
+                                <span class="modal-info-label">Coordinates (Latitude / Longitude)</span>
+                                <span class="modal-info-val">
+                                    @(SelectedOutletForModal.Latitude.HasValue && SelectedOutletForModal.Longitude.HasValue 
+                                        ? $"{SelectedOutletForModal.Latitude.Value:F4}, {SelectedOutletForModal.Longitude.Value:F4}" 
+                                        : "Not mapped")
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="modal-info-box">
+                            <div class="modal-info-icon-box">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <path d="M9 12l2 2 4-4"></path>
+                                </svg>
+                            </div>
+                            <div class="modal-info-content">
+                                <span class="modal-info-label">Active Contracts</span>
+                                <span class="modal-info-val">@GetOutletContractCount(SelectedOutletForModal.OutletID) Contracts</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 4: Purchase Requests -->
+                    <div class="modal-info-box">
+                        <div class="modal-info-icon-box">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                            </svg>
+                        </div>
+                        <div class="modal-info-content">
+                            <span class="modal-info-label">Purchase Requests</span>
+                            <span class="modal-info-val">@GetOutletPrCount(SelectedOutletForModal.OutletID) Requests</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-card-footer">
+                    <button type="button" class="btn-modal-cancel" @onclick="CloseOutletDetails">Close</button>
+                    <button type="button" class="btn-modal-primary" @onclick='() => { CloseOutletDetails(); Nav.NavigateTo("/procurement"); }'>
+                        Create Purchase Request &rarr;
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+}
+

@@ -1,0 +1,1615 @@
+@page "/outlet-manager"
+@rendermode InteractiveServer 
+@inject ApiService Api
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+<PageTitle>Outlet Manager Dashboard - Smart Vendor Management</PageTitle>
+
+@if (!Auth.IsAuthenticated)
+{
+    <div class="om-auth-warning-wrap">
+        <div class="om-auth-warning-card">
+            <h4 class="fw-bold mb-2 text-dark">Authentication Required</h4>
+            <p class="text-muted mb-3">Please log in as an Outlet Manager to access this dashboard.</p>
+            <button class="btn om-btn-primary" @onclick='() => Nav.NavigateTo("/login")'>Go to Login</button>
+        </div>
+    </div>
+}
+else if (!Auth.IsOutletManager && !Auth.IsAdmin)
+{
+    <div class="om-auth-warning-wrap">
+        <div class="om-auth-warning-card">
+            <h4 class="fw-bold mb-2 text-danger">Access Denied</h4>
+            <p class="text-muted mb-3">You do not have privileges to access the Outlet Manager Dashboard.</p>
+            <button class="btn btn-outline-secondary" @onclick='() => Nav.NavigateTo("/")'>Return to Home</button>
+        </div>
+    </div>
+}
+else
+{
+    <div class="om-layout">
+        
+        <!-- ===================================================================
+             1. DARK GREEN SIDEBAR (#174F45)
+             =================================================================== -->
+        <aside class="om-sidebar">
+            
+            <div class="om-sidebar-top">
+                <!-- SIDEBAR BRAND -->
+                <div class="om-sidebar-brand">
+                    <div class="om-brand-icon-box">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+                            <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+                            <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+                            <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+                        </svg>
+                    </div>
+                    <span class="om-brand-text">OUTLET WORKSPACE</span>
+                </div>
+
+                <!-- NAVIGATION ITEMS -->
+                <nav class="om-nav-list">
+                    <button type="button" 
+                            class="om-nav-item @(ActiveTab == "Dashboard" ? "active" : "")"
+                            @onclick='() => SetActiveTab("Dashboard")'>
+                        <svg class="om-nav-icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                        </svg>
+                        <span>Dashboard</span>
+                    </button>
+
+                    <button type="button" 
+                            class="om-nav-item @(ActiveTab == "MyRequests" ? "active" : "")"
+                            @onclick='() => SetActiveTab("MyRequests")'>
+                        <svg class="om-nav-icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <line x1="10" y1="9" x2="8" y2="9"></line>
+                        </svg>
+                        <span>My Purchase Requests</span>
+                    </button>
+
+                    <button type="button" 
+                            class="om-nav-item @(ActiveTab == "PurchaseOrders" ? "active" : "")"
+                            @onclick='() => SetActiveTab("PurchaseOrders")'>
+                        <svg class="om-nav-icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="1" y="3" width="15" height="13"></rect>
+                            <polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon>
+                            <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                            <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                        </svg>
+                        <span>Purchase Orders</span>
+                        @if (ActiveOrdersCount > 0)
+                        {
+                            <span class="badge bg-danger ms-auto om-nav-badge">@ActiveOrdersCount</span>
+                        }
+                    </button>
+
+                    <button type="button" 
+                            class="om-nav-item @(ActiveTab == "MyOutlet" ? "active" : "")"
+                            @onclick='() => SetActiveTab("MyOutlet")'>
+                        <svg class="om-nav-icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"></path>
+                            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                            <path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"></path>
+                            <path d="M2 7h20"></path>
+                            <path d="M22 7v3a2 2 0 0 1-2 2v0a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12v0a2 2 0 0 1-2-2V7"></path>
+                        </svg>
+                        <span>My Outlet</span>
+                    </button>
+
+                    <button type="button" 
+                            class="om-nav-item @(ActiveTab == "MyProfile" ? "active" : "")"
+                            @onclick='() => SetActiveTab("MyProfile")'>
+                        <svg class="om-nav-icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        <span>My Profile</span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- SIDEBAR FOOTER (USER & LOGOUT) -->
+            <div class="om-sidebar-bottom">
+                <div class="om-user-profile-row">
+                    <div class="om-avatar-circle">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </div>
+                    <div class="om-user-info-text">
+                        <div class="om-user-name">@OutletManagerName</div>
+                        <div class="om-user-role">Outlet Manager</div>
+                    </div>
+                </div>
+
+                <button type="button" class="om-logout-btn" @onclick="HandleLogout">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    <span>Logout</span>
+                </button>
+            </div>
+
+        </aside>
+
+        <!-- ===================================================================
+             2. MAIN CONTENT AREA
+             =================================================================== -->
+        <main class="om-main-canvas">
+            
+            <!-- TOP HEADER -->
+            <header class="om-top-header">
+                <div class="om-header-left">
+                    <h1 class="om-welcome-title">@GetGreeting(), @OutletManagerName</h1>
+                    <p class="om-welcome-subtitle">
+                        Outlet: <span class="om-accent-text">@OutletNameDisplay</span> &bull; Organization: @OrganizationNameDisplay
+                    </p>
+                </div>
+
+                <div class="om-header-right">
+                    
+                    <!-- NOTIFICATIONS POPUP -->
+                    <div class="om-notif-container">
+                        <button type="button" class="om-header-pill om-notif-pill" @onclick="ToggleNotifications">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
+                                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path>
+                            </svg>
+                            <span>Notifications</span>
+                            @if (UnreadNotificationCount > 0)
+                            {
+                                <span class="om-notif-badge">@UnreadNotificationCount</span>
+                            }
+                            else if (Notifications.Count > 0)
+                            {
+                                <span class="om-notif-badge">@Notifications.Count</span>
+                            }
+                        </button>
+
+                        @if (ShowNotificationDropdown)
+                        {
+                            <div class="om-notif-dropdown">
+                                <div class="om-notif-dropdown-head">
+                                    <h6 class="mb-0 fw-bold">Outlet Notifications</h6>
+                                    @if (UnreadNotificationCount > 0)
+                                    {
+                                        <span class="badge bg-success">@UnreadNotificationCount new</span>
+                                    }
+                                </div>
+                                @if (Notifications == null || Notifications.Count == 0)
+                                {
+                                    <div class="p-3 text-center text-muted small">No notifications found.</div>
+                                }
+                                else
+                                {
+                                    <div class="om-notif-dropdown-body">
+                                        @foreach (var notif in Notifications.Take(8))
+                                        {
+                                            bool isClickable = IsClickableNotification(notif);
+                                            <div class="om-notif-item @(notif.IsRead ? "read" : "unread") @(isClickable ? "clickable" : "")"
+                                                 @onclick="() => HandleNotificationClick(notif)">
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <span class="om-notif-title @(notif.NotificationType == "OpportunityRejected" || notif.NotificationType == "PurchaseOrderRejected" ? "text-danger" : "text-dark")">
+                                                        @(notif.NotificationType == "OpportunityRejected" ? "Opportunity Declined" : notif.Title)
+                                                    </span>
+                                                    <span class="om-notif-time">@notif.CreatedDate.ToString("dd MMM, hh:mm tt")</span>
+                                                </div>
+                                                <p class="om-notif-msg mb-1">@notif.Message</p>
+                                                <div class="d-flex justify-content-between align-items-center mt-1">
+                                                    @if (!notif.IsRead)
+                                                    {
+                                                        <button type="button" class="om-notif-mark" @onclick='() => MarkAsRead(notif.NotificationID)' @onclick:stopPropagation="true">
+                                                            Mark as read
+                                                        </button>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span></span>
+                                                    }
+
+                                                    @if (isClickable)
+                                                    {
+                                                        <span class="om-notif-view-link">
+                                                            <span>View Details</span>
+                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                                <polyline points="9 18 15 12 9 6"></polyline>
+                                                            </svg>
+                                                        </span>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <!-- OUTLET CONTEXT PILL -->
+                    <div class="om-header-pill om-outlet-pill">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#174F45" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        <span class="om-outlet-pill-text">@OutletNameDisplay</span>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+
+                    <!-- TOP HEADER LOGOUT BUTTON -->
+                    <button type="button" class="om-header-pill om-logout-header-pill" @onclick="HandleLogout" title="Logout">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        <span>Logout</span>
+                    </button>
+
+                </div>
+            </header>
+
+            @if (IsLoading)
+            {
+                <div class="om-loading-state">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 text-muted fw-semibold">Loading outlet dashboard...</p>
+                </div>
+            }
+            else
+            {
+                <!-- ===============================================================
+                     TAB 1: MAIN DASHBOARD VIEW
+                     =============================================================== -->
+                @if (ActiveTab == "Dashboard")
+                {
+                    <div class="om-dashboard-body">
+                        
+                        <!-- 5 SUMMARY METRIC CARDS -->
+                        <div class="om-metric-grid">
+                            
+                            <!-- 1. TOTAL PURCHASE REQUESTS -->
+                            <div class="om-metric-card">
+                                <div class="om-metric-header">
+                                    <span class="om-metric-label">Total Purchase Requests</span>
+                                    <div class="om-metric-icon-box bg-soft-green">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#174F45" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                                            <polyline points="14 2 14 8 20 8"></polyline>
+                                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="om-metric-value text-dark">@PurchaseRequestsCount</div>
+                                <div class="om-metric-desc">All requests for this outlet</div>
+                            </div>
+
+                            <!-- 2. PENDING REQUESTS -->
+                            <div class="om-metric-card">
+                                <div class="om-metric-header">
+                                    <span class="om-metric-label">Pending Requests</span>
+                                    <div class="om-metric-icon-box bg-soft-amber">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="10"></circle>
+                                            <polyline points="12 6 12 12 16 14"></polyline>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="om-metric-value text-amber">@PendingQuotationsCount</div>
+                                <div class="om-metric-desc">Awaiting approval</div>
+                            </div>
+
+                            <!-- 3. APPROVED REQUESTS -->
+                            <div class="om-metric-card">
+                                <div class="om-metric-header">
+                                    <span class="om-metric-label">Approved Requests</span>
+                                    <div class="om-metric-icon-box bg-soft-green-check">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="om-metric-value text-green">@ApprovedRequestsCount</div>
+                                <div class="om-metric-desc">Approved / completed</div>
+                            </div>
+
+                            <!-- 4. REJECTED REQUESTS -->
+                            <div class="om-metric-card">
+                                <div class="om-metric-header">
+                                    <span class="om-metric-label">Rejected Requests</span>
+                                    <div class="om-metric-icon-box bg-soft-red">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect>
+                                            <line x1="9" y1="9" x2="15" y2="15"></line>
+                                            <line x1="15" y1="9" x2="9" y2="15"></line>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="om-metric-value text-red">@RejectedRequestsCount</div>
+                                <div class="om-metric-desc">Returned / not approved</div>
+                            </div>
+
+                            <!-- 5. ACTIVE CONTRACTS -->
+                            <div class="om-metric-card">
+                                <div class="om-metric-header">
+                                    <span class="om-metric-label">Active Contracts</span>
+                                    <div class="om-metric-icon-box bg-soft-blue">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                                            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="om-metric-value text-blue">@ActiveContractsCount</div>
+                                <div class="om-metric-desc">Active agreements</div>
+                            </div>
+
+                        </div>
+
+                        <!-- MIDDLE SECTION: RECENT ACTIVITY + REQUEST STATUS OVERVIEW -->
+                        <div class="om-mid-grid">
+                            
+                            <!-- LEFT: RECENT ACTIVITY -->
+                            <div class="om-card om-activity-card">
+                                <div class="om-card-header">
+                                    <h3 class="om-card-title">Recent Activity</h3>
+                                </div>
+                                <div class="om-card-body p-0">
+                                    @if (RecentActivities == null || RecentActivities.Count == 0)
+                                    {
+                                        <div class="p-4 text-center text-muted small">
+                                            No recent activity records available for this outlet.
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="om-activity-list">
+                                            @foreach (var act in RecentActivities)
+                                            {
+                                                <div class="om-activity-row">
+                                                    <div class="om-activity-icon @act.Type">
+                                                        @if (act.Type == "approved")
+                                                        {
+                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                                            </svg>
+                                                        }
+                                                        else if (act.Type == "pending")
+                                                        {
+                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                                <circle cx="12" cy="12" r="10"></circle>
+                                                                <polyline points="12 6 12 12 16 14"></polyline>
+                                                            </svg>
+                                                        }
+                                                        else if (act.Type == "contract")
+                                                        {
+                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                                                <polyline points="14 2 14 8 20 8"></polyline>
+                                                            </svg>
+                                                        }
+                                                        else
+                                                        {
+                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                            </svg>
+                                                        }
+                                                    </div>
+
+                                                    <div class="om-activity-content">
+                                                        <div class="om-activity-title">
+                                                            @if (!string.IsNullOrEmpty(act.HighlightRef))
+                                                            {
+                                                                <span>@act.Prefix</span>
+                                                                <span class="om-ref-highlight">@act.HighlightRef</span>
+                                                                <span>@act.Suffix</span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span>@act.Text</span>
+                                                            }
+                                                        </div>
+                                                        <div class="om-activity-time">@act.TimeAgo</div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- RIGHT: REQUEST STATUS OVERVIEW -->
+                            <div class="om-card om-overview-card">
+                                <div class="om-card-header">
+                                    <h3 class="om-card-title">Request Status Overview</h3>
+                                    <button type="button" class="om-link-btn" @onclick='() => SetActiveTab("MyRequests")'>
+                                        View All &rarr;
+                                    </button>
+                                </div>
+                                <div class="om-card-body d-flex align-items-center justify-content-between p-4">
+                                    
+                                    <!-- DONUT CHART (SVG) -->
+                                    <div class="om-donut-wrap">
+                                        <svg width="140" height="140" viewBox="0 0 140 140" class="om-donut-svg">
+                                            <!-- Base track -->
+                                            <circle cx="70" cy="70" r="50" fill="transparent" stroke="#E5E7EB" stroke-width="18"></circle>
+
+                                            @{
+                                                // Circumference of radius 50 = 2 * PI * 50 = 314.159
+                                                double circumference = 314.159;
+                                                double approvedDash = (ApprovedPercentage / 100.0) * circumference;
+                                                double pendingDash = (PendingPercentage / 100.0) * circumference;
+                                                double rejectedDash = (RejectedPercentage / 100.0) * circumference;
+
+                                                double pendingOffset = -approvedDash;
+                                                double rejectedOffset = -(approvedDash + pendingDash);
+                                            }
+
+                                            @if (TotalRequests > 0)
+                                            {
+                                                <!-- Approved segment (Green) -->
+                                                <circle cx="70" cy="70" r="50" fill="transparent"
+                                                        stroke="#2E7D61" stroke-width="18"
+                                                        stroke-dasharray="@approvedDash.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) @circumference"
+                                                        stroke-dashoffset="0"
+                                                        transform="rotate(-90 70 70)">
+                                                </circle>
+
+                                                <!-- Pending segment (Amber) -->
+                                                <circle cx="70" cy="70" r="50" fill="transparent"
+                                                        stroke="#F59E0B" stroke-width="18"
+                                                        stroke-dasharray="@pendingDash.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) @circumference"
+                                                        stroke-dashoffset="@pendingOffset.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)"
+                                                        transform="rotate(-90 70 70)">
+                                                </circle>
+
+                                                <!-- Rejected segment (Red) -->
+                                                <circle cx="70" cy="70" r="50" fill="transparent"
+                                                        stroke="#EF4444" stroke-width="18"
+                                                        stroke-dasharray="@rejectedDash.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) @circumference"
+                                                        stroke-dashoffset="@rejectedOffset.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)"
+                                                        transform="rotate(-90 70 70)">
+                                                </circle>
+                                            }
+                                        </svg>
+
+                                        <!-- Centered Text -->
+                                        <div class="om-donut-center">
+                                            <div class="om-donut-num">@TotalRequests</div>
+                                            <div class="om-donut-label">Total</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- LEGEND -->
+                                    <div class="om-donut-legend">
+                                        <div class="om-legend-row">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="om-legend-dot dot-approved"></span>
+                                                <span class="om-legend-name">Approved</span>
+                                            </div>
+                                            <span class="om-legend-val">@ApprovedRequestsCount (@ApprovedPercentage%)</span>
+                                        </div>
+
+                                        <div class="om-legend-row">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="om-legend-dot dot-pending"></span>
+                                                <span class="om-legend-name">Pending</span>
+                                            </div>
+                                            <span class="om-legend-val">@PendingQuotationsCount (@PendingPercentage%)</span>
+                                        </div>
+
+                                        <div class="om-legend-row">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="om-legend-dot dot-rejected"></span>
+                                                <span class="om-legend-name">Rejected</span>
+                                            </div>
+                                            <span class="om-legend-val">@RejectedRequestsCount (@RejectedPercentage%)</span>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- FULL-WIDTH SECTION: MY PURCHASE REQUESTS -->
+                        <div class="om-card om-table-card">
+                            <div class="om-card-header">
+                                <h3 class="om-card-title">My Purchase Requests</h3>
+                                <button type="button" class="om-link-btn" @onclick='() => SetActiveTab("MyRequests")'>
+                                    View All Requests &rarr;
+                                </button>
+                            </div>
+                            <div class="om-card-body p-0">
+                                @if (PRsForMyOutlet == null || PRsForMyOutlet.Count == 0)
+                                {
+                                    <div class="p-5 text-center text-muted">
+                                        <h6 class="fw-bold mb-1">No Purchase Requests Registered</h6>
+                                        <p class="mb-0 small">There are no purchase requests for your outlet currently.</p>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="table-responsive">
+                                        <table class="om-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>REQUEST REF</th>
+                                                    <th>PRODUCT</th>
+                                                    <th>QUANTITY</th>
+                                                    <th>STATUS</th>
+                                                    <th>REQUEST DATE</th>
+                                                    <th class="text-end">ACTION</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var pr in PRsForMyOutlet.Take(6))
+                                                {
+                                                    var firstItem = pr.Items?.FirstOrDefault();
+                                                    string productName = firstItem?.ProductName ?? "N/A";
+                                                    string qtyStr = firstItem != null ? $"{firstItem.Quantity:0.##} {firstItem.Unit}" : "N/A";
+                                                    string badgeClass = pr.Status switch
+                                                    {
+                                                        "Approved" or "Accepted" or "Completed" => "status-approved",
+                                                        "Pending" or "Submitted" => "status-pending",
+                                                        "Rejected" or "Declined" => "status-rejected",
+                                                        _ => "status-neutral"
+                                                    };
+
+                                                    <tr class="om-table-row" @onclick='() => NavigateToRequest(pr.RequestID)'>
+                                                        <td class="om-col-ref">PR-@pr.RequestID</td>
+                                                        <td class="om-col-product">@productName</td>
+                                                        <td class="om-col-qty">@qtyStr</td>
+                                                        <td class="om-col-status">
+                                                            <span class="om-status-badge @badgeClass">@pr.Status</span>
+                                                        </td>
+                                                        <td class="om-col-date">@pr.RequestDate.ToString("dd MMM yyyy")</td>
+                                                        <td class="om-col-action text-end">
+                                                            <button type="button" class="om-arrow-btn" @onclick='() => NavigateToRequest(pr.RequestID)' @onclick:stopPropagation="true">
+                                                                &rarr;
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                    </div>
+                }
+
+                <!-- ===============================================================
+                     TAB 2: MY PURCHASE REQUESTS VIEW (EXACT MATCH TO REFERENCE)
+                     =============================================================== -->
+                else if (ActiveTab == "MyRequests")
+                {
+                    <div class="om-prs-page-container">
+                        
+                        <!-- PAGE HEADER WITH DECORATIVE CLIPBOARD ICON -->
+                        <div class="om-prs-header-card">
+                            <div class="om-prs-header-text">
+                                <h2 class="om-prs-title">My Purchase Requests</h2>
+                                <p class="om-prs-subtitle">View and track all purchase requests created for your outlet by the Organization Manager.</p>
+                            </div>
+                            <div class="om-prs-header-icon">
+                                <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#2E7D61" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                                    <line x1="9" y1="12" x2="15" y2="12"></line>
+                                    <line x1="9" y1="16" x2="15" y2="16"></line>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <!-- SEARCH & FILTER TOOLBAR -->
+                        <div class="om-prs-toolbar-card">
+                            
+                            <!-- Search Bar -->
+                            <div class="om-prs-search-box">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                                <input type="text" 
+                                       class="om-prs-search-input" 
+                                       placeholder="Search by request ref or product..." 
+                                       @bind="SearchQuery" 
+                                       @bind:event="oninput" />
+                            </div>
+
+                            <!-- Status Dropdown -->
+                            <div class="om-prs-filter-group">
+                                <span class="om-prs-filter-label">Status</span>
+                                <select class="om-prs-filter-select" @bind="StatusFilter">
+                                    <option value="All">All Statuses</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Approved">Approved</option>
+                                    <option value="Rejected">Rejected</option>
+                                </select>
+                            </div>
+
+                            <!-- From Date -->
+                            <div class="om-prs-date-group">
+                                <input type="date" class="om-prs-date-input" @bind="FromDateFilter" placeholder="From Date" />
+                            </div>
+
+                            <!-- To Date -->
+                            <div class="om-prs-date-group">
+                                <input type="date" class="om-prs-date-input" @bind="ToDateFilter" placeholder="To Date" />
+                            </div>
+
+                            <!-- Clear Filters -->
+                            <button type="button" class="om-prs-clear-btn" @onclick="ClearFilters">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                                    <path d="M3 3v5h5"></path>
+                                </svg>
+                                <span>Clear Filters</span>
+                            </button>
+
+                        </div>
+
+                        <!-- PURCHASE REQUESTS TABLE CARD -->
+                        <div class="om-card om-table-card">
+                            <div class="om-card-body p-0">
+                                @if (FilteredPRs == null || FilteredPRs.Count == 0)
+                                {
+                                    <div class="p-5 text-center text-muted">
+                                        <div class="mb-3">
+                                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                                                <polyline points="14 2 14 8 20 8"></polyline>
+                                            </svg>
+                                        </div>
+                                        <h6 class="fw-bold mb-1 text-dark">No Purchase Requests</h6>
+                                        <p class="mb-0 small">There are currently no purchase requests matching your filter criteria for this outlet.</p>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="table-responsive">
+                                        <table class="om-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>REQUEST REF</th>
+                                                    <th>PRODUCT</th>
+                                                    <th>QUANTITY</th>
+                                                    <th>STATUS</th>
+                                                    <th>REQUEST DATE</th>
+                                                    <th class="text-end">ACTION</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var pr in FilteredPRs)
+                                                {
+                                                    var firstItem = pr.Items?.FirstOrDefault();
+                                                    string productName = firstItem?.ProductName ?? "N/A";
+                                                    string qtyStr = firstItem != null ? $"{firstItem.Quantity:0.##} {firstItem.Unit}" : "N/A";
+                                                    string badgeClass = pr.Status switch
+                                                    {
+                                                        "Approved" or "Accepted" or "Completed" => "status-approved",
+                                                        "Pending" or "Submitted" => "status-pending",
+                                                        "Rejected" or "Declined" => "status-rejected",
+                                                        _ => "status-neutral"
+                                                    };
+
+                                                    <tr class="om-table-row" @onclick='() => NavigateToRequest(pr.RequestID)'>
+                                                        <td class="om-col-ref">PR-@pr.RequestID</td>
+                                                        <td class="om-col-product">@productName</td>
+                                                        <td class="om-col-qty">@qtyStr</td>
+                                                        <td class="om-col-status">
+                                                            <span class="om-status-badge @badgeClass">@pr.Status</span>
+                                                        </td>
+                                                        <td class="om-col-date">@pr.RequestDate.ToString("dd MMM yyyy")</td>
+                                                        <td class="om-col-action text-end">
+                                                            <button type="button" class="om-btn-view-details" @onclick='() => NavigateToRequest(pr.RequestID)' @onclick:stopPropagation="true">
+                                                                <span>View Details</span>
+                                                                <span>&rarr;</span>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                    </div>
+                }
+
+                <!-- ===============================================================
+                     TAB 3: MY OUTLET VIEW (EXACT MATCH TO REFERENCE DESIGN)
+                     =============================================================== -->
+                else if (ActiveTab == "MyOutlet")
+                {
+                    <div class="om-card om-outlet-detail-card">
+                        
+                        <!-- CARD HEADER -->
+                        <div class="om-outlet-card-header">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="om-outlet-icon-circle">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#174F45" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"></path>
+                                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                                        <path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"></path>
+                                        <path d="M2 7h20"></path>
+                                        <path d="M22 7v3a2 2 0 0 1-2 2v0a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12v0a2 2 0 0 1-2-2V7"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h2 class="om-outlet-main-title">Outlet Information</h2>
+                                    <p class="om-outlet-main-subtitle">View details about your assigned outlet</p>
+                                </div>
+                            </div>
+
+                            @if (!IsEditingOutlet)
+                            {
+                                <button type="button" class="om-btn-edit-outlet" @onclick="StartEditOutlet">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                                    </svg>
+                                    <span>Edit Outlet Details</span>
+                                </button>
+                            }
+                        </div>
+
+                        <!-- ALERTS -->
+                        @if (!string.IsNullOrEmpty(OutletMessage))
+                        {
+                            <div class="om-alert-success mb-3">
+                                <span>@OutletMessage</span>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(OutletError))
+                        {
+                            <div class="om-alert-danger mb-3">
+                                <span>@OutletError</span>
+                            </div>
+                        }
+
+                        @if (IsEditingOutlet)
+                        {
+                            <!-- EDIT FORM -->
+                            <div class="om-outlet-edit-form">
+                                <div class="row g-4 mb-4">
+                                    <div class="col-md-6">
+                                        <label class="om-block-label">OUTLET NAME</label>
+                                        <input type="text" class="form-control om-edit-input" @bind="EditOutletName" placeholder="Enter outlet name" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="om-block-label">ORGANIZATION</label>
+                                        <input type="text" class="form-control om-edit-input" value="@OrganizationNameDisplay" disabled readonly />
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="om-block-label">ADDRESS</label>
+                                        <input type="text" class="form-control om-edit-input" @bind="EditOutletAddress" placeholder="Enter outlet address" />
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-end gap-2">
+                                    <button type="button" class="btn btn-outline-secondary px-4 fw-semibold" @onclick="CancelEditOutlet" disabled="@IsSavingOutlet">
+                                        Cancel
+                                    </button>
+                                    <button type="button" class="btn om-btn-primary px-4 fw-bold" @onclick="SaveOutletDetails" disabled="@IsSavingOutlet">
+                                        @if (IsSavingOutlet)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                                            <span>Saving...</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Save Details</span>
+                                        }
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <!-- DISPLAY INFORMATION BLOCKS -->
+                            <div class="om-outlet-blocks-container">
+                                
+                                <!-- ROW 1: OUTLET NAME & ORGANIZATION -->
+                                <div class="om-outlet-two-col">
+                                    
+                                    <!-- OUTLET NAME -->
+                                    <div class="om-outlet-field-group">
+                                        <span class="om-block-label">OUTLET NAME</span>
+                                        <div class="om-info-large-box">
+                                            <div class="om-info-box-icon">
+                                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#174F45" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"></path>
+                                                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                                                    <path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"></path>
+                                                    <path d="M2 7h20"></path>
+                                                    <path d="M22 7v3a2 2 0 0 1-2 2v0a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12v0a2 2 0 0 1-2-2V7"></path>
+                                                </svg>
+                                            </div>
+                                            <span class="om-info-box-text">@OutletNameDisplay</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- ORGANIZATION -->
+                                    <div class="om-outlet-field-group">
+                                        <span class="om-block-label">ORGANIZATION</span>
+                                        <div class="om-info-large-box">
+                                            <div class="om-info-box-icon">
+                                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#174F45" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                                                    <path d="M9 22v-4h6v4"></path>
+                                                    <path d="M8 6h.01"></path>
+                                                    <path d="M16 6h.01"></path>
+                                                    <path d="M8 10h.01"></path>
+                                                    <path d="M16 10h.01"></path>
+                                                    <path d="M8 14h.01"></path>
+                                                    <path d="M16 14h.01"></path>
+                                                </svg>
+                                            </div>
+                                            <span class="om-info-box-text">@OrganizationNameDisplay</span>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <!-- ROW 2: ADDRESS -->
+                                <div class="om-outlet-field-group">
+                                    <span class="om-block-label">ADDRESS</span>
+                                    <div class="om-info-large-box om-info-full-width">
+                                        <div class="om-info-box-icon">
+                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#174F45" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+                                                <circle cx="12" cy="10" r="3"></circle>
+                                            </svg>
+                                        </div>
+                                        <span class="om-info-box-text">@(string.IsNullOrWhiteSpace(AssignedOutletAddress) ? "Address Not Specified" : AssignedOutletAddress)</span>
+                                    </div>
+                                </div>
+
+                                <!-- ROW 3: PERMISSIONS & OWNERSHIP PANEL -->
+                                <div class="om-permissions-panel">
+                                    <div class="d-flex align-items-start gap-3">
+                                        <div class="om-perm-icon">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="12" cy="12" r="10"></circle>
+                                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h4 class="om-perm-title">Assigned outlet permissions and ownership</h4>
+                                            <p class="om-perm-desc">
+                                                Permissions, access levels and ownership for this outlet are managed by the Organization Admin.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- SUBTLE WATERMARK EMBLEM (SHIELD + STORE) -->
+                                    <div class="om-perm-watermark">
+                                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#93C5FD" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.6">
+                                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                                            <path d="m9 12 2 2 4-4"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+
+                            </div>
+                        }
+
+                    </div>
+                }
+
+                <!-- ===============================================================
+                     TAB: PURCHASE ORDERS & DELIVERIES (CLEAN REDESIGN)
+                     =============================================================== -->
+                else if (ActiveTab == "PurchaseOrders")
+                {
+                    <div class="om-po-page-container">
+                        <!-- HEADER -->
+                        <div class="om-po-header">
+                            <h2 class="om-po-page-title">Purchase Orders &amp; Deliveries</h2>
+                            <p class="om-po-page-subtitle">Track purchase orders sent to your outlet and their current delivery status.</p>
+                        </div>
+
+                        <!-- ERROR BANNER IF ANY -->
+                        @if (!string.IsNullOrWhiteSpace(PoErrorMessage))
+                        {
+                            <div class="alert alert-danger d-flex align-items-center justify-content-between mb-3 shadow-sm rounded-3 py-2 px-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                    </svg>
+                                    <span class="small fw-semibold">@PoErrorMessage</span>
+                                </div>
+                                <button type="button" class="btn-close btn-close-sm" @onclick="() => PoErrorMessage = string.Empty"></button>
+                            </div>
+                        }
+
+                        <!-- TOP 3 SUMMARY CARDS -->
+                        <div class="om-po-metrics-row mb-4">
+                            <!-- 1. PENDING -->
+                            <div class="om-po-stat-card">
+                                <div class="om-po-stat-icon-box bg-stat-yellow">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <polyline points="12 6 12 12 16 14"></polyline>
+                                    </svg>
+                                </div>
+                                <div class="om-po-stat-content">
+                                    <div class="om-po-stat-num">@PendingOrdersCount</div>
+                                    <div class="om-po-stat-label">Pending</div>
+                                    <div class="om-po-stat-desc">Awaiting vendor confirmation</div>
+                                </div>
+                            </div>
+
+                            <!-- 2. DISPATCHED / IN TRANSIT -->
+                            <div class="om-po-stat-card">
+                                <div class="om-po-stat-icon-box bg-stat-blue">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="1" y="3" width="15" height="13"></rect>
+                                        <polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon>
+                                        <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                        <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                                    </svg>
+                                </div>
+                                <div class="om-po-stat-content">
+                                    <div class="om-po-stat-num">@DispatchedOrdersCount</div>
+                                    <div class="om-po-stat-label">Dispatched / In Transit</div>
+                                    <div class="om-po-stat-desc">On the way to your outlet</div>
+                                </div>
+                            </div>
+
+                            <!-- 3. DELIVERED -->
+                            <div class="om-po-stat-card">
+                                <div class="om-po-stat-icon-box bg-stat-green">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                    </svg>
+                                </div>
+                                <div class="om-po-stat-content">
+                                    <div class="om-po-stat-num">@DeliveredOrdersCount</div>
+                                    <div class="om-po-stat-label">Delivered</div>
+                                    <div class="om-po-stat-desc">Successfully received</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- MAIN ORDERS TABLE CARD -->
+                        <div class="om-card om-po-table-card">
+                            <div class="om-po-table-header">
+                                <h3 class="om-po-table-title mb-0">Purchase Orders</h3>
+                                <div class="om-po-search-box">
+                                    <svg class="om-po-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="11" cy="11" r="8"></circle>
+                                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                    </svg>
+                                    <input type="text" class="om-po-search-input" placeholder="Search by PO #, vendor or product..." @bind="PoSearchQuery" @bind:event="oninput" />
+                                </div>
+                            </div>
+
+                            <div class="om-card-body p-0">
+                                @if (FilteredPOs == null || FilteredPOs.Count == 0)
+                                {
+                                    <div class="p-5 text-center text-muted">
+                                        <div class="mb-3">
+                                            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="1" y="3" width="15" height="13"></rect>
+                                                <polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon>
+                                                <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                                <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                                            </svg>
+                                        </div>
+                                        <h6 class="fw-bold mb-1 text-dark">No Purchase Orders Found</h6>
+                                        <p class="mb-0 small">There are currently no purchase orders matching your search or assigned to your outlet.</p>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="table-responsive">
+                                        <table class="om-po-clean-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>PO Reference</th>
+                                                    <th>Vendor</th>
+                                                    <th>Product</th>
+                                                    <th>Quantity</th>
+                                                    <th>Status</th>
+                                                    <th>Last Updated</th>
+                                                    <th class="text-end">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var po in FilteredPOs)
+                                                {
+                                                    <tr class="om-po-row" @onclick='() => OpenPurchaseOrderDetails(po.PurchaseOrderID)'>
+                                                        <td class="om-po-col-ref">
+                                                            <span class="om-po-ref-text">PO-@po.PurchaseOrderID</span>
+                                                        </td>
+                                                        <td class="om-po-col-vendor">
+                                                            <span>@(string.IsNullOrWhiteSpace(po.VendorName) ? $"Vendor #{po.VendorID}" : po.VendorName)</span>
+                                                        </td>
+                                                        <td class="om-po-col-product">
+                                                            <span>@GetPrimaryProductName(po)</span>
+                                                        </td>
+                                                        <td class="om-po-col-qty">
+                                                            <span>@GetPrimaryProductQty(po)</span>
+                                                        </td>
+                                                        <td class="om-po-col-status">
+                                                            @if (po.Status == "Dispatched" || po.Status == "In Transit")
+                                                            {
+                                                                <div class="d-flex flex-column align-items-start">
+                                                                    <span class="om-po-pill-dispatched">Dispatched</span>
+                                                                    <span class="om-po-subdate">@po.OrderDate.ToString("dd MMM yyyy, hh:mm tt")</span>
+                                                                </div>
+                                                            }
+                                                            else if (po.Status == "Delivered" || po.Status == "Completed")
+                                                            {
+                                                                <div class="d-flex flex-column align-items-start">
+                                                                    <span class="om-po-pill-delivered">Delivered</span>
+                                                                    <span class="om-po-subdate">@((po.ActualDeliveryDate ?? po.OrderDate).ToString("dd MMM yyyy, hh:mm tt"))</span>
+                                                                </div>
+                                                            }
+                                                            else if (po.Status == "Accepted")
+                                                            {
+                                                                <div class="d-flex flex-column align-items-start">
+                                                                    <span class="om-po-pill-accepted">Accepted</span>
+                                                                    <span class="om-po-subdate">Accepted by Vendor</span>
+                                                                </div>
+                                                            }
+                                                            else if (po.Status == "Rejected")
+                                                            {
+                                                                <div class="d-flex flex-column align-items-start">
+                                                                    <span class="om-po-pill-rejected">Rejected</span>
+                                                                    <span class="om-po-subdate">Declined by Vendor</span>
+                                                                </div>
+                                                            }
+                                                            else
+                                                            {
+                                                                <div class="d-flex flex-column align-items-start">
+                                                                    <span class="om-po-pill-pending">Pending</span>
+                                                                    <span class="om-po-subdate">Pending Vendor Confirmation</span>
+                                                                </div>
+                                                            }
+                                                        </td>
+                                                        <td class="om-po-col-date">
+                                                            <div class="d-flex flex-column">
+                                                                <span class="fw-semibold text-dark">@((po.ActualDeliveryDate ?? po.OrderDate).ToString("dd MMM yyyy"))</span>
+                                                                <span class="om-po-subdate">@((po.ActualDeliveryDate ?? po.OrderDate).ToString("hh:mm tt"))</span>
+                                                            </div>
+                                                        </td>
+                                                        <td class="om-po-col-action text-end">
+                                                            <button type="button" class="om-btn-view-status" @onclick='() => OpenPurchaseOrderDetails(po.PurchaseOrderID)' @onclick:stopPropagation="true">
+                                                                <span>View Status</span>
+                                                                <span>&rarr;</span>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <!-- PAGINATION FOOTER -->
+                                    <div class="om-po-pagination-footer">
+                                        <span class="om-po-pagination-text">Showing 1 to @FilteredPOs.Count of @FilteredPOs.Count orders</span>
+                                        <div class="om-po-page-pills">
+                                            <button type="button" class="om-po-page-arrow" disabled>&lsaquo;</button>
+                                            <button type="button" class="om-po-page-num active">1</button>
+                                            <button type="button" class="om-po-page-arrow" disabled>&rsaquo;</button>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- ===============================================================
+                     TAB 4: MY PROFILE VIEW
+                     =============================================================== -->
+                else if (ActiveTab == "MyProfile")
+                {
+                    <div class="row justify-content-center">
+                        <div class="col-lg-7">
+                            <div class="om-card">
+                                <div class="om-card-header">
+                                    <h3 class="om-card-title">Outlet Manager Profile</h3>
+                                </div>
+                                <div class="om-card-body p-4">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="om-field-label">NAME</label>
+                                            <div class="om-field-val fw-bold">@OutletManagerName</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="om-field-label">EMAIL</label>
+                                            <div class="om-field-val">@(Auth.CurrentUser?.Email ?? (Auth.Email ?? string.Empty))</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="om-field-label">ROLE</label>
+                                            <div class="om-field-val text-green fw-bold">Outlet Manager</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="om-field-label">ASSIGNED OUTLET</label>
+                                            <div class="om-field-val fw-bold">@OutletNameDisplay</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-4 pt-3 border-top d-flex justify-content-end">
+                                        <button type="button" class="btn btn-outline-danger fw-bold px-4 py-2" @onclick="HandleLogout">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                                <polyline points="16 17 21 12 16 7"></polyline>
+                                                <line x1="21" y1="12" x2="9" y2="12"></line>
+                                            </svg>
+                                            <span>Logout</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+            }
+
+        </main>
+
+        <!-- ===================================================================
+             PURCHASE ORDER STATUS & DETAILS MODAL (MATCHES SCREENSHOT 1 DESIGN)
+             =================================================================== -->
+        @if (ShowPoDetailsModal && SelectedPurchaseOrder != null)
+        {
+            var primaryItem = SelectedPurchaseOrder.Items?.FirstOrDefault();
+            string prodName = primaryItem != null ? GetProductName(primaryItem.ProductID) : "General Goods";
+            string prodUnit = primaryItem != null ? GetProductUnit(primaryItem.ProductID) : "units";
+            decimal orderedQty = primaryItem?.Quantity ?? 0;
+            var primaryDeliveryRecord = DeliveryRecordsForSelectedPo.FirstOrDefault();
+
+            <div class="om-modal-overlay" @onclick="ClosePoDetailsModal">
+                <div class="om-po-drawer-card" @onclick:stopPropagation="true">
+                    <!-- HEADER -->
+                    <div class="om-po-drawer-header">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <h4 class="mb-0 fw-bold text-dark" style="font-size: 1.1rem;">PO-@SelectedPurchaseOrder.PurchaseOrderID</h4>
+                                @if (SelectedPurchaseOrder.Status == "Dispatched" || SelectedPurchaseOrder.Status == "In Transit")
+                                {
+                                    <span class="om-po-pill-dispatched">Dispatched</span>
+                                }
+                                else if (SelectedPurchaseOrder.Status == "Delivered" || SelectedPurchaseOrder.Status == "Completed")
+                                {
+                                    <span class="om-po-pill-delivered">Delivered</span>
+                                }
+                                else if (SelectedPurchaseOrder.Status == "Accepted")
+                                {
+                                    <span class="om-po-pill-accepted">Accepted</span>
+                                }
+                                else if (SelectedPurchaseOrder.Status == "Rejected")
+                                {
+                                    <span class="om-po-pill-rejected">Rejected</span>
+                                }
+                                else
+                                {
+                                    <span class="om-po-pill-pending">Pending</span>
+                                }
+                            </div>
+                            <span class="text-muted small">Vendor: @(string.IsNullOrWhiteSpace(SelectedPurchaseOrder.VendorName) ? $"Vendor #{SelectedPurchaseOrder.VendorID}" : SelectedPurchaseOrder.VendorName)</span>
+                        </div>
+                        <button type="button" class="btn-close" @onclick="ClosePoDetailsModal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="om-po-drawer-body">
+
+                        <!-- ALERTS -->
+                        @if (!string.IsNullOrWhiteSpace(DeliverySuccessMessage))
+                        {
+                            <div class="alert alert-success d-flex align-items-center justify-content-between mb-3 shadow-sm rounded-3 py-2 px-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                    <span class="small fw-semibold">@DeliverySuccessMessage</span>
+                                </div>
+                                <button type="button" class="btn-close btn-close-sm" @onclick="() => DeliverySuccessMessage = string.Empty"></button>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(DeliveryFormError))
+                        {
+                            <div class="alert alert-danger d-flex align-items-center justify-content-between mb-3 shadow-sm rounded-3 py-2 px-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                    </svg>
+                                    <span class="small fw-semibold">@DeliveryFormError</span>
+                                </div>
+                                <button type="button" class="btn-close btn-close-sm" @onclick="() => DeliveryFormError = string.Empty"></button>
+                            </div>
+                        }
+
+                        <!-- =======================================================
+                             VIEW MODE: STANDARD PO DETAILS
+                             ======================================================= -->
+                        @if (!IsRecordingDelivery && !IsReviewingDelivery)
+                        {
+                            <!-- 2-COLUMN ORDER DETAILS GRID -->
+                            <div class="om-po-details-grid mb-4">
+                                <div class="om-po-grid-item">
+                                    <span class="om-po-grid-label">Product</span>
+                                    <span class="om-po-grid-value">@prodName</span>
+                                </div>
+                                <div class="om-po-grid-item">
+                                    <span class="om-po-grid-label">Order Date</span>
+                                    <span class="om-po-grid-value">@SelectedPurchaseOrder.OrderDate.ToString("dd MMM yyyy, hh:mm tt")</span>
+                                </div>
+                                <div class="om-po-grid-item">
+                                    <span class="om-po-grid-label">Ordered Quantity</span>
+                                    <span class="om-po-grid-value">@orderedQty.ToString("0.##") @prodUnit</span>
+                                </div>
+                                <div class="om-po-grid-item">
+                                    <span class="om-po-grid-label">Ordered By</span>
+                                    <span class="om-po-grid-value">@(string.IsNullOrWhiteSpace(OrganizationNameDisplay) ? "Organization Manager" : OrganizationNameDisplay)</span>
+                                </div>
+                                <div class="om-po-grid-item">
+                                    <span class="om-po-grid-label">Expected Delivery</span>
+                                    <span class="om-po-grid-value">@(SelectedPurchaseOrder.ExpectedDeliveryDate?.ToString("dd MMM yyyy") ?? SelectedPurchaseOrder.OrderDate.AddDays(2).ToString("dd MMM yyyy"))</span>
+                                </div>
+                                @if (SelectedPurchaseOrder.Status == "Dispatched" || SelectedPurchaseOrder.Status == "In Transit" || SelectedPurchaseOrder.Status == "Delivered" || SelectedPurchaseOrder.Status == "Completed")
+                                {
+                                    <div class="om-po-grid-item">
+                                        <span class="om-po-grid-label">Dispatched On</span>
+                                        <span class="om-po-grid-value">@(SelectedPurchaseOrder.DispatchDateTime.HasValue ? SelectedPurchaseOrder.DispatchDateTime.Value.ToString("dd MMM yyyy, hh:mm tt") : "Dispatched")</span>
+                                    </div>
+                                }
+                                @if (SelectedPurchaseOrder.Status == "Delivered" || SelectedPurchaseOrder.Status == "Completed")
+                                {
+                                    <div class="om-po-grid-item">
+                                        <span class="om-po-grid-label">Delivered On</span>
+                                        <span class="om-po-grid-value text-success fw-bold">@((SelectedPurchaseOrder.ActualDeliveryDate ?? primaryDeliveryRecord?.DeliveryDate ?? SelectedPurchaseOrder.OrderDate).ToString("dd MMM yyyy, hh:mm tt"))</span>
+                                    </div>
+                                    <div class="om-po-grid-item">
+                                        <span class="om-po-grid-label">Delivery Performance</span>
+                                        <span class="badge @(GetDeliveryPerformanceBadge(SelectedPurchaseOrder, primaryDeliveryRecord)) fw-semibold">
+                                            @GetDeliveryPerformanceText(SelectedPurchaseOrder, primaryDeliveryRecord)
+                                        </span>
+                                    </div>
+                                }
+                            </div>
+
+                            <hr class="om-po-divider" />
+
+                            <!-- CURRENT STATUS INFO -->
+                            <div class="mb-4">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="om-po-grid-label" style="text-transform: uppercase; letter-spacing: 0.03em;">Current Status</span>
+                                    <span class="om-po-pill-@(SelectedPurchaseOrder.Status?.ToLower() ?? "pending")">@SelectedPurchaseOrder.Status</span>
+                                </div>
+                            </div>
+
+                            <!-- 4-STEP HORIZONTAL STATUS PROGRESSION STEPPER -->
+                            <div class="om-po-stepper-container mb-4">
+                                @{
+                                    string s = SelectedPurchaseOrder.Status ?? "Pending";
+                                    bool isPending = true;
+                                    bool isAccepted = s == "Accepted" || s == "Dispatched" || s == "In Transit" || s == "Delivered" || s == "Completed";
+                                    bool isDispatched = s == "Dispatched" || s == "In Transit" || s == "Delivered" || s == "Completed";
+                                    bool isDelivered = s == "Delivered" || s == "Completed";
+                                }
+
+                                <div class="om-po-stepper">
+                                    <!-- STEP 1: PENDING -->
+                                    <div class="om-po-step @(isPending ? "completed" : "")">
+                                        <div class="om-po-step-circle">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
+                                        </div>
+                                        <span class="om-po-step-title">Pending</span>
+                                        <span class="om-po-step-date">@SelectedPurchaseOrder.OrderDate.ToString("dd MMM yyyy")</span>
+                                        <span class="om-po-step-time">@SelectedPurchaseOrder.OrderDate.ToString("hh:mm tt")</span>
+                                    </div>
+
+                                    <div class="om-po-step-line @(isAccepted ? "active" : "")"></div>
+
+                                    <!-- STEP 2: ACCEPTED -->
+                                    <div class="om-po-step @(isAccepted ? "completed" : "")">
+                                        <div class="om-po-step-circle">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
+                                        </div>
+                                        <span class="om-po-step-title">Accepted</span>
+                                        <span class="om-po-step-date">@(isAccepted ? SelectedPurchaseOrder.OrderDate.ToString("dd MMM yyyy") : "--")</span>
+                                        <span class="om-po-step-time">@(isAccepted ? SelectedPurchaseOrder.OrderDate.ToString("hh:mm tt") : "")</span>
+                                    </div>
+
+                                    <div class="om-po-step-line @(isDispatched ? "active" : "")"></div>
+
+                                    <!-- STEP 3: DISPATCHED -->
+                                    <div class="om-po-step @(isDispatched ? (isDelivered ? "completed" : "active-step") : "")">
+                                        <div class="om-po-step-circle">
+                                            @if (isDelivered)
+                                            {
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                </svg>
+                                            }
+                                            else
+                                            {
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                    <rect x="1" y="3" width="15" height="13"></rect>
+                                                    <polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon>
+                                                    <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                                    <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                                                </svg>
+                                            }
+                                        </div>
+                                        <span class="om-po-step-title">Dispatched</span>
+                                        <span class="om-po-step-date">@(isDispatched ? (SelectedPurchaseOrder.DispatchDateTime.HasValue ? SelectedPurchaseOrder.DispatchDateTime.Value.ToString("dd MMM yyyy") : "--") : "--")</span>
+                                        <span class="om-po-step-time">@(isDispatched ? (SelectedPurchaseOrder.DispatchDateTime.HasValue ? SelectedPurchaseOrder.DispatchDateTime.Value.ToString("hh:mm tt") : "") : "")</span>
+                                    </div>
+
+                                    <div class="om-po-step-line @(isDelivered ? "active" : "")"></div>
+
+                                    <!-- STEP 4: DELIVERED -->
+                                    <div class="om-po-step @(isDelivered ? "completed" : "")">
+                                        <div class="om-po-step-circle">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
+                                        </div>
+                                        <span class="om-po-step-title">Delivered</span>
+                                        <span class="om-po-step-date">@(isDelivered ? (SelectedPurchaseOrder.ActualDeliveryDate ?? primaryDeliveryRecord?.DeliveryDate ?? SelectedPurchaseOrder.OrderDate).ToString("dd MMM yyyy") : "--")</span>
+                                        <span class="om-po-step-time">@(isDelivered ? (SelectedPurchaseOrder.ActualDeliveryDate ?? primaryDeliveryRecord?.DeliveryDate ?? SelectedPurchaseOrder.OrderDate).ToString("hh:mm tt") : "")</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- INFO CALLOUT -->
+                            <div class="om-po-info-callout mb-4">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                </svg>
+                                <span>
+                                    @if (SelectedPurchaseOrder.Status == "Dispatched" || SelectedPurchaseOrder.Status == "In Transit")
+                                    {
+                                        <span>Your order has been dispatched by the vendor and is on the way to your outlet.</span>
+                                    }
+                                    else if (SelectedPurchaseOrder.Status == "Delivered" || SelectedPurchaseOrder.Status == "Completed")
+                                    {
+                                        <span>Your order has been successfully delivered and received at your outlet.</span>
+                                    }
+                                    else if (SelectedPurchaseOrder.Status == "Accepted")
+                                    {
+                                        <span>The vendor has accepted your order and is currently preparing it for dispatch.</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Your order has been issued and is awaiting confirmation from the vendor.</span>
+                                    }
+                                </span>
+                            </div>
+
+                            <!-- RECORD DELIVERY SECTION (VISIBLE IF DISPATCHED) -->
+                            @if (SelectedPurchaseOrder.Status == "Dispatched" || SelectedPurchaseOrder.Status == "In Transit")
+                            {
+                                <div class="om-record-delivery-box mb-4">
+                                    <h6 class="fw-bold text-dark mb-1" style="font-size: 0.95rem;">Record Delivery</h6>
+                                    <p class="text-muted small mb-3" style="margin-top: 0.15rem;">Goods received at your outlet? Record the received quantity and confirm delivery.</p>
+                                    <button type="button" class="om-btn-record-delivery" @onclick="StartRecordDelivery">
+                                        Record Delivery
+                                    </button>
+                                </div>
+                            }
+                            else if (SelectedPurchaseOrder.Status == "Delivered" || SelectedPurchaseOrder.Status == "Completed")
+                            {
+                                <!-- VERIFIED DELIVERY SUMMARY CARD -->
+                                <div class="om-record-delivery-box bg-light border-success border-opacity-25 mb-4">
+                                    <h6 class="fw-bold text-success mb-2 d-flex align-items-center gap-1">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                        </svg>
+                                        <span>Delivery Confirmed &amp; Logged</span>
+                                    </h6>
+                                    <div class="row g-2 small mt-1">
+                                        <div class="col-sm-6">
+                                            <span class="text-muted">Received Quantity:</span>
+                                            <strong class="d-block text-dark">@((primaryDeliveryRecord?.ReceivedQuantity ?? orderedQty).ToString("0.##")) @prodUnit</strong>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <span class="text-muted">Spoiled / Damaged:</span>
+                                            <strong class="d-block @(primaryDeliveryRecord?.SpoiledQuantity > 0 ? "text-danger" : "text-dark")">
+                                                @((primaryDeliveryRecord?.SpoiledQuantity ?? 0).ToString("0.##")) @prodUnit
+                                                @if ((primaryDeliveryRecord?.SpoiledQuantity ?? 0) > 0)
+                                                {
+                                                    <span class="badge bg-danger text-white ms-1" style="font-size: 0.7rem;">@((primaryDeliveryRecord?.SpoilagePercentage ?? 0).ToString("0.##"))% Spoilage</span>
+                                                }
+                                            </strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+
+                        <!-- =======================================================
+                             STEP 1: RECORD DELIVERY INPUT FORM
+                             ======================================================= -->
+                        @if (IsRecordingDelivery && !IsReviewingDelivery)
+                        {
+                            <div class="om-delivery-form-container">
+                                <div class="om-delivery-form-header mb-3">
+                                    <h5 class="fw-bold text-dark mb-1">Record Goods Delivery</h5>
+                                    <p class="text-muted small mb-0">Verify quantities received for <strong>PO-@SelectedPurchaseOrder.PurchaseOrderID</strong> (@prodName).</p>
+                                </div>
+
+                                <div class="mb-3 p-3 bg-light rounded-3">
+                                    <div class="row g-2 small">
+                                        <div class="col-6">
+                                            <span class="text-muted">Ordered Quantity:</span>
+                                            <div class="fw-bold text-dark">@orderedQty.ToString("0.##") @prodUnit</div>
+                                        </div>
+                                        <div class="col-6">
+                                            <span class="text-muted">Vendor:</span>
+                                            <div class="fw-bold text-dark">@SelectedPurchaseOrder.VendorName</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold text-dark">Received Quantity (@prodUnit) <span class="text-danger">*</span></label>
+                                    <input type="number" step="0.01" min="0" class="form-control" @bind="DeliveryReceivedQuantity" placeholder="e.g. 10.00" />
+                                    <span class="text-muted" style="font-size: 0.75rem;">Enter the actual acceptable quantity received in good condition.</span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold text-dark">Spoiled / Damaged Quantity (@prodUnit)</label>
+                                    <input type="number" step="0.01" min="0" class="form-control" @bind="DeliverySpoiledQuantity" placeholder="e.g. 0.00" />
+                                    <span class="text-muted" style="font-size: 0.75rem;">Enter quantity rejected due to damage or spoilage, if any.</span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold text-dark">Actual Delivery Date <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" @bind="DeliveryActualDate" />
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label small fw-bold text-dark">Delivery Notes / Remarks (Optional)</label>
+                                    <textarea class="form-control" rows="2" @bind="DeliveryNotes" placeholder="e.g. Goods received in good condition. Inspected by outlet manager."></textarea>
+                                </div>
+
+                                <div class="d-flex align-items-center justify-content-between pt-2 border-top">
+                                    <button type="button" class="btn btn-outline-secondary px-3" @onclick="CancelRecordDelivery">
+                                        Cancel
+                                    </button>
+                                    <button type="button" class="btn btn-success fw-bold px-4" @onclick="ProceedToReviewDelivery">
+                                        <span>Review Delivery</span>
+                                        <span class="ms-1">&rarr;</span>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- =======================================================
+                             STEP 2: REVIEW & CONFIRM DELIVERY
+                             ======================================================= -->
+                        @if (IsReviewingDelivery)
+                        {
+                            <div class="om-delivery-review-container">
+                                <div class="om-delivery-form-header mb-3">
+                                    <h5 class="fw-bold text-dark mb-1">Review &amp; Confirm Delivery</h5>
+                                    <p class="text-muted small mb-0">Please verify the delivery summary before final submission.</p>
+                                </div>
+
+                                <div class="card border rounded-3 p-3 mb-4 shadow-sm bg-white">
+                                    <div class="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom">
+                                        <span class="text-muted small">Purchase Order</span>
+                                        <strong class="text-dark">PO-@SelectedPurchaseOrder.PurchaseOrderID</strong>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom">
+                                        <span class="text-muted small">Product</span>
+                                        <strong class="text-dark">@prodName</strong>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom">
+                                        <span class="text-muted small">Ordered Quantity</span>
+                                        <span class="text-dark">@orderedQty.ToString("0.##") @prodUnit</span>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom">
+                                        <span class="text-muted small">Received Quantity</span>
+                                        <strong class="text-success fs-6">@DeliveryReceivedQuantity.ToString("0.##") @prodUnit</strong>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom">
+                                        <span class="text-muted small">Spoiled / Damaged</span>
+                                        <strong class="@(DeliverySpoiledQuantity > 0 ? "text-danger" : "text-dark")">
+                                            @DeliverySpoiledQuantity.ToString("0.##") @prodUnit
+                                            @if (DeliverySpoiledQuantity > 0 && DeliveryReceivedQuantity > 0)
+                                            {
+                                                decimal revPct = Math.Round((DeliverySpoiledQuantity / DeliveryReceivedQuantity) * 100m, 2);
+                                                <span class="badge bg-danger text-white ms-1" style="font-size: 0.7rem;">@revPct.ToString("0.##")% Spoilage</span>
+                                            }
+                                        </strong>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom">
+                                        <span class="text-muted small">Actual Delivery Date</span>
+                                        <span class="text-dark fw-semibold">@DeliveryActualDate.ToString("dd MMM yyyy")</span>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <span class="text-muted small">Delivery Performance</span>
+                                        @{
+                                            DateTime expDate = SelectedPurchaseOrder.ExpectedDeliveryDate ?? SelectedPurchaseOrder.OrderDate.AddDays(2);
+                                            bool isOnTime = DeliveryActualDate.Date <= expDate.Date;
+                                        }
+                                        <span class="badge @(isOnTime ? "bg-success" : "bg-danger")">
+                                            @(isOnTime ? "On Time" : $"Delayed by {(DeliveryActualDate.Date - expDate.Date).Days} days")
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex align-items-center justify-content-between pt-2 border-top">
+                                    <button type="button" class="btn btn-outline-secondary px-3" @onclick="BackToEditDelivery" disabled="@IsSubmittingDelivery">
+                                        &larr; Edit Details
+                                    </button>
+                                    <button type="button" class="btn btn-success fw-bold px-4 d-flex align-items-center gap-2" @onclick="ConfirmDeliveryAsync" disabled="@IsSubmittingDelivery">
+                                        @if (IsSubmittingDelivery)
+                                        {
+                                            <span class="spinner-border spinner-border-sm"></span>
+                                            <span>Confirming...</span>
+                                        }
+                                        else
+                                        {
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
+                                            <span>Confirm Delivery</span>
+                                        }
+                                    </button>
+                                </div>
+                            </div>
+                        }
+
+                    </div>
+
+                    <!-- FOOTER -->
+                    @if (!IsRecordingDelivery && !IsReviewingDelivery)
+                    {
+                        <div class="om-po-drawer-footer">
+                            <button type="button" class="btn btn-light px-4 fw-semibold" @onclick="ClosePoDetailsModal">
+                                Close
+                            </button>
+                            <button type="button" class="btn btn-success px-4 fw-semibold" @onclick="ClosePoDetailsModal">
+                                Done
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+    </div>
+}

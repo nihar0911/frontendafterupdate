@@ -1,0 +1,618 @@
+/* =============================================================================
+   PURCHASE REQUEST DETAILS - OUTLET MANAGER REDESIGN
+   ============================================================================= */
+
+.prd-layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: #F4F7F5;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* -----------------------------------------------------------------------------
+   1. LEFT SIDEBAR
+   ----------------------------------------------------------------------------- */
+.prd-sidebar {
+    width: 240px;
+    background-color: #174F45;
+    color: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    padding: 1.5rem 1rem;
+}
+
+.prd-brand-area {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.5rem 1.75rem 0.5rem;
+}
+
+.prd-brand-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFFFFF;
+    flex-shrink: 0;
+}
+
+.prd-brand-text {
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: #FFFFFF;
+}
+
+.prd-nav-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    flex: 1;
+}
+
+.prd-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    color: #C2D6D0;
+    background: transparent;
+    border: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    width: 100%;
+    text-align: left;
+}
+
+.prd-nav-item:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: #FFFFFF;
+}
+
+.prd-nav-item.active {
+    background-color: #24584D;
+    color: #FFFFFF;
+    font-weight: 700;
+}
+
+.prd-sidebar-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.prd-user-profile-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.5rem;
+}
+
+.prd-avatar-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFFFFF;
+    flex-shrink: 0;
+}
+
+.prd-user-meta {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.prd-user-name {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.prd-user-role {
+    font-size: 0.72rem;
+    color: #9ABCB2;
+}
+
+.prd-logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: transparent;
+    border: none;
+    color: #C2D6D0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.4rem 0.5rem;
+    cursor: pointer;
+    transition: color 0.15s ease;
+}
+
+.prd-logout-btn:hover {
+    color: #EF4444;
+}
+
+/* -----------------------------------------------------------------------------
+   2. MAIN CANVAS & HEADER
+   ----------------------------------------------------------------------------- */
+.prd-main-canvas {
+    margin-left: 240px;
+    flex: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.prd-top-header {
+    height: 72px;
+    background-color: #FFFFFF;
+    border-bottom: 1px solid #E5E7EB;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 90;
+}
+
+.prd-hamburger-btn {
+    background: transparent;
+    border: none;
+    color: #374151;
+    cursor: pointer;
+    display: none;
+}
+
+.prd-greeting {
+    font-size: 1.12rem;
+    font-weight: 800;
+    color: #111827;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.prd-header-sub {
+    font-size: 0.78rem;
+    color: #6B7280;
+    margin: 0.15rem 0 0 0;
+}
+
+.text-green {
+    color: #174F45;
+}
+
+.prd-header-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.prd-notif-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    background-color: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 4px;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #374151;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.prd-notif-btn:hover {
+    background-color: #F3F4F6;
+}
+
+.prd-notif-badge {
+    background-color: #174F45;
+    color: #FFFFFF;
+    font-size: 0.68rem;
+    font-weight: 800;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.prd-dropdown-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 320px;
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 4px;
+    z-index: 1000;
+    overflow: hidden;
+}
+
+.prd-dropdown-header {
+    padding: 0.75rem 1rem;
+    background-color: #F9FAFB;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.prd-dropdown-list {
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.prd-dropdown-item {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #F3F4F6;
+    cursor: pointer;
+}
+
+.prd-dropdown-item.unread {
+    background-color: #F0FDF4;
+}
+
+.prd-outlet-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    background-color: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 4px;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+/* -----------------------------------------------------------------------------
+   3. CONTENT CONTAINER & CARDS
+   ----------------------------------------------------------------------------- */
+.prd-content-wrapper {
+    padding: 1.75rem 2rem;
+    flex: 1;
+    max-width: 1200px;
+    width: 100%;
+}
+
+.prd-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: transparent;
+    border: none;
+    color: #2E7D61;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.15s ease;
+}
+
+.prd-back-link:hover {
+    color: #174F45;
+    text-decoration: underline;
+}
+
+.prd-page-title {
+    font-size: 1.55rem;
+    font-weight: 800;
+    color: #111827;
+    margin: 0 0 0.25rem 0;
+}
+
+.prd-page-subtitle {
+    font-size: 0.92rem;
+    color: #6B7280;
+    margin: 0;
+}
+
+.prd-card {
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+/* -----------------------------------------------------------------------------
+   4. SUMMARY CARD
+   ----------------------------------------------------------------------------- */
+.prd-summary-card {
+    padding: 1.5rem 1.75rem;
+}
+
+.prd-summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 1.15rem;
+    border-bottom: 1px solid #F3F4F6;
+    margin-bottom: 1.25rem;
+}
+
+.prd-summary-code {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #111827;
+    margin: 0;
+}
+
+.prd-status-pill {
+    font-size: 0.78rem;
+    font-weight: 750;
+    padding: 0.35rem 0.95rem;
+    border-radius: 4px;
+    text-transform: capitalize;
+}
+
+.status-approved {
+    background-color: #E8F6EF;
+    color: #15803D;
+}
+
+.status-pending {
+    background-color: #FEF3C7;
+    color: #B45309;
+}
+
+.status-rejected {
+    background-color: #FEE2E2;
+    color: #B91C1C;
+}
+
+.status-neutral {
+    background-color: #F3F4F6;
+    color: #4B5563;
+}
+
+.prd-summary-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+.prd-summary-metric {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.prd-metric-label {
+    font-size: 0.74rem;
+    font-weight: 750;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.prd-metric-val {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+/* -----------------------------------------------------------------------------
+   5. TWO-COLUMN MIDDLE GRID
+   ----------------------------------------------------------------------------- */
+.prd-section-title {
+    font-size: 1.08rem;
+    font-weight: 750;
+    color: #111827;
+    margin: 0 0 1.25rem 0;
+}
+
+.prd-info-row {
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+}
+
+.prd-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.prd-info-label {
+    font-size: 0.74rem;
+    font-weight: 750;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.prd-info-val {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: 0.95rem;
+    color: #111827;
+}
+
+.prd-quotation-notice-box {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    background-color: #F0FDF4;
+    border: 1px solid #DCFCE7;
+    border-radius: 4px;
+    padding: 0.9rem 1.15rem;
+}
+
+.prd-notice-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: #DCFCE7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.prd-notice-title {
+    font-size: 0.92rem;
+    font-weight: 750;
+    color: #166534;
+    margin: 0 0 0.15rem 0;
+}
+
+.prd-notice-desc {
+    font-size: 0.82rem;
+    color: #4B5563;
+    margin: 0;
+    line-height: 1.35;
+}
+
+.prd-quotation-active-box {
+    background-color: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 4px;
+    padding: 1rem 1.25rem;
+}
+
+/* -----------------------------------------------------------------------------
+   6. REQUESTED ITEMS TABLE
+   ----------------------------------------------------------------------------- */
+.prd-items-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.prd-items-table thead th {
+    background-color: #F9FAFB;
+    color: #6B7280;
+    font-size: 0.74rem;
+    font-weight: 750;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 0.85rem 1.25rem;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.prd-items-table tbody td {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #F3F4F6;
+    vertical-align: middle;
+}
+
+.prd-col-product {
+    font-weight: 750;
+    color: #111827;
+}
+
+.prd-col-qty {
+    font-weight: 750;
+    color: #111827;
+}
+
+.prd-col-unit {
+    font-weight: 600;
+    color: #6B7280;
+}
+
+/* -----------------------------------------------------------------------------
+   7. LOADING & WARNING STATES
+   ----------------------------------------------------------------------------- */
+.prd-loading-state {
+    padding: 5rem 0;
+    text-align: center;
+}
+
+.prd-auth-warning-wrap {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.prd-auth-warning-card {
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 4px;
+    padding: 2.5rem;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    max-width: 440px;
+    width: 100%;
+}
+
+.prd-btn-primary {
+    background-color: #174F45;
+    border: 1px solid #174F45;
+    color: #FFFFFF;
+    font-weight: 700;
+    border-radius: 4px;
+    padding: 0.65rem 1.5rem;
+}
+
+.prd-btn-primary:hover {
+    background-color: #113B34;
+    color: #FFFFFF;
+}
+
+/* -----------------------------------------------------------------------------
+   8. RESPONSIVE BREAKPOINTS
+   ----------------------------------------------------------------------------- */
+@media (max-width: 992px) {
+    .prd-sidebar {
+        width: 200px;
+    }
+    .prd-main-canvas {
+        margin-left: 200px;
+    }
+    .prd-summary-metrics-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .prd-layout {
+        flex-direction: column;
+    }
+    .prd-sidebar {
+        position: static;
+        width: 100%;
+        min-height: auto;
+    }
+    .prd-main-canvas {
+        margin-left: 0;
+    }
+    .prd-content-wrapper {
+        padding: 1rem 0.75rem;
+    }
+    .prd-top-header {
+        flex-direction: column;
+        align-items: flex-start;
+        height: auto;
+        padding: 1rem;
+        gap: 1rem;
+    }
+}

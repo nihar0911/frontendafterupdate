@@ -1,0 +1,155 @@
+@namespace VenodorManagementFrontend.Components.Shared.LoginForm
+@inject ApiService Api
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+<div class="min-vh-100 d-flex flex-column justify-content-center py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-sm-11 col-md-9 col-lg-7" style="max-width: 580px;">
+                
+                <!-- TOP PORTAL LINK -->
+                <div class="mb-4">
+                    <a href="/login" class="text-decoration-none text-muted d-inline-flex align-items-center gap-2 fw-semibold hover-primary" style="font-size: 0.95rem;">
+                        <span style="font-size: 1.15rem;">&larr;</span> Back to Login
+                    </a>
+                </div>
+
+                <!-- BRANDING & ROLE HEADER -->
+                <div class="text-center mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center text-white mb-3 shadow-sm @RoleIconBgClass" 
+                         style="width: 56px; height: 56px; font-size: 1.8rem; background-color: @RoleIconColor; border-radius: 4px;">
+                        @RoleIcon
+                    </div>
+                    <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+                        <h2 class="fw-bold text-dark mb-0 fs-3">@RoleTitle</h2>
+                        <span class="badge @RoleBadgeClass py-1.5 px-3" style="font-size: 0.85rem;">@RoleBadge</span>
+                    </div>
+                    <p class="text-muted mb-0 px-2" style="font-size: 0.98rem; line-height: 1.5;">@RoleDescription</p>
+                </div>
+
+                <!-- MAIN LOGIN CARD -->
+                <div class="card shadow border bg-white mb-4" 
+                     style="border: 1px solid #D6DFD9 !important; border-radius: 4px !important; box-shadow: 0 4px 14px rgba(38, 49, 43, 0.06) !important;">
+                    <div class="card-body p-4 p-sm-5">
+
+                        @if (Auth.IsAuthenticated)
+                        {
+                            <!-- ALREADY AUTHENTICATED STATE -->
+                            <div class="text-center py-3">
+                                <div class="alert alert-success border-0 bg-success bg-opacity-10 text-success fw-bold py-3 mb-4 fs-6" role="alert">
+                                    Currently signed in as @Auth.Role
+                                </div>
+                                <div class="mb-2 text-dark fs-6">
+                                    <span class="text-muted">Account:</span> <strong>@Auth.CurrentUser?.Email</strong>
+                                </div>
+                                <div class="mb-4 text-dark fs-6">
+                                    <span class="text-muted">Name:</span> <strong>@Auth.UserName</strong>
+                                </div>
+
+                                @if (Auth.IsAdmin)
+                                {
+                                    <button class="btn btn-primary w-100 py-2.5 fw-bold shadow-sm mb-2.5 fs-6" @onclick='() => Nav.NavigateTo("/admin")'>
+                                        Go to Admin Dashboard &rarr;
+                                    </button>
+                                }
+                                else if (Auth.IsOrgManager)
+                                {
+                                    <button class="btn btn-primary w-100 py-2.5 fw-bold shadow-sm mb-2.5 fs-6" @onclick='() => Nav.NavigateTo("/org-dashboard")'>
+                                        Go to Organization Dashboard &rarr;
+                                    </button>
+                                }
+                                else if (Auth.IsVendorManager)
+                                {
+                                    <button class="btn btn-primary w-100 py-2.5 fw-bold shadow-sm mb-2.5 fs-6" @onclick='() => Nav.NavigateTo("/vendor-dashboard")'>
+                                        Go to Vendor Dashboard &rarr;
+                                    </button>
+                                }
+                                else if (Auth.IsOutletManager)
+                                {
+                                    <button class="btn btn-primary w-100 py-2.5 fw-bold shadow-sm mb-2.5 fs-6" @onclick='() => Nav.NavigateTo("/outlet-manager")'>
+                                        Go to Outlet Dashboard &rarr;
+                                    </button>
+                                }
+                                else if (Auth.IsPurchaseManager)
+                                {
+                                    <button class="btn btn-primary w-100 py-2.5 fw-bold shadow-sm mb-2.5 fs-6" @onclick='() => Nav.NavigateTo("/purchase-manager")'>
+                                        Go to Purchase Manager Dashboard &rarr;
+                                    </button>
+                                }
+
+                                <button class="btn btn-outline-danger w-100 py-2 fw-bold mt-2 fs-6" @onclick="HandleLogout">
+                                    Sign Out / Switch Account
+                                </button>
+                            </div>
+                        }
+                        else
+                        {
+                            <!-- LOGIN FORM -->
+                            <div class="mb-4">
+                                <h4 class="fw-bold text-dark mb-1 fs-4">Sign In</h4>
+                                <p class="text-muted mb-0" style="font-size: 0.92rem;">Enter your authorized credentials to continue</p>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(ErrorMessage))
+                            {
+                                <div class="alert alert-danger py-2.5 px-3.5 mb-4 d-flex align-items-center" role="alert" style="font-size: 0.95rem;">
+                                    <div>@ErrorMessage</div>
+                                </div>
+                            }
+
+                            <form @onsubmit="HandleLogin" @onsubmit:preventDefault="true">
+                                <div class="mb-3.5">
+                                    <label class="form-label fw-bold text-dark mb-1.5" style="font-size: 0.95rem;">Email Address</label>
+                                    <input type="email" 
+                                           class="form-control" 
+                                           style="padding: 0.75rem 1.15rem; font-size: 1rem; border: 1px solid #CBD8CF !important; border-radius: 4px;"
+                                           @bind="Email" 
+                                           @bind:event="oninput" 
+                                           placeholder="name@company.com" 
+                                           autocomplete="email"
+                                           required />
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold text-dark mb-1.5" style="font-size: 0.95rem;">Password</label>
+                                    <input type="password" 
+                                           class="form-control" 
+                                           style="padding: 0.75rem 1.15rem; font-size: 1rem; border: 1px solid #CBD8CF !important; border-radius: 4px;"
+                                           @bind="Password" 
+                                           @bind:event="oninput" 
+                                           placeholder="••••••••" 
+                                           autocomplete="current-password"
+                                           required />
+                                </div>
+
+                                <button type="submit" 
+                                        class="btn btn-primary w-100 fw-bold shadow-sm" 
+                                        style="padding: 0.85rem 1.5rem; font-size: 1rem; border-radius: 4px;"
+                                        disabled="@IsLoading">
+                                    @if (IsLoading)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        <span>Signing in...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Sign In</span>
+                                    }
+                                </button>
+                            </form>
+                        }
+                    </div>
+                </div>
+
+                <!-- FOOTER NOTE -->
+                <div class="text-center mt-3">
+                    <small class="text-muted" style="font-size: 0.82rem;">
+                        &copy; Smart Vendor Management System &bull; Secured Enterprise Access
+                    </small>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>

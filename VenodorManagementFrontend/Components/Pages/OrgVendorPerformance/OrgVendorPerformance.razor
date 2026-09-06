@@ -1,0 +1,10 @@
+@page "/organization/vendor-performance"
+@rendermode InteractiveServer
+@inject NavigationManager Nav
+
+@code {
+    protected override void OnInitialized()
+    {
+        Nav.NavigateTo("/org-dashboard", replace: true);
+    }
+}

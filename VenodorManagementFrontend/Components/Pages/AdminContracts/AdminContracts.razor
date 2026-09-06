@@ -1,0 +1,458 @@
+@page "/admin/contracts"
+@rendermode InteractiveServer
+@inject ApiService Api
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+<PageTitle>Contracts - Smart Vendor Management System</PageTitle>
+
+@if (!Auth.IsAuthenticated)
+{
+    <div class="container py-5">
+        <div class="alert alert-warning text-center py-4 my-5 shadow-sm rounded-3">
+            <h4 class="fw-bold mb-2">Authentication Required</h4>
+            <p class="text-muted mb-3">Please log in as an Admin user to view this page.</p>
+            <button class="btn btn-primary fw-bold px-4" @onclick='() => Nav.NavigateTo("/login")'>Go to Login</button>
+        </div>
+    </div>
+}
+else if (!Auth.IsAdmin)
+{
+    <div class="container py-5">
+        <div class="alert alert-danger text-center py-4 my-5 shadow-sm rounded-3">
+            <h4 class="fw-bold mb-2">Access Denied</h4>
+            <p class="text-muted mb-3">You do not have administrative privileges to view contracts.</p>
+            <button class="btn btn-outline-secondary fw-bold px-4" @onclick='() => Nav.NavigateTo("/")'>Return to Home</button>
+        </div>
+    </div>
+}
+else
+{
+    <div class="admin-app-layout @(IsSidebarCollapsed ? "sidebar-collapsed" : "")">
+
+        <!-- =======================================================================
+             LEFT SIDEBAR NAVIGATION
+             ======================================================================= -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-branding" @onclick='() => Nav.NavigateTo("/admin")'>
+                    <div class="brand-emblem">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="brand-text">
+                        <span class="brand-name">Smart Vendor</span>
+                        <span class="brand-sub">Management</span>
+                    </div>
+                </div>
+                <button class="sidebar-collapse-btn" @onclick="ToggleSidebar" title="Toggle Sidebar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        @if (IsSidebarCollapsed)
+                        {
+                            <polyline points="13 17 18 12 13 7"></polyline>
+                            <polyline points="6 17 11 12 6 7"></polyline>
+                        }
+                        else
+                        {
+                            <polyline points="11 17 6 12 11 7"></polyline>
+                            <polyline points="18 17 13 12 18 7"></polyline>
+                        }
+                    </svg>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/admin")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="7" height="7"></rect>
+                                    <rect x="14" y="3" width="7" height="7"></rect>
+                                    <rect x="14" y="14" width="7" height="7"></rect>
+                                    <rect x="3" y="14" width="7" height="7"></rect>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Dashboard</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/admin/organizations")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                                    <path d="M9 22v-4h6v4"></path>
+                                    <path d="M8 6h.01"></path>
+                                    <path d="M16 6h.01"></path>
+                                    <path d="M8 10h.01"></path>
+                                    <path d="M16 10h.01"></path>
+                                    <path d="M8 14h.01"></path>
+                                    <path d="M16 14h.01"></path>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Organizations</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/admin/users")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="9" cy="7" r="4"></circle>
+                                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Users</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/admin/vendors")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Vendors</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/admin/outlets")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Outlets</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/admin/products")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Products</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/admin/vendorproducts")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Vendor Products</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/admin/taxrates")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="9" y1="15" x2="15" y2="15"></line>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Tax Rates</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link active" @onclick='() => Nav.NavigateTo("/admin/contracts")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    <polyline points="10 9 9 9 8 9"></polyline>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Contracts</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/admin/profile")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0 2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Settings</span>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="collapse-toggle-link" @onclick="ToggleSidebar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                    <span class="collapse-label">Collapse</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- =======================================================================
+             MAIN BODY AREA
+             ======================================================================= -->
+        <div class="admin-main-wrapper">
+
+            <!-- TOP HEADER BAR -->
+            <header class="admin-top-header">
+                <div class="header-left">
+                    <button class="menu-toggle-btn" @onclick="ToggleSidebar" title="Toggle Sidebar">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="header-right">
+                    <!-- User Profile Dropdown Capsule -->
+                    <div class="profile-capsule-wrapper">
+                        <div class="profile-capsule" @onclick="ToggleProfileDropdown">
+                            <div class="profile-avatar">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </div>
+                            <div class="profile-meta">
+                                <span class="profile-name">@(string.IsNullOrEmpty(Auth.UserName) ? "System Admin" : Auth.UserName)</span>
+                                <span class="profile-role">Administrator</span>
+                            </div>
+                            <svg class="dropdown-arrow @(IsProfileDropdownOpen ? "open" : "")" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+
+                        @if (IsProfileDropdownOpen)
+                        {
+                            <div class="profile-dropdown-menu">
+                                <div class="dropdown-header">
+                                    <strong>@Auth.CurrentUser?.Email</strong>
+                                </div>
+                                <button class="dropdown-item" @onclick='() => Nav.NavigateTo("/admin/profile")'>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                                    View Profile &amp; Settings
+                                </button>
+                                <div class="dropdown-divider"></div>
+                                <button class="dropdown-item text-danger" @onclick="HandleLogout">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                                    Sign Out
+                                </button>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </header>
+
+            <!-- MAIN CONTENT CANVAS -->
+            <main class="admin-main-content">
+                <div class="content-container">
+
+                    <!-- PAGE TITLE -->
+                    <div class="page-title-row">
+                        <div class="page-title-left">
+                            <h1 class="page-heading">Contracts</h1>
+                            <div class="breadcrumbs-bar">
+                                <span class="breadcrumb-item breadcrumb-link" @onclick='() => Nav.NavigateTo("/admin")'>
+                                    Dashboard
+                                </span>
+                                <span class="breadcrumb-separator">&rsaquo;</span>
+                                <span class="breadcrumb-item active">Contracts</span>
+                            </div>
+                            <p class="page-subheading">Contracts registered in the system</p>
+                        </div>
+                    </div>
+
+                    <!-- CONTRACTS LIST CONTAINER -->
+                    @if (IsLoading)
+                    {
+                        <div class="contracts-loading-card">
+                            <div class="spinner-border text-success mb-3" role="status" style="width: 2.5rem; height: 2.5rem;">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <h5 class="fw-semibold text-muted">Loading contracts...</h5>
+                        </div>
+                    }
+                    else if (HasError)
+                    {
+                        <div class="contracts-error-card">
+                            <h5 class="fw-bold text-danger mb-2">Unable to load contracts</h5>
+                            <p class="text-muted small mb-3">An error occurred while connecting to the server. Please try again.</p>
+                            <button class="btn-primary-action px-4" @onclick="LoadContracts">Try Again</button>
+                        </div>
+                    }
+                    else if (Contracts == null || Contracts.Count == 0)
+                    {
+                        <div class="contracts-empty-card">
+                            <h5 class="fw-bold mb-1">No Contracts Found</h5>
+                            <p class="text-muted mb-0">There are currently no contracts registered in the system.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- LIST OF STRUCTURED CONTRACT CARDS -->
+                        <div class="contracts-card-list">
+                            @foreach (var contract in Contracts)
+                            {
+                                var currentContract = contract;
+                                bool isActive = string.Equals(currentContract.Status, "Active", StringComparison.OrdinalIgnoreCase);
+                                string outletName = GetOutletName(currentContract.OutletID);
+                                string productName = GetProductName(currentContract.ProductID);
+
+                                <div class="contract-card">
+                                    <!-- Card Header Banner -->
+                                    <div class="contract-card-header">
+                                        <h3 class="contract-title">@outletName &mdash; @productName</h3>
+                                        <span class="contract-header-status-badge">
+                                            @(string.IsNullOrWhiteSpace(currentContract.Status) ? "Active" : currentContract.Status)
+                                        </span>
+                                    </div>
+
+                                    <!-- Card Body Content -->
+                                    <div class="contract-card-body">
+                                        <!-- Top Summary Grid -->
+                                        <div class="contract-summary-grid">
+                                            <div class="summary-col">
+                                                <span class="summary-label">Outlet</span>
+                                                <span class="summary-val-dark">@outletName</span>
+                                            </div>
+                                            <div class="summary-col">
+                                                <span class="summary-label">Product</span>
+                                                <span class="summary-val-dark">@productName</span>
+                                            </div>
+                                            <div class="summary-col">
+                                                <span class="summary-label">Total Quantity</span>
+                                                <span class="summary-val-dark">@currentContract.TotalQuantity.ToString("F2")</span>
+                                            </div>
+                                            <div class="summary-col">
+                                                <span class="summary-label">Payment Method</span>
+                                                <span class="summary-val-accent">@currentContract.PaymentMethod</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Dates Row -->
+                                        <div class="contract-dates-row">
+                                            <div class="date-col">
+                                                <span class="summary-label">Start Date</span>
+                                                <div class="date-value-wrap">
+                                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4B5563" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                                    <span>@FormatDate(currentContract.StartDate)</span>
+                                                </div>
+                                            </div>
+                                            <div class="date-col">
+                                                <span class="summary-label">End Date</span>
+                                                <div class="date-value-wrap">
+                                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4B5563" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                                    <span>@FormatDate(currentContract.EndDate)</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Vendor Allocations Section -->
+                                        <div class="allocations-container">
+                                            <h4 class="allocations-heading">Vendor Allocations</h4>
+
+                                            @if (currentContract.Allocations == null || currentContract.Allocations.Count == 0)
+                                            {
+                                                <div class="no-allocations-msg">
+                                                    No vendor allocations associated with this contract.
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="table-responsive">
+                                                    <table class="allocations-table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th class="th-vendor">VENDOR</th>
+                                                                <th class="th-alloc">ALLOCATION %</th>
+                                                                <th class="th-qty">ALLOCATED QTY</th>
+                                                                <th class="th-used">USED QTY</th>
+                                                                <th class="th-rem">REMAINING QTY</th>
+                                                                <th class="th-status">STATUS</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach (var alloc in currentContract.Allocations)
+                                                            {
+                                                                var currentAlloc = alloc;
+                                                                string vendorName = GetVendorName(currentAlloc.VendorID);
+
+                                                                <tr>
+                                                                    <td class="td-vendor">@vendorName</td>
+                                                                    <td class="td-alloc">@currentAlloc.AllocationPercentage.ToString("F2")%</td>
+                                                                    <td class="td-qty">@currentAlloc.AllocatedQuantity.ToString("F2")</td>
+                                                                    <td class="td-used">@currentAlloc.UsedQuantity.ToString("F2")</td>
+                                                                    <td class="td-rem">@currentAlloc.RemainingQuantity.ToString("F2")</td>
+                                                                    <td class="td-status">
+                                                                        <span class="status-active-pill">
+                                                                            @(string.IsNullOrWhiteSpace(currentAlloc.Status) ? "Active" : currentAlloc.Status)
+                                                                        </span>
+                                                                    </td>
+                                                                </tr>
+                                                            }
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- PAGINATION FOOTER -->
+                        <div class="contracts-pagination-footer">
+                            <span class="pagination-info">
+                                Showing 1 to @Contracts.Count of @Contracts.Count contracts
+                            </span>
+                            <div class="pagination-controls">
+                                <button class="page-btn page-arrow" disabled title="Previous page">&lsaquo;</button>
+                                <button class="page-btn page-number active">1</button>
+                                <button class="page-btn page-arrow" disabled title="Next page">&rsaquo;</button>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- FOOTER -->
+                    <footer class="admin-footer">
+                        <p class="footer-text">
+                            &copy; @DateTime.Now.Year Smart Vendor Management System &bull; Secured Enterprise Access
+                        </p>
+                    </footer>
+
+                </div>
+            </main>
+
+        </div>
+
+    </div>
+}

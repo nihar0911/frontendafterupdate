@@ -1,0 +1,248 @@
+@using VenodorManagementFrontend.Models.VendorPerformance
+@rendermode InteractiveServer
+
+@if (IsOpen)
+{
+    <div class="submit-review-backdrop" @onclick="HandleBackdropClick">
+        <div class="submit-review-dialog" @onclick:stopPropagation="true">
+            
+            <!-- HEADER -->
+            <div class="submit-review-header">
+                <div class="header-icon-box">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                </div>
+                <div class="header-text">
+                    <h3 class="modal-title">@(Item?.AlreadyReviewed == true ? "Vendor Review Details" : "Submit Vendor Review")</h3>
+                    <p class="modal-subtitle">
+                        @if (Item != null)
+                        {
+                            <span>PO-@Item.PurchaseOrderID &bull; @Item.VendorName</span>
+                        }
+                    </p>
+                </div>
+                <button type="button" class="btn-close-modal" @onclick="CloseAsync" aria-label="Close modal">&times;</button>
+            </div>
+
+            <!-- BODY -->
+            <div class="submit-review-body">
+
+                @if (Item != null)
+                {
+                    <!-- TRANSACTION SUMMARY CARD (REAL DATA) -->
+                    <div class="summary-card">
+                        <div class="summary-grid">
+                            <div class="summary-col">
+                                <span class="summary-label">Vendor</span>
+                                <span class="summary-val text-dark fw-bold">@Item.VendorName</span>
+                            </div>
+                            <div class="summary-col">
+                                <span class="summary-label">Purchase Order</span>
+                                <span class="summary-val text-dark fw-semibold">PO-@Item.PurchaseOrderID</span>
+                            </div>
+                            <div class="summary-col">
+                                <span class="summary-label">Outlet</span>
+                                <span class="summary-val text-dark">@(string.IsNullOrWhiteSpace(Item.OutletName) ? $"Outlet #{Item.OutletID}" : Item.OutletName)</span>
+                            </div>
+                            <div class="summary-col">
+                                <span class="summary-label">Delivered Product</span>
+                                <span class="summary-val text-dark">@Item.ProductName (@Item.Quantity.ToString("N2") @Item.Unit)</span>
+                            </div>
+                            <div class="summary-col">
+                                <span class="summary-label">Expected Delivery</span>
+                                <span class="summary-val text-secondary">
+                                    @(Item.ExpectedDeliveryDate.HasValue ? Item.ExpectedDeliveryDate.Value.ToString("dd MMM yyyy") : "N/A")
+                                </span>
+                            </div>
+                            <div class="summary-col">
+                                <span class="summary-label">Actual Delivery</span>
+                                <span class="summary-val text-secondary">
+                                    @(Item.ActualDeliveryDate.HasValue ? Item.ActualDeliveryDate.Value.ToString("dd MMM yyyy") : "N/A")
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- AUTOMATIC DELIVERY PUNCTUALITY STATUS (NOT MANUALLY CHOSEN) -->
+                        <div class="delivery-status-banner @(IsDeliveryDelayed ? "banner-delayed" : "banner-ontime")">
+                            @if (IsDeliveryDelayed)
+                            {
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                                <span>Delivery Status: <strong>Delayed by @DelayDays day@(DelayDays > 1 ? "s" : "")</strong></span>
+                            }
+                            else
+                            {
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="me-1">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                <span>Delivery Status: <strong>On Time</strong></span>
+                            }
+                        </div>
+                    </div>
+
+                    @if (Item.AlreadyReviewed)
+                    {
+                        <!-- ALREADY REVIEWED STATE: DISPLAY DETAILS, NO ACTIVE SUBMIT -->
+                        <div class="already-reviewed-alert">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-success">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                <span class="fw-bold text-success">Review Submitted</span>
+                            </div>
+                            <p class="mb-0 text-muted small">
+                                A performance review has already been submitted for this purchase order transaction. Duplicate submissions are not permitted.
+                            </p>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- ACTIVE SUBMISSION FORM -->
+                        <div class="ratings-section">
+
+                            <!-- 1. OVERALL RATING -->
+                            <div class="rating-group">
+                                <div class="rating-label-row">
+                                    <span class="rating-title">Overall Rating <span class="text-danger">*</span></span>
+                                    <span class="rating-score-display @(OverallRating > 0 ? "has-val" : "no-val")">
+                                        @(OverallRating > 0 ? $"{OverallRating} / 5" : "Not selected yet")
+                                    </span>
+                                </div>
+                                <div class="rating-buttons" role="group" aria-label="Overall Rating">
+                                    @for (int r = 1; r <= 5; r++)
+                                    {
+                                        int score = r;
+                                        <button type="button"
+                                                class="btn-rating-tile @(OverallRating == score ? "selected" : "")"
+                                                @onclick="() => SetOverallRating(score)"
+                                                @onclick:preventDefault="true"
+                                                disabled="@IsSubmitting"
+                                                title="@score of 5">
+                                            <span class="tile-num">@score</span>
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- 2. PRODUCT QUALITY RATING -->
+                            <div class="rating-group">
+                                <div class="rating-label-row">
+                                    <span class="rating-title">Product Quality <span class="text-danger">*</span></span>
+                                    <span class="rating-score-display @(ProductQualityRating > 0 ? "has-val" : "no-val")">
+                                        @(ProductQualityRating > 0 ? $"{ProductQualityRating} / 5" : "Not selected yet")
+                                    </span>
+                                </div>
+                                <div class="rating-buttons" role="group" aria-label="Product Quality Rating">
+                                    @for (int r = 1; r <= 5; r++)
+                                    {
+                                        int score = r;
+                                        <button type="button"
+                                                class="btn-rating-tile @(ProductQualityRating == score ? "selected" : "")"
+                                                @onclick="() => SetProductQualityRating(score)"
+                                                @onclick:preventDefault="true"
+                                                disabled="@IsSubmitting"
+                                                title="@score of 5">
+                                            <span class="tile-num">@score</span>
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- 3. DELIVERY PUNCTUALITY RATING -->
+                            <div class="rating-group">
+                                <div class="rating-label-row">
+                                    <span class="rating-title">Delivery Punctuality <span class="text-danger">*</span></span>
+                                    <span class="rating-score-display @(DeliveryRating > 0 ? "has-val" : "no-val")">
+                                        @(DeliveryRating > 0 ? $"{DeliveryRating} / 5" : "Not selected yet")
+                                    </span>
+                                </div>
+                                <div class="rating-buttons" role="group" aria-label="Delivery Rating">
+                                    @for (int r = 1; r <= 5; r++)
+                                    {
+                                        int score = r;
+                                        <button type="button"
+                                                class="btn-rating-tile @(DeliveryRating == score ? "selected" : "")"
+                                                @onclick="() => SetDeliveryRating(score)"
+                                                @onclick:preventDefault="true"
+                                                disabled="@IsSubmitting"
+                                                title="@score of 5">
+                                            <span class="tile-num">@score</span>
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- 4. FEEDBACK COMMENTS -->
+                            <div class="feedback-comments-group">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label for="reviewComments" class="rating-title mb-0">Feedback Comments <span class="text-danger">*</span></label>
+                                    <span class="char-count @(ReviewText.Length > 1000 ? "text-danger fw-bold" : "text-muted")">
+                                        @ReviewText.Length / 1000
+                                    </span>
+                                </div>
+                                <textarea id="reviewComments"
+                                          class="form-control feedback-textarea"
+                                          rows="4"
+                                          maxlength="1000"
+                                          placeholder="Share specific observations about quality, freshness, packaging, punctuality, or vendor cooperation..."
+                                          @bind="ReviewText"
+                                          @bind:event="oninput"
+                                          disabled="@IsSubmitting"></textarea>
+                            </div>
+
+                        </div>
+
+                        <!-- ERROR ALERT MESSAGE -->
+                        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+                        {
+                            <div class="alert alert-danger submit-error-alert" role="alert">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2 flex-shrink-0">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                </svg>
+                                <span>@ErrorMessage</span>
+                            </div>
+                        }
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-4 text-muted">
+                        No transaction selected.
+                    </div>
+                }
+
+            </div>
+
+            <!-- FOOTER ACTIONS -->
+            <div class="submit-review-footer">
+                <button type="button" class="btn-cancel" @onclick="CloseAsync" disabled="@IsSubmitting">
+                    @(Item?.AlreadyReviewed == true ? "Close" : "Cancel")
+                </button>
+
+                @if (Item != null && !Item.AlreadyReviewed)
+                {
+                    <button type="button" class="btn-submit" @onclick="SubmitReviewAsync" disabled="@IsSubmitting">
+                        @if (IsSubmitting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            <span>Submitting Review...</span>
+                        }
+                        else
+                        {
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="me-1">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            <span>Submit Review</span>
+                        }
+                    </button>
+                }
+            </div>
+
+        </div>
+    </div>
+}

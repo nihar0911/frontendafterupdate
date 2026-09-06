@@ -1,0 +1,1098 @@
+/* =============================================================================
+   CONTRACT DETAILS PAGE — SCOPED STYLES (ContractDetails.razor.css)
+   Clean, Professional, Enterprise Design Matching Reference Image
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   1. APP LAYOUT CONTAINER
+   ----------------------------------------------------------------------------- */
+.org-app-layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: #F4F7F5;
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #1F2933;
+    margin: -1.5rem -1.5rem -2.5rem -1.5rem;
+}
+
+/* -----------------------------------------------------------------------------
+   2. LEFT SIDEBAR NAVIGATION
+   ----------------------------------------------------------------------------- */
+.org-sidebar {
+    width: 250px;
+    background-color: #174F45;
+    color: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    transition: width 0.25s ease;
+    z-index: 100;
+}
+
+.sidebar-collapsed .org-sidebar {
+    width: 74px;
+}
+
+/* Sidebar Header & Brand */
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-branding {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    user-select: none;
+    overflow: hidden;
+}
+
+.brand-emblem {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    background-color: rgba(255, 255, 255, 0.14);
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+    white-space: nowrap;
+}
+
+.brand-name {
+    font-size: 0.95rem;
+    font-weight: 750;
+    color: #FFFFFF;
+    letter-spacing: -0.01em;
+}
+
+.brand-sub {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.sidebar-collapse-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.sidebar-collapse-btn:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: #FFFFFF;
+}
+
+.sidebar-collapsed .brand-text,
+.sidebar-collapsed .sidebar-collapse-btn {
+    display: none;
+}
+
+/* Sidebar Navigation Items */
+.sidebar-nav {
+    flex: 1;
+    padding: 1rem 0.75rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.nav-list-bottom {
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.nav-item {
+    margin: 0;
+}
+
+.nav-link {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.7rem 0.85rem;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+    font-weight: 550;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+    white-space: nowrap;
+}
+
+.nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: #FFFFFF;
+}
+
+.nav-link.active {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: #FFFFFF;
+    font-weight: 700;
+}
+
+.nav-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.sidebar-collapsed .nav-label {
+    display: none;
+}
+
+.sidebar-collapsed .nav-link {
+    justify-content: center;
+    padding: 0.7rem 0;
+}
+
+/* -----------------------------------------------------------------------------
+   3. TOP HEADER
+   ----------------------------------------------------------------------------- */
+.org-main-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.org-top-header {
+    height: 64px;
+    background-color: #FFFFFF;
+    border-bottom: 1px solid #D9E2DD;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.75rem;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.menu-toggle-btn {
+    background: transparent;
+    border: none;
+    color: #4B5563;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.menu-toggle-btn:hover {
+    background-color: #F3F4F6;
+    color: #111827;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.profile-capsule-wrapper {
+    position: relative;
+}
+
+.profile-capsule {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 4px;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.15s;
+}
+
+.profile-capsule:hover {
+    background-color: #F3F4F6;
+}
+
+.profile-avatar {
+    width: 34px;
+    height: 34px;
+    background-color: #D1E7DD;
+    color: #174F45;
+    font-weight: 750;
+    font-size: 0.95rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.profile-meta {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.profile-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #1F2933;
+}
+
+.profile-role {
+    font-size: 0.72rem;
+    color: #6B7280;
+}
+
+.dropdown-arrow {
+    color: #9CA3AF;
+    transition: transform 0.2s ease;
+}
+
+.dropdown-arrow.open {
+    transform: rotate(180deg);
+}
+
+.header-logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: transparent;
+    border: 1px solid #D1D5DB;
+    padding: 0.4rem 0.85rem;
+    border-radius: 4px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #374151;
+    cursor: pointer;
+    transition: background-color 0.15s, border-color 0.15s;
+}
+
+.header-logout-btn:hover {
+    background-color: #FEE2E2;
+    border-color: #FCA5A5;
+    color: #991B1B;
+}
+
+/* -----------------------------------------------------------------------------
+   4. MAIN CONTENT CANVAS
+   ----------------------------------------------------------------------------- */
+.org-main-content {
+    flex: 1;
+    padding: 1.75rem 2rem 3rem 2rem;
+}
+
+.content-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Breadcrumb & Top Back Row */
+.top-breadcrumb-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.breadcrumb-links {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.86rem;
+}
+
+.bc-link {
+    color: #4B5563;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.bc-link:hover {
+    color: #174F45;
+    text-decoration: underline;
+}
+
+.bc-sep {
+    color: #9CA3AF;
+    font-size: 1rem;
+}
+
+.bc-current {
+    color: #111827;
+    font-weight: 700;
+}
+
+.btn-back-dashboard {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.45rem 0.9rem;
+    background-color: #FFFFFF;
+    border: 1px solid #D1D5DB;
+    border-radius: 4px;
+    color: #374151;
+    font-size: 0.82rem;
+    font-weight: 650;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    transition: all 0.15s;
+}
+
+.btn-back-dashboard:hover {
+    background-color: #F9FAFB;
+    border-color: #9CA3AF;
+    color: #111827;
+}
+
+/* Page Title Section */
+.page-title-section {
+    margin-bottom: 1.5rem;
+}
+
+.page-main-heading {
+    font-size: 1.85rem;
+    font-weight: 800;
+    color: #111827;
+    margin: 0 0 0.35rem 0;
+    letter-spacing: -0.02em;
+}
+
+.page-sub-heading {
+    font-size: 0.92rem;
+    color: #6B7280;
+    margin: 0;
+}
+
+/* -----------------------------------------------------------------------------
+   5. TOP CONTRACT HERO CARD (MATCHING REFERENCE IMAGE)
+   ----------------------------------------------------------------------------- */
+.contract-hero-card {
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 4px;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    margin-bottom: 1.5rem;
+}
+
+.hero-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.hero-icon-box {
+    width: 44px;
+    height: 44px;
+    background-color: #E6F4EA;
+    color: #174F45;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.hero-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.hero-title-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.85rem;
+}
+
+.hero-contract-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #111827;
+    margin: 0;
+}
+
+.hero-effective-dates {
+    font-size: 0.84rem;
+    color: #4B5563;
+    font-weight: 600;
+}
+
+.hero-meta-row {
+    font-size: 0.84rem;
+    color: #6B7280;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.hero-meta-row strong {
+    color: #111827;
+    font-weight: 700;
+}
+
+.meta-bullet {
+    color: #9CA3AF;
+}
+
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.84rem;
+    font-weight: 750;
+    padding: 0.35rem 0.95rem;
+    border-radius: 4px;
+}
+
+.status-active {
+    background-color: #DCFCE7;
+    color: #166534;
+    border: 1px solid #BBF7D0;
+}
+
+.status-completed {
+    background-color: #E0E7FF;
+    color: #3730A3;
+    border: 1px solid #C7D2FE;
+}
+
+.status-pending {
+    background-color: #FEF3C7;
+    color: #92400E;
+    border: 1px solid #FDE68A;
+}
+
+/* -----------------------------------------------------------------------------
+   6. TWO COLUMN MAIN LAYOUT (MATCHING REFERENCE IMAGE)
+   ----------------------------------------------------------------------------- */
+.contract-details-two-col {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 1.5rem;
+}
+
+.details-left-col {
+    display: flex;
+    flex-direction: column;
+}
+
+.details-right-col {
+    display: flex;
+    flex-direction: column;
+}
+
+.content-card {
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 4px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.card-header-row {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #F3F4F6;
+}
+
+.card-icon-box {
+    width: 34px;
+    height: 34px;
+    background-color: #E6F4EA;
+    color: #174F45;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.card-section-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #111827;
+    margin: 0;
+}
+
+/* Vendor Meta Details */
+.vendor-meta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.vendor-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.vmeta-label {
+    font-size: 0.76rem;
+    color: #6B7280;
+}
+
+.vmeta-val {
+    font-size: 0.92rem;
+    font-weight: 750;
+    color: #111827;
+}
+
+/* Allocation Table */
+.alloc-table-wrap {
+    border: 1px solid #E5E7EB;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.alloc-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.86rem;
+}
+
+.alloc-table th {
+    background-color: #F9FAFB;
+    color: #4B5563;
+    font-size: 0.74rem;
+    font-weight: 750;
+    letter-spacing: 0.03em;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.alloc-table td {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid #F3F4F6;
+    color: #374151;
+    vertical-align: middle;
+}
+
+.alloc-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.vendor-title-cell strong {
+    color: #111827;
+    font-weight: 750;
+}
+
+.badge-active-tag {
+    background-color: #DCFCE7;
+    color: #166534;
+    font-size: 0.72rem;
+    font-weight: 750;
+    padding: 0.15rem 0.55rem;
+    border-radius: 6px;
+    border: 1px solid #BBF7D0;
+}
+
+/* Product Breakdown 2x2 Grid */
+.product-breakdown-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+}
+
+.pb-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.pb-label {
+    font-size: 0.76rem;
+    color: #6B7280;
+}
+
+.pb-val {
+    font-size: 0.95rem;
+    color: #111827;
+}
+
+/* -----------------------------------------------------------------------------
+   7. RIGHT COLUMN: FINANCIALS & WORKSPACE RETURN
+   ----------------------------------------------------------------------------- */
+.financials-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.fin-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.fin-label {
+    font-size: 0.76rem;
+    color: #6B7280;
+}
+
+.fin-val {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #111827;
+}
+
+.contract-total-box {
+    background-color: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 4px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-bottom: 1.25rem;
+}
+
+.total-box-label {
+    font-size: 0.78rem;
+    color: #6B7280;
+    font-weight: 600;
+}
+
+.total-box-val {
+    font-size: 1.65rem;
+    font-weight: 850;
+    color: #174F45;
+    line-height: 1.1;
+}
+
+.contract-dates-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.cdate-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.cdate-label {
+    font-size: 0.76rem;
+    color: #6B7280;
+}
+
+.cdate-val {
+    font-size: 0.88rem;
+    font-weight: 750;
+    color: #111827;
+}
+
+.btn-return-workspace {
+    width: 100%;
+    padding: 0.75rem 1.25rem;
+    background-color: #FFFFFF;
+    border: 1.5px solid #174F45;
+    border-radius: 4px;
+    color: #174F45;
+    font-size: 0.9rem;
+    font-weight: 750;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s ease;
+}
+
+.btn-return-workspace:hover {
+    background-color: #E6F4EA;
+}
+
+/* -----------------------------------------------------------------------------
+   8. LOADING & ERROR STATES
+   ----------------------------------------------------------------------------- */
+.loading-state {
+    text-align: center;
+    padding: 4rem 2rem;
+}
+
+.loading-spinner {
+    width: 44px;
+    height: 44px;
+    border: 3.5px solid rgba(23, 79, 69, 0.15);
+    border-top-color: #174F45;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 1rem auto;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading-text {
+    font-size: 1.15rem;
+    font-weight: 750;
+    color: #111827;
+    margin-bottom: 0.25rem;
+}
+
+.loading-sub {
+    font-size: 0.86rem;
+    color: #6B7280;
+}
+
+.error-banner {
+    background-color: #FEF2F2;
+    border: 1px solid #FECACA;
+    border-radius: 4px;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #991B1B;
+    font-size: 0.88rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+}
+
+.error-banner-content {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+/* -----------------------------------------------------------------------------
+   9. UNAUTHENTICATED CONTAINER
+   ----------------------------------------------------------------------------- */
+.unauth-container {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.unauth-card {
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 4px;
+    padding: 2.5rem;
+    text-align: center;
+    max-width: 440px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.unauth-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #111827;
+    margin-bottom: 0.5rem;
+}
+
+.unauth-desc {
+    font-size: 0.88rem;
+    color: #6B7280;
+    margin-bottom: 1.5rem;
+}
+
+.btn-login-redirect {
+    padding: 0.65rem 1.5rem;
+    background-color: #174F45;
+    border: none;
+    border-radius: 4px;
+    color: #FFFFFF;
+    font-weight: 750;
+    font-size: 0.88rem;
+    cursor: pointer;
+}
+
+/* -----------------------------------------------------------------------------
+   10. RESPONSIVE DESIGN
+   ----------------------------------------------------------------------------- */
+@media (max-width: 1024px) {
+    .contract-details-two-col {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .org-sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        transform: translateX(-100%);
+    }
+
+    .org-sidebar.mobile-open {
+        transform: translateX(0);
+    }
+
+    .org-main-content {
+        padding: 1.25rem 1rem 2rem 1rem;
+    }
+
+    .contract-hero-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .hero-title-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+
+    .vendor-meta-grid,
+    .product-breakdown-grid,
+    .financials-row,
+    .contract-dates-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* -----------------------------------------------------------------------------
+   CAPACITY REACHED & RESET CONTRACT STYLES
+   ----------------------------------------------------------------------------- */
+.status-reached {
+    background-color: #FEF3C7;
+    color: #B45309;
+    border: 1px solid #FDE68A;
+}
+
+.btn-reset-contract {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.45rem 0.95rem;
+    background-color: #F0FDF4;
+    border: 1.5px solid #16A34A;
+    border-radius: 4px;
+    color: #15803D;
+    font-size: 0.82rem;
+    font-weight: 750;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-reset-contract:hover {
+    background-color: #16A34A;
+    color: #FFFFFF;
+    box-shadow: 0 2px 6px rgba(22, 163, 74, 0.25);
+}
+
+.reset-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(17, 24, 39, 0.6);
+    backdrop-filter: blur(3px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+    padding: 1rem;
+}
+
+.reset-modal-content {
+    background-color: #FFFFFF;
+    border-radius: 4px;
+    width: 100%;
+    max-width: 480px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+    animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.reset-modal-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #E5E7EB;
+    position: relative;
+}
+
+.reset-header-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    background-color: #DCFCE7;
+    color: #16A34A;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.reset-modal-title {
+    font-size: 1.12rem;
+    font-weight: 800;
+    color: #111827;
+    margin: 0;
+}
+
+.reset-modal-sub {
+    font-size: 0.8rem;
+    color: #6B7280;
+    margin: 0;
+}
+
+.btn-close-reset {
+    position: absolute;
+    top: 1rem;
+    right: 1.25rem;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #9CA3AF;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.btn-close-reset:hover {
+    color: #111827;
+}
+
+.reset-modal-body {
+    padding: 1.25rem 1.5rem;
+}
+
+.reset-info-box {
+    background-color: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 4px;
+    padding: 0.85rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    margin-bottom: 1rem;
+}
+
+.reset-info-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.84rem;
+}
+
+.info-label {
+    color: #6B7280;
+}
+
+.info-val {
+    color: #1F2937;
+}
+
+.reset-alert-box {
+    display: flex;
+    align-items: flex-start;
+    background-color: #FEF3C7;
+    border: 1px solid #FDE68A;
+    border-radius: 4px;
+    padding: 0.85rem 1rem;
+    font-size: 0.82rem;
+    color: #92400E;
+    line-height: 1.45;
+}
+
+.reset-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    background-color: #F9FAFB;
+    border-top: 1px solid #E5E7EB;
+}
+
+.btn-cancel-reset {
+    padding: 0.55rem 1.15rem;
+    background-color: #FFFFFF;
+    border: 1px solid #D1D5DB;
+    border-radius: 4px;
+    color: #374151;
+    font-size: 0.86rem;
+    font-weight: 650;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.btn-cancel-reset:hover {
+    background-color: #F3F4F6;
+}
+
+.btn-confirm-reset {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.55rem 1.25rem;
+    background-color: #16A34A;
+    border: none;
+    border-radius: 4px;
+    color: #FFFFFF;
+    font-size: 0.86rem;
+    font-weight: 750;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.btn-confirm-reset:hover {
+    background-color: #15803D;
+}
+
+.btn-confirm-reset:disabled,
+.btn-cancel-reset:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}

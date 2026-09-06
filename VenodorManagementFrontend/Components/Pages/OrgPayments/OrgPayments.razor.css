@@ -1,0 +1,709 @@
+/* =============================================================================
+   ORGANIZATION PAYMENTS PAGE — ENTERPRISE STYLES (OrgPayments.razor.css)
+   ============================================================================= */
+
+.org-app-layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: #F4F7F5;
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #1F2933;
+    margin: -1.5rem -1.5rem -2.5rem -1.5rem;
+}
+
+/* -----------------------------------------------------------------------------
+   1. LEFT SIDEBAR NAVIGATION (#174F45)
+   ----------------------------------------------------------------------------- */
+.org-sidebar {
+    width: 250px;
+    background-color: #174F45;
+    color: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    transition: width 0.25s ease;
+    z-index: 100;
+}
+
+.sidebar-collapsed .org-sidebar {
+    width: 74px;
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-branding {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    user-select: none;
+    overflow: hidden;
+}
+
+.brand-emblem {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    background-color: rgba(255, 255, 255, 0.14);
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.brand-text {
+    display: flex;
+    flex-direction: column;
+    white-space: nowrap;
+}
+
+.brand-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+    line-height: 1.2;
+}
+
+.brand-sub {
+    font-size: 0.75rem;
+    opacity: 0.75;
+    letter-spacing: 0.03em;
+}
+
+.sidebar-collapse-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    padding: 0.35rem;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar-collapse-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #FFFFFF;
+}
+
+.sidebar-portal-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.2rem;
+    background-color: rgba(0, 0, 0, 0.12);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.portal-dot {
+    width: 6px;
+    height: 6px;
+    background-color: #2ECC71;
+    border-radius: 50%;
+}
+
+.sidebar-nav {
+    flex: 1;
+    padding: 1rem 0.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    overflow-y: auto;
+}
+
+.nav-item-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.7rem 0.9rem;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    position: relative;
+}
+
+.nav-item-btn:hover {
+    background-color: rgba(255, 255, 255, 0.09);
+    color: #FFFFFF;
+}
+
+.nav-item-btn.active {
+    background-color: #266E61;
+    color: #FFFFFF;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.nav-counter-badge {
+    margin-left: auto;
+    background-color: #E67E22;
+    color: #FFFFFF;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+}
+
+.sidebar-collapsed .nav-text,
+.sidebar-collapsed .brand-text,
+.sidebar-collapsed .portal-label,
+.sidebar-collapsed .user-info-text,
+.sidebar-collapsed .nav-counter-badge {
+    display: none;
+}
+
+.sidebar-user-footer {
+    padding: 1rem 1.2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.user-avatar-circle {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background-color: #2ECC71;
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.user-info-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.user-full-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #FFFFFF;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.user-role-label {
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.65);
+}
+
+.btn-logout {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    padding: 0.35rem;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+.btn-logout:hover {
+    color: #E74C3C;
+}
+
+/* -----------------------------------------------------------------------------
+   2. MAIN VIEWPORT
+   ----------------------------------------------------------------------------- */
+.org-main-viewport {
+    flex: 1;
+    min-width: 0;
+    padding: 2rem 2.5rem;
+    overflow-y: auto;
+}
+
+.org-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.75rem;
+}
+
+.page-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 0.25rem;
+}
+
+.page-subtitle {
+    font-size: 0.875rem;
+    color: #6B7280;
+    margin-bottom: 0;
+}
+
+/* -----------------------------------------------------------------------------
+   3. KPI CARDS
+   ----------------------------------------------------------------------------- */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.kpi-card {
+    background-color: #FFFFFF;
+    border-radius: 4px;
+    border: 1px solid #E5E7EB;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.kpi-card-highlight {
+    border-left: 4px solid #E67E22;
+}
+
+.kpi-icon-wrap {
+    width: 44px;
+    height: 44px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.icon-teal { background-color: #E8F5F1; color: #174F45; }
+.icon-green { background-color: #EBF7EE; color: #27AE60; }
+.icon-amber { background-color: #FEF6EC; color: #D35400; }
+.icon-gray { background-color: #F3F4F6; color: #6B7280; }
+
+.kpi-data {
+    display: flex;
+    flex-direction: column;
+}
+
+.kpi-label {
+    font-size: 0.78rem;
+    color: #6B7280;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.kpi-value {
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: #111827;
+    line-height: 1.2;
+    margin: 0.15rem 0;
+}
+
+.kpi-hint {
+    font-size: 0.72rem;
+    color: #9CA3AF;
+}
+
+/* -----------------------------------------------------------------------------
+   4. CONTENT PANEL & TABS
+   ----------------------------------------------------------------------------- */
+.content-panel {
+    background-color: #FFFFFF;
+    border-radius: 4px;
+    border: 1px solid #E5E7EB;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+}
+
+.panel-tabs-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #E5E7EB;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.panel-tabs {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.tab-btn {
+    background: transparent;
+    border: none;
+    padding: 0.6rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #4B5563;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.tab-btn:hover {
+    background-color: #F3F4F6;
+    color: #111827;
+}
+
+.tab-btn.active {
+    background-color: #174F45;
+    color: #FFFFFF;
+    font-weight: 600;
+}
+
+.tab-badge {
+    background-color: rgba(0, 0, 0, 0.08);
+    font-size: 0.75rem;
+    padding: 0.1rem 0.45rem;
+    border-radius: 4px;
+}
+
+.tab-btn.active .tab-badge {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: #FFFFFF;
+}
+
+.tab-badge-amber {
+    background-color: #E67E22;
+    color: #FFFFFF;
+}
+
+.panel-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.search-box {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: #F9FAFB;
+    border: 1px solid #D1D5DB;
+    border-radius: 6px;
+    padding: 0.45rem 0.75rem;
+}
+
+.search-box input {
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 0.85rem;
+    width: 230px;
+}
+
+.method-select {
+    width: auto;
+    font-size: 0.85rem;
+    padding: 0.45rem 2rem 0.45rem 0.75rem;
+    border-radius: 6px;
+    border-color: #D1D5DB;
+}
+
+/* -----------------------------------------------------------------------------
+   5. TABLE
+   ----------------------------------------------------------------------------- */
+.table-responsive {
+    overflow-x: auto;
+}
+
+.org-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.org-table th {
+    background-color: #F9FAFB;
+    color: #4B5563;
+    font-weight: 600;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.85rem 1.25rem;
+    border-bottom: 1px solid #E5E7EB;
+    text-align: left;
+}
+
+.org-table td {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #F3F4F6;
+    vertical-align: middle;
+}
+
+.org-table tr:hover td {
+    background-color: #FAFAFA;
+}
+
+.vendor-name-cell {
+    font-weight: 500;
+    color: #111827;
+}
+
+.ref-link {
+    color: #174F45;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.ref-link:hover {
+    text-decoration: underline;
+}
+
+.badge-payment-method {
+    display: inline-block;
+    padding: 0.25rem 0.6rem;
+    background-color: #EEF2F6;
+    color: #334E68;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.65rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.pill-paid {
+    background-color: #D4EDDA;
+    color: #155724;
+}
+
+.pill-approved {
+    background-color: #CCE5FF;
+    color: #004085;
+}
+
+.btn-action-view {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: transparent;
+    border: 1px solid #D1D5DB;
+    border-radius: 5px;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: #4B5563;
+    cursor: pointer;
+}
+
+.btn-action-view:hover {
+    background-color: #F3F4F6;
+    color: #111827;
+}
+
+.btn-record-payment {
+    background-color: #174F45;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 6px;
+    padding: 0.4rem 0.85rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.btn-record-payment:hover {
+    background-color: #123C34;
+    color: #FFFFFF;
+}
+
+/* -----------------------------------------------------------------------------
+   6. MODAL STYLING
+   ----------------------------------------------------------------------------- */
+.modal-backdrop-custom {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+    backdrop-filter: blur(2px);
+}
+
+.modal-dialog-custom {
+    width: 100%;
+    max-width: 520px;
+    margin: 1.5rem;
+}
+
+.modal-content-custom {
+    background-color: #FFFFFF;
+    border-radius: 4px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+}
+
+.modal-header-custom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.modal-title-custom {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+}
+
+.modal-subtitle-custom {
+    font-size: 0.8rem;
+    color: #6B7280;
+}
+
+.btn-close-modal {
+    background: transparent;
+    border: none;
+    color: #9CA3AF;
+    padding: 0.25rem;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.btn-close-modal:hover {
+    color: #111827;
+}
+
+.modal-body-custom {
+    padding: 1.5rem;
+}
+
+.payment-meta-card {
+    background-color: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 4px;
+    padding: 0.85rem 1rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+}
+
+.meta-row {
+    display: flex;
+    justify-content: space-between;
+}
+
+.meta-label {
+    color: #6B7280;
+}
+
+.meta-val {
+    font-weight: 600;
+    color: #111827;
+}
+
+/* Amount Due Banner — Strictly READ-ONLY */
+.amount-due-card {
+    background: linear-gradient(135deg, #E8F5F1 0%, #D4EDDA 100%);
+    border: 1px solid #A3D9C9;
+    border-radius: 4px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 1.25rem;
+}
+
+.amount-due-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.35rem;
+}
+
+.amount-due-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #174F45;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.badge-auto-derived {
+    background-color: #174F45;
+    color: #FFFFFF;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+}
+
+.amount-due-figure {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #174F45;
+    line-height: 1.1;
+}
+
+.amount-due-note {
+    font-size: 0.72rem;
+    color: #2D5A4C;
+    margin-top: 0.35rem;
+}
+
+.form-label-custom {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.35rem;
+    display: block;
+}
+
+.modal-footer-custom {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    background-color: #F9FAFB;
+    border-top: 1px solid #E5E7EB;
+}
+
+.empty-state, .loading-state {
+    padding: 3.5rem 1.5rem;
+    text-align: center;
+}
+
+.empty-state-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    background-color: #F3F4F6;
+    color: #9CA3AF;
+    border-radius: 50%;
+}

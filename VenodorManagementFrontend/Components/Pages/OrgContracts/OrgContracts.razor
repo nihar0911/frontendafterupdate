@@ -1,0 +1,633 @@
+@page "/org/contracts"
+@page "/organization/contracts"
+@rendermode InteractiveServer
+@inject ApiService Api
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+<PageTitle>Organization Contracts - Smart Vendor Management System</PageTitle>
+
+@if (!Auth.IsAuthenticated)
+{
+    <div class="unauth-container">
+        <div class="unauth-card">
+            <h4 class="unauth-title">Authentication Required</h4>
+            <p class="unauth-desc">Please log in as an Organization Manager to view contracts.</p>
+            <button class="btn-login-redirect" @onclick='() => Nav.NavigateTo("/login")'>Go to Login</button>
+        </div>
+    </div>
+}
+else if (!Auth.IsOrgManager && !Auth.IsAdmin)
+{
+    <div class="unauth-container">
+        <div class="unauth-card">
+            <h4 class="unauth-title text-danger">Access Denied</h4>
+            <p class="unauth-desc">You do not have Organization Manager privileges to view contracts.</p>
+            <button class="btn-login-redirect" @onclick='() => Nav.NavigateTo("/")'>Return to Home</button>
+        </div>
+    </div>
+}
+else
+{
+    <div class="org-app-layout @(IsSidebarCollapsed ? "sidebar-collapsed" : "")">
+
+        <!-- =======================================================================
+             LEFT SIDEBAR NAVIGATION (ENTERPRISE DARK GREEN)
+             ======================================================================= -->
+        <aside class="org-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-branding" @onclick='() => Nav.NavigateTo("/org-dashboard")'>
+                    <div class="brand-emblem">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="brand-text">
+                        <span class="brand-name">Smart Vendor</span>
+                        <span class="brand-sub">Management</span>
+                    </div>
+                </div>
+                <button class="sidebar-collapse-btn" @onclick="ToggleSidebar" title="Toggle Sidebar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        @if (IsSidebarCollapsed)
+                        {
+                            <polyline points="13 17 18 12 13 7"></polyline>
+                            <polyline points="6 17 11 12 6 7"></polyline>
+                        }
+                        else
+                        {
+                            <polyline points="11 17 6 12 11 7"></polyline>
+                            <polyline points="18 17 13 12 18 7"></polyline>
+                        }
+                    </svg>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/org-dashboard")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Dashboard</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/organization/outlets")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                    <path d="M9 22V12h6v10"></path>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Outlets</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/procurement")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Purchase Requests</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/quotations")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="12" y1="18" x2="12" y2="12"></line>
+                                    <line x1="9" y1="15" x2="15" y2="15"></line>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Quotations</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link active" @onclick='() => Nav.NavigateTo("/organization/contracts")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Contracts</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/organization/purchase-orders")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="1" y="3" width="15" height="13"></rect>
+                                    <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                                    <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                    <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Purchase Orders</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/organization/invoices")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    <polyline points="10 9 9 9 8 9"></polyline>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Invoices</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/organization/payments")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                    <line x1="1" y1="10" x2="23" y2="10"></line>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Payments</span>
+                        </button>
+                    </li>
+                </ul>
+
+                <ul class="nav-list nav-list-bottom">
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/org-dashboard")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </span>
+                            <span class="nav-label">My Profile</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link nav-logout" @onclick="HandleLogout">
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                    <polyline points="16 17 21 12 16 7"></polyline>
+                                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Logout</span>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- =======================================================================
+             MAIN BODY WRAPPER
+             ======================================================================= -->
+        <div class="org-main-wrapper">
+
+            <!-- TOP HEADER -->
+            <header class="org-top-header">
+                <button class="menu-toggle-btn" @onclick="ToggleSidebar" title="Toggle Menu">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+
+                <div class="header-right">
+                    <div class="profile-capsule-wrapper">
+                        <div class="profile-capsule" @onclick="ToggleProfileDropdown">
+                            <div class="profile-avatar">@GetUserInitial()</div>
+                            <div class="profile-meta">
+                                <span class="profile-name">@(string.IsNullOrWhiteSpace(Auth.UserName) ? (Auth.CurrentUser?.Name ?? "Organization Manager") : Auth.UserName)</span>
+                                <span class="profile-role">Organization Manager</span>
+                            </div>
+                            <svg class="dropdown-arrow @(IsProfileDropdownOpen ? "open" : "")" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <button class="header-logout-btn" @onclick="HandleLogout" title="Sign out">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        <span>Logout</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- MAIN CONTENT CANVAS -->
+            <main class="org-main-content">
+                <div class="content-container">
+
+                    <!-- BREADCRUMB ROW -->
+                    <div class="top-breadcrumb-row">
+                        <div class="breadcrumb-links">
+                            <a href="/org-dashboard" class="bc-link">Dashboard</a>
+                            <span class="bc-sep">&rsaquo;</span>
+                            <span class="bc-current">Contracts</span>
+                        </div>
+                    </div>
+
+                    <!-- PAGE MAIN HEADING ROW (WITH + ADD CONTRACT ACTION) -->
+                    <div class="page-header-action-row">
+                        <div>
+                            <h1 class="page-main-heading">Active Organization Contracts</h1>
+                            <p class="page-sub-heading">Active procurement contracts across all outlets in @OrganizationName</p>
+                        </div>
+
+                        <button type="button" class="btn-start-procure-header" @onclick='() => Nav.NavigateTo("/contract/create")'>
+                            <span>Add Contract</span>
+                        </button>
+                    </div>
+
+                    @if (IsLoading)
+                    {
+                        <div class="loading-state">
+                            <div class="loading-spinner"></div>
+                            <h4 class="loading-text">Loading organization contracts...</h4>
+                            <p class="loading-sub">Fetching active outlet contracts, vendor allocations and fulfillment status</p>
+                        </div>
+                    }
+                    else if (HasError)
+                    {
+                        <div class="error-banner">
+                            <div class="error-banner-content">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                </svg>
+                                <span>Failed to load contracts for your organization. Please try again.</span>
+                            </div>
+                            <button type="button" class="btn-back-dashboard" @onclick="LoadData">Retry</button>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- 4 STAT SUMMARY TILES -->
+                        <div class="stats-grid-row mb-4">
+                            <div class="stat-card">
+                                <div class="stat-icon-box stat-icon-green">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    </svg>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-label">Active Contracts</span>
+                                    <span class="stat-value text-success">@ActiveContractsCount</span>
+                                </div>
+                            </div>
+
+                            <div class="stat-card">
+                                <div class="stat-icon-box stat-icon-teal">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                        <path d="M9 22V12h6v10"></path>
+                                    </svg>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-label">Outlets Covered</span>
+                                    <span class="stat-value">@OutletsWithContractsCount</span>
+                                </div>
+                            </div>
+
+                            <div class="stat-card">
+                                <div class="stat-icon-box stat-icon-blue">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                                    </svg>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-label">Total Contracted Qty</span>
+                                    <span class="stat-value text-success">@TotalContractedQuantity.ToString("N2") Kg</span>
+                                </div>
+                            </div>
+
+                            <div class="stat-card">
+                                <div class="stat-icon-box stat-icon-emerald">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="12" y1="1" x2="12" y2="23"></line>
+                                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                                    </svg>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-label">Total Active Value</span>
+                                    <span class="stat-value text-success">Rs. @TotalContractedValue.ToString("N2")</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SEARCH & FILTER TOOLBAR -->
+                        <div class="contracts-toolbar mb-4">
+                            <div class="search-box-wrap">
+                                <svg class="search-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                                <input type="text" class="search-input" placeholder="Search by product, vendor, or contract #..."
+                                       @bind="SearchQuery" @bind:event="oninput" />
+                            </div>
+
+                            <div class="toolbar-actions">
+                                <div class="select-box-wrap">
+                                    <select class="toolbar-select" @bind="SelectedOutletId">
+                                        <option value="0">All Outlets</option>
+                                        @foreach (var o in OrgOutlets)
+                                        {
+                                            <option value="@o.OutletID">@o.OutletName</option>
+                                        }
+                                    </select>
+                                </div>
+
+                                <div class="select-box-wrap">
+                                    <select class="toolbar-select" @bind="SelectedSort">
+                                        <option value="Latest">Latest First</option>
+                                        <option value="ValueHigh">Highest Value</option>
+                                        <option value="Outlet">Outlet Name</option>
+                                        <option value="Oldest">Oldest First</option>
+                                    </select>
+                                </div>
+
+                                <span class="badge-total-count">
+                                    Contracts: @FilteredContracts.Count()
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- CONTRACTS LIST CARDS -->
+                        @if (!FilteredContracts.Any())
+                        {
+                            <div class="empty-contracts-card">
+                                <div class="empty-contracts-icon">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    </svg>
+                                </div>
+                                <h4 class="empty-contracts-title">No Active Contracts Found</h4>
+                                <p class="empty-contracts-desc">
+                                    @if (!string.IsNullOrWhiteSpace(SearchQuery) || SelectedOutletId > 0)
+                                    {
+                                        <span>No contracts match your selected outlet or search query.</span>
+                                    }
+                                    else
+                                    {
+                                        <span>No active contracts are established for @OrganizationName yet. Once you review and accept a vendor quotation, you can generate an active contract.</span>
+                                    }
+                                </p>
+                                <button type="button" class="btn-goto-procure" @onclick='() => Nav.NavigateTo("/quotations")'>
+                                    Review Quotations &rarr;
+                                </button>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="contracts-cards-grid">
+                                @foreach (var contract in FilteredContracts)
+                                {
+                                    var currentContract = contract;
+                                    decimal remaining = currentContract.TotalQuantity - currentContract.UsedQuantity;
+                                    decimal totalVal = currentContract.TotalAmount > 0 
+                                        ? currentContract.TotalAmount 
+                                        : (currentContract.TotalQuantity * currentContract.UnitPrice + currentContract.TaxAmount);
+                                    double progressPercent = currentContract.TotalQuantity > 0 
+                                        ? (double)Math.Min(100m, Math.Round((currentContract.UsedQuantity / currentContract.TotalQuantity) * 100m, 1)) 
+                                        : 0;
+
+                                    <div class="contract-card">
+                                        <!-- Card Top Header -->
+                                        <div class="contract-card-header">
+                                            <div class="c-header-left">
+                                                <div class="c-icon-badge">
+                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                                                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <div class="c-title-row">
+                                                        <h3 class="c-title">Contract @currentContract.ContractID</h3>
+                                                        <span class="c-outlet-pill">@currentContract.OutletName</span>
+                                                    </div>
+                                                    <span class="c-dates">
+                                                        Effective: @currentContract.StartDate.ToString("dd MMM yyyy") &ndash; @currentContract.EndDate.ToString("dd MMM yyyy")
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                @if (string.Equals(currentContract.Status, "Active", StringComparison.OrdinalIgnoreCase))
+                                                {
+                                                    <span class="status-pill status-active">
+                                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                                        </svg>
+                                                        <span>Active</span>
+                                                    </span>
+                                                }
+                                                else if (string.Equals(currentContract.Status, "Reached", StringComparison.OrdinalIgnoreCase))
+                                                {
+                                                    <span class="status-pill status-reached">
+                                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                                            <circle cx="12" cy="12" r="10"></circle>
+                                                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                                                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                                        </svg>
+                                                        <span>Capacity Reached</span>
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="status-pill status-other">@currentContract.Status</span>
+                                                }
+                                            </div>
+                                        </div>
+
+                                        <!-- Card Middle Information Grid -->
+                                        <div class="contract-card-body">
+                                            <div class="c-body-col">
+                                                <div class="c-field-group">
+                                                    <span class="c-label">Product Contracted</span>
+                                                    <span class="c-val-product">@currentContract.ProductName</span>
+                                                </div>
+
+                                                <div class="c-field-group">
+                                                    <span class="c-label">Primary Vendor</span>
+                                                    <span class="c-val-vendor">@currentContract.VendorName</span>
+                                                </div>
+
+                                                <div class="c-field-group">
+                                                    <span class="c-label">Payment Method</span>
+                                                    <span class="c-val">@currentContract.PaymentMethod</span>
+                                                </div>
+                                            </div>
+
+                                            <div class="c-body-col">
+                                                <div class="c-field-group">
+                                                    <div class="d-flex justify-content-between align-items-baseline mb-1">
+                                                        <span class="c-label">Fulfillment / Usage</span>
+                                                        <span class="c-progress-text">@currentContract.UsedQuantity.ToString("N2") / @currentContract.TotalQuantity.ToString("N2") @currentContract.Unit</span>
+                                                    </div>
+                                                    <div class="progress-bar-track">
+                                                        <div class="progress-bar-fill" style="width: @progressPercent%;"></div>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between align-items-center mt-1">
+                                                        <span class="c-sub-text">@progressPercent% Used</span>
+                                                        <span class="c-sub-text text-success fw-bold">@remaining.ToString("N2") @currentContract.Unit Remaining</span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="c-financials-box mt-3">
+                                                    <div class="c-fin-item">
+                                                        <span class="c-fin-label">Unit Price</span>
+                                                        <span class="c-fin-val">Rs. @currentContract.UnitPrice.ToString("N2")</span>
+                                                    </div>
+                                                    <div class="c-fin-item text-end">
+                                                        <span class="c-fin-label">Total Contract Value</span>
+                                                        <span class="c-fin-val text-success fw-bold fs-6">Rs. @totalVal.ToString("N2")</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Card Action Footer -->
+                                        <div class="contract-card-footer d-flex justify-content-between align-items-center">
+                                            <div>
+                                                @if (string.Equals(currentContract.Status, "Reached", StringComparison.OrdinalIgnoreCase))
+                                                {
+                                                    <button type="button" class="btn-reset-contract" @onclick="() => PromptResetContract(currentContract)">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                            <polyline points="1 4 1 10 7 10"></polyline>
+                                                            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                                                        </svg>
+                                                        <span>Reset Contract Allocation</span>
+                                                    </button>
+                                                }
+                                            </div>
+                                            <button type="button" class="btn-card-details" @onclick='() => Nav.NavigateTo($"/contract/{currentContract.ContractID}")'>
+                                                <span>View Contract Details &rarr;</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    }
+
+                </div>
+            </main>
+        </div>
+    </div>
+}
+
+@if (IsResetModalOpen && ContractToReset != null)
+{
+    <div class="reset-modal-backdrop" @onclick="CancelReset">
+        <div class="reset-modal-content" @onclick:stopPropagation="true">
+            <div class="reset-modal-header">
+                <div class="reset-header-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="1 4 1 10 7 10"></polyline>
+                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="reset-modal-title">Reset Contract Allocation</h3>
+                    <p class="reset-modal-sub">Contract #@ContractToReset.ContractID &bull; @ContractToReset.OutletName</p>
+                </div>
+                <button type="button" class="btn-close-reset" @onclick="CancelReset" aria-label="Close">&times;</button>
+            </div>
+
+            <div class="reset-modal-body">
+                <div class="reset-info-box">
+                    <div class="reset-info-row">
+                        <span class="info-label">Product:</span>
+                        <span class="info-val fw-bold">@ContractToReset.ProductName</span>
+                    </div>
+                    <div class="reset-info-row">
+                        <span class="info-label">Total Commitment:</span>
+                        <span class="info-val">@ContractToReset.TotalQuantity.ToString("N2") @ContractToReset.Unit</span>
+                    </div>
+                    <div class="reset-info-row">
+                        <span class="info-label">Current Usage:</span>
+                        <span class="info-val text-danger fw-bold">@ContractToReset.UsedQuantity.ToString("N2") @ContractToReset.Unit (100% Reached)</span>
+                    </div>
+                </div>
+
+                <div class="reset-alert-box">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2 text-warning flex-shrink-0">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    <span>
+                        Resetting this contract will restore its status to <strong>Active</strong> and set <strong>Used Quantity to 0</strong> for all allocations. This allows new Purchase Orders to utilize the contracted volume again.
+                    </span>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(ResetErrorMessage))
+                {
+                    <div class="alert alert-danger mt-3 py-2 small" role="alert">
+                        @ResetErrorMessage
+                    </div>
+                }
+            </div>
+
+            <div class="reset-modal-footer">
+                <button type="button" class="btn-cancel-reset" @onclick="CancelReset" disabled="@IsResetting">Cancel</button>
+                <button type="button" class="btn-confirm-reset" @onclick="ExecuteResetContractAsync" disabled="@IsResetting">
+                    @if (IsResetting)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        <span>Resetting...</span>
+                    }
+                    else
+                    {
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="me-1">
+                            <polyline points="1 4 1 10 7 10"></polyline>
+                            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                        </svg>
+                        <span>Yes, Reset Contract</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+}

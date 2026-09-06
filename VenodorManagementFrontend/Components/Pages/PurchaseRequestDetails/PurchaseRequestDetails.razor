@@ -1,0 +1,481 @@
+@page "/purchase-request/{requestId:int}"
+@page "/purchase-request"
+@rendermode InteractiveServer
+@inject ApiService Api
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+<PageTitle>Purchase Request Details - Smart Vendor Management System</PageTitle>
+
+@if (!Auth.IsAuthenticated)
+{
+    <div class="prd-auth-warning-wrap">
+        <div class="prd-auth-warning-card">
+            <h4 class="fw-bold mb-2">Authentication Required</h4>
+            <p class="text-muted mb-3">Please log in to view purchase request details.</p>
+            <button class="btn prd-btn-primary fw-bold px-4" @onclick='() => Nav.NavigateTo(Auth.IsPurchaseManager ? "/purchase-manager/login" : "/login")'>Go to Login</button>
+        </div>
+    </div>
+}
+else
+{
+    <div class="prd-layout">
+        
+        <!-- ===============================================================
+             1. LEFT SIDEBAR (DARK GREEN #174F45)
+             =============================================================== -->
+        <aside class="prd-sidebar">
+            <div class="prd-brand-area">
+                <div class="prd-brand-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+                        <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+                        <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+                        <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+                    </svg>
+                </div>
+                <span class="prd-brand-text">OUTLET WORKSPACE</span>
+            </div>
+
+            <!-- NAVIGATION MENU -->
+            <nav class="prd-nav-list">
+                <!-- Dashboard -->
+                <button type="button" class="prd-nav-item" @onclick='() => Nav.NavigateTo(Auth.IsPurchaseManager ? "/purchase-manager" : "/outlet-manager")'>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    <span>Dashboard</span>
+                </button>
+
+                <!-- My Purchase Requests (ACTIVE) -->
+                <button type="button" class="prd-nav-item active" @onclick='() => Nav.NavigateTo("/outlet-manager")'>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <line x1="10" y1="9" x2="8" y2="9"></line>
+                    </svg>
+                    <span>My Purchase Requests</span>
+                </button>
+
+                <!-- Purchase Orders -->
+                <button type="button" class="prd-nav-item" @onclick='() => Nav.NavigateTo("/outlet-manager?tab=PurchaseOrders")'>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="1" y="3" width="15" height="13"></rect>
+                        <polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon>
+                        <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                        <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                    </svg>
+                    <span>Purchase Orders</span>
+                </button>
+
+                <!-- My Outlet -->
+                <button type="button" class="prd-nav-item" @onclick='() => Nav.NavigateTo("/outlet-manager")'>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"></path>
+                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                        <path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"></path>
+                        <path d="M2 7h20"></path>
+                        <path d="M22 7v3a2 2 0 0 1-2 2v0a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12v0a2 2 0 0 1-2-2V7"></path>
+                    </svg>
+                    <span>My Outlet</span>
+                </button>
+
+                <!-- My Profile -->
+                <button type="button" class="prd-nav-item" @onclick='() => Nav.NavigateTo("/outlet-manager")'>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    <span>My Profile</span>
+                </button>
+            </nav>
+
+            <!-- BOTTOM USER PILL & LOGOUT -->
+            <div class="prd-sidebar-footer">
+                <div class="prd-user-profile-pill">
+                    <div class="prd-avatar-circle">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </div>
+                    <div class="prd-user-meta">
+                        <span class="prd-user-name">@(string.IsNullOrWhiteSpace(Auth.UserName) || Auth.UserName == "Guest" ? (Auth.CurrentUser?.Name ?? (Auth.IsPurchaseManager ? "Purchase Manager" : "Outlet Manager")) : Auth.UserName)</span>
+                        <span class="prd-user-role">@(Auth.IsPurchaseManager ? "Purchase Manager" : "Outlet Manager")</span>
+                    </div>
+                </div>
+
+                <button type="button" class="prd-logout-btn" @onclick="HandleLogout">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- ===============================================================
+             2. MAIN CONTENT AREA
+             =============================================================== -->
+        <main class="prd-main-canvas">
+            
+            <!-- TOP WHITE HEADER BAR -->
+            <header class="prd-top-header">
+                <div class="d-flex align-items-center gap-3">
+                    <button type="button" class="prd-hamburger-btn" aria-label="Toggle menu">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <div>
+                        <h1 class="prd-greeting">Welcome, @(string.IsNullOrWhiteSpace(Auth.UserName) || Auth.UserName == "Guest" ? (Auth.CurrentUser?.Name ?? (Auth.IsPurchaseManager ? "Purchase Manager" : "Outlet Manager")) : Auth.UserName)</h1>
+                        <p class="prd-header-sub">Outlet: <strong class="text-green">@OutletName</strong> &bull; Organization: @OrganizationName</p>
+                    </div>
+                </div>
+
+                <!-- TOP HEADER CONTROLS (RIGHT) -->
+                <div class="prd-header-right">
+                    <!-- Notifications Dropdown -->
+                    <div class="position-relative">
+                        <button type="button" class="prd-notif-btn" @onclick="ToggleNotifications">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
+                                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path>
+                            </svg>
+                            <span>Notifications</span>
+                            @if (UnreadNotificationCount > 0)
+                            {
+                                <span class="prd-notif-badge">@UnreadNotificationCount</span>
+                            }
+                        </button>
+
+                        @if (ShowNotificationDropdown)
+                        {
+                            <div class="prd-dropdown-panel shadow">
+                                <div class="prd-dropdown-header">
+                                    <h6 class="mb-0 fw-bold">Notifications (@UnreadNotificationCount unread)</h6>
+                                </div>
+                                <div class="prd-dropdown-list">
+                                    @if (Notifications == null || Notifications.Count == 0)
+                                    {
+                                        <div class="p-3 text-center text-muted small">No new notifications</div>
+                                    }
+                                    else
+                                    {
+                                        @foreach (var notif in Notifications)
+                                        {
+                                            <div class="prd-dropdown-item @(notif.IsRead ? "read" : "unread")" @onclick="() => MarkAsRead(notif.NotificationID)">
+                                                <div class="fw-bold text-dark small">@notif.Title</div>
+                                                <div class="text-muted small">@notif.Message</div>
+                                                <div class="text-secondary smaller mt-1">@notif.CreatedDate.ToString("dd MMM yyyy, hh:mm tt")</div>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Outlet Location Pill -->
+                    <div class="prd-outlet-pill">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        <span>@OutletName</span>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                </div>
+            </header>
+
+            <!-- MAIN CONTENT CONTAINER -->
+            <div class="prd-content-wrapper">
+                
+                @if (IsLoading)
+                {
+                    <div class="prd-loading-state">
+                        <div class="spinner-border text-success mb-3" role="status" style="width: 2.75rem; height: 2.75rem;"></div>
+                        <p class="text-muted fw-bold">Loading purchase request details...</p>
+                    </div>
+                }
+                else if (HasError || PurchaseRequest == null)
+                {
+                    <div class="prd-card p-5 text-center my-4">
+                        <h5 class="fw-bold text-danger mb-2">Purchase Request Not Found or Access Denied</h5>
+                        <p class="text-muted small mb-3">@ErrorMessage</p>
+                        <button class="btn prd-btn-primary fw-bold px-4" @onclick='() => Nav.NavigateTo(Auth.IsPurchaseManager ? "/purchase-manager" : "/outlet-manager")'>
+                            &larr; @(Auth.IsPurchaseManager ? "Return to Dashboard" : "Return to My Purchase Requests")
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <!-- BACK LINK -->
+                    <div class="mb-3">
+                        <button type="button" class="prd-back-link" @onclick='() => Nav.NavigateTo(Auth.IsPurchaseManager ? "/purchase-manager" : "/outlet-manager")'>
+                            &larr; @(Auth.IsPurchaseManager ? "Back to Dashboard" : "Back to My Purchase Requests")
+                        </button>
+                    </div>
+
+                    <!-- PAGE TITLE & SUBTITLE -->
+                    <div class="mb-4">
+                        <h2 class="prd-page-title">Purchase Request Details</h2>
+                        <p class="prd-page-subtitle">View request status, item details, and vendor quotation</p>
+                    </div>
+
+                    <!-- 1. TOP PURCHASE REQUEST SUMMARY CARD -->
+                    <div class="prd-card prd-summary-card mb-4">
+                        <div class="prd-summary-header">
+                            <h3 class="prd-summary-code">Purchase Request PR-@PurchaseRequest.RequestID</h3>
+                            
+                            @{
+                                string badgeClass = PurchaseRequest.Status switch
+                                {
+                                    "Approved" or "Accepted" or "Completed" => "status-approved",
+                                    "Pending" or "Submitted" => "status-pending",
+                                    "Rejected" or "Declined" => "status-rejected",
+                                    _ => "status-neutral"
+                                };
+                            }
+                            <span class="prd-status-pill @badgeClass">@PurchaseRequest.Status</span>
+                        </div>
+
+                        <div class="prd-summary-metrics-grid">
+                            <!-- Created On -->
+                            <div class="prd-summary-metric">
+                                <span class="prd-metric-label">Created On</span>
+                                <div class="prd-metric-val">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2E7D61" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                                    </svg>
+                                    <span>@PurchaseRequest.RequestDate.ToString("dd MMM yyyy, hh:mm tt")</span>
+                                </div>
+                            </div>
+
+                            <!-- Requested By -->
+                            <div class="prd-summary-metric">
+                                <span class="prd-metric-label">Requested By</span>
+                                <div class="prd-metric-val">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2E7D61" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="12" cy="7" r="4"></circle>
+                                    </svg>
+                                    <span>@CreatedByUserName</span>
+                                </div>
+                            </div>
+
+                            <!-- Current Status -->
+                            <div class="prd-summary-metric">
+                                <span class="prd-metric-label">Current Status</span>
+                                <div class="prd-metric-val text-success">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                    </svg>
+                                    <span class="fw-bold">@PurchaseRequest.Status</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. TWO-COLUMN MIDDLE GRID -->
+                    <div class="row g-4 mb-4">
+                        
+                        <!-- LEFT: REQUEST INFORMATION -->
+                        <div class="col-lg-6">
+                            <div class="prd-card h-100 p-4">
+                                <h4 class="prd-section-title">Request Information</h4>
+
+                                <div class="prd-info-row">
+                                    <div class="prd-info-item">
+                                        <span class="prd-info-label">Outlet</span>
+                                        <div class="prd-info-val">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#174F45" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"></path>
+                                                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                                                <path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"></path>
+                                            </svg>
+                                            <span class="fw-bold">@OutletName</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="prd-info-item">
+                                        <span class="prd-info-label">Organization</span>
+                                        <div class="prd-info-val">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#174F45" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                                                <path d="M9 22v-4h6v4"></path>
+                                                <path d="M8 6h.01"></path>
+                                                <path d="M16 6h.01"></path>
+                                                <path d="M8 10h.01"></path>
+                                                <path d="M16 10h.01"></path>
+                                            </svg>
+                                            <span class="fw-bold">@OrganizationName</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="prd-info-item">
+                                        <span class="prd-info-label">Request Date</span>
+                                        <div class="prd-info-val">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#174F45" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                                            </svg>
+                                            <span>@PurchaseRequest.RequestDate.ToString("dd MMM yyyy")</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- RIGHT: VENDOR & QUOTATION STATUS -->
+                        <div class="col-lg-6">
+                            <div class="prd-card h-100 p-4">
+                                <h4 class="prd-section-title">Vendor & Quotation Status</h4>
+
+                                @if (AssociatedQuotation == null)
+                                {
+                                    <!-- NO QUOTATION INFORMATION BANNER -->
+                                    <div class="prd-quotation-notice-box mb-3">
+                                        <div class="prd-notice-icon">
+                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2E7D61" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h5 class="prd-notice-title">No Quotation Submitted Yet</h5>
+                                            <p class="prd-notice-desc">Vendor recommendations are ready.<br />Quotation is pending submission or review.</p>
+                                        </div>
+                                    </div>
+
+                                    @if (!string.IsNullOrWhiteSpace(VendorName) && VendorName != "N/A")
+                                    {
+                                        <div class="prd-vendor-row">
+                                            <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                                <span class="prd-info-label mb-0">Selected Vendor</span>
+                                                <span class="fw-bold text-dark">@VendorName</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center py-2">
+                                                <span class="prd-info-label mb-0">Vendor Response</span>
+                                                <span class="prd-status-pill @(PurchaseRequest.Status == "Approved" || PurchaseRequest.Status == "Accepted" ? "status-approved" : "status-pending")">
+                                                    @(PurchaseRequest.Status == "Approved" || PurchaseRequest.Status == "Accepted" ? "Accepted" : PurchaseRequest.Status)
+                                                </span>
+                                            </div>
+                                        </div>
+                                    }
+                                    else if (!string.IsNullOrWhiteSpace(PurchaseRequest.VendorName))
+                                    {
+                                        <div class="prd-vendor-row">
+                                            <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                                <span class="prd-info-label mb-0">Selected Vendor</span>
+                                                <span class="fw-bold text-dark">@PurchaseRequest.VendorName</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center py-2">
+                                                <span class="prd-info-label mb-0">Vendor Response</span>
+                                                <span class="prd-status-pill @(PurchaseRequest.Status == "Approved" || PurchaseRequest.Status == "Accepted" ? "status-approved" : "status-pending")">
+                                                    @(PurchaseRequest.Status == "Approved" || PurchaseRequest.Status == "Accepted" ? "Accepted" : PurchaseRequest.Status)
+                                                </span>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <!-- QUOTATION AVAILABLE -->
+                                    <div class="prd-quotation-active-box mb-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="fw-bold text-dark">Quotation Ref: QT-@AssociatedQuotation.QuotationID</span>
+                                            <span class="prd-status-pill @(AssociatedQuotation.Status == "Accepted" ? "status-approved" : AssociatedQuotation.Status == "Rejected" ? "status-rejected" : "status-pending")">
+                                                @AssociatedQuotation.Status
+                                            </span>
+                                        </div>
+                                        <div class="small text-muted mb-2">
+                                            Selected Vendor: <strong class="text-dark">@VendorName</strong>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                            <span class="small text-muted">Total Quoted Amount</span>
+                                            <span class="fw-bold text-success fs-5">Rs. @GetQuotationTotal(AssociatedQuotation).ToString("N2")</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="prd-vendor-row">
+                                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                            <span class="prd-info-label mb-0">Selected Vendor</span>
+                                            <span class="fw-bold text-dark">@VendorName</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center py-2">
+                                            <span class="prd-info-label mb-0">Vendor Response</span>
+                                            <span class="prd-status-pill @(AssociatedQuotation.Status == "Accepted" ? "status-approved" : AssociatedQuotation.Status == "Rejected" ? "status-rejected" : "status-pending")">
+                                                @AssociatedQuotation.Status
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3 pt-2 text-end border-top">
+                                        <button type="button" class="btn btn-sm btn-success fw-bold px-3 py-1.5" @onclick='() => Nav.NavigateTo($"/quotation-review/{AssociatedQuotation.QuotationID}")'>
+                                            Review Quotation &rarr;
+                                        </button>
+                                    </div>
+                                }
+
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- 3. REQUESTED ITEMS CARD -->
+                    <div class="prd-card p-4">
+                        <h4 class="prd-section-title">Requested Items</h4>
+
+                        @if (PurchaseRequest.Items == null || PurchaseRequest.Items.Count == 0)
+                        {
+                            <div class="p-4 text-center text-muted small">No item breakdown available for this purchase request.</div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="prd-items-table">
+                                    <thead>
+                                        <tr>
+                                            <th>PRODUCT</th>
+                                            <th class="text-center">QUANTITY</th>
+                                            <th class="text-end">UNIT</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in PurchaseRequest.Items)
+                                        {
+                                            <tr>
+                                                <td class="prd-col-product">@GetProductName(item)</td>
+                                                <td class="prd-col-qty text-center">@item.Quantity.ToString("0.00")</td>
+                                                <td class="prd-col-unit text-end">@item.Unit</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+
+                }
+
+            </div>
+        </main>
+
+    </div>
+}

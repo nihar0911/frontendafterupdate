@@ -1,0 +1,334 @@
+.submit-review-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(17, 24, 39, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1060;
+    padding: 1rem;
+}
+
+.submit-review-dialog {
+    background-color: #FFFFFF;
+    border-radius: 4px;
+    width: 100%;
+    max-width: 580px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    overflow: hidden;
+    animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* HEADER */
+.submit-review-header {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #E5E7EB;
+    position: relative;
+}
+
+.header-icon-box {
+    width: 42px;
+    height: 42px;
+    border-radius: 4px;
+    background-color: #DCFCE7;
+    color: #166534;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.header-text {
+    flex: 1;
+}
+
+.modal-title {
+    font-size: 1.18rem;
+    font-weight: 800;
+    color: #111827;
+    margin: 0;
+}
+
+.modal-subtitle {
+    font-size: 0.82rem;
+    color: #6B7280;
+    margin: 0.15rem 0 0 0;
+}
+
+.btn-close-modal {
+    background: none;
+    border: none;
+    font-size: 1.6rem;
+    color: #9CA3AF;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    margin-left: 0.5rem;
+}
+
+.btn-close-modal:hover {
+    color: #111827;
+}
+
+/* BODY */
+.submit-review-body {
+    padding: 1.25rem 1.5rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+/* TRANSACTION SUMMARY CARD */
+.summary-card {
+    background-color: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 4px;
+    padding: 1rem 1.15rem;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.summary-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.summary-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #6B7280;
+    font-weight: 650;
+}
+
+.summary-val {
+    font-size: 0.88rem;
+    line-height: 1.35;
+}
+
+/* DELIVERY STATUS BANNER */
+.delivery-status-banner {
+    display: flex;
+    align-items: center;
+    font-size: 0.82rem;
+    padding: 0.45rem 0.75rem;
+    border-radius: 3px;
+    margin-top: 0.4rem;
+}
+
+.banner-ontime {
+    background-color: #ECFDF5;
+    color: #065F46;
+    border: 1px solid #A7F3D0;
+}
+
+.banner-delayed {
+    background-color: #FEF3C7;
+    color: #92400E;
+    border: 1px solid #FDE68A;
+}
+
+/* ALREADY REVIEWED ALERT */
+.already-reviewed-alert {
+    background-color: #F0FDF4;
+    border: 1px solid #BBF7D0;
+    border-radius: 4px;
+    padding: 1rem 1.25rem;
+}
+
+/* RATINGS SECTION */
+.ratings-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+}
+
+.rating-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.rating-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.rating-title {
+    font-size: 0.86rem;
+    font-weight: 750;
+    color: #1F2937;
+}
+
+.rating-score-display.has-val {
+    font-size: 0.84rem;
+    color: #166534;
+    font-weight: 750;
+}
+
+.rating-score-display.no-val {
+    font-size: 0.8rem;
+    color: #9CA3AF;
+    font-weight: 500;
+    font-style: italic;
+}
+
+/* RATING TILES ROW */
+.rating-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-rating-tile {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.6rem 0.25rem;
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 4px;
+    color: #4B5563;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    outline: none;
+}
+
+.btn-rating-tile:hover:not(:disabled) {
+    border-color: #166534;
+    color: #166534;
+    background-color: #F0FDF4;
+}
+
+.btn-rating-tile.selected {
+    background-color: #174F45;
+    border-color: #174F45;
+    color: #FFFFFF;
+    box-shadow: 0 2px 6px rgba(23, 79, 69, 0.25);
+}
+
+.btn-rating-tile:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.tile-num {
+    font-size: 0.95rem;
+    font-weight: 800;
+}
+
+/* COMMENTS */
+.feedback-comments-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.char-count {
+    font-size: 0.76rem;
+}
+
+.feedback-textarea {
+    font-size: 0.88rem;
+    border: 1px solid #D1D5DB;
+    border-radius: 4px;
+    padding: 0.65rem 0.85rem;
+    resize: vertical;
+    min-height: 85px;
+    line-height: 1.45;
+}
+
+.feedback-textarea:focus {
+    border-color: #166534;
+    box-shadow: 0 0 0 2px rgba(22, 101, 52, 0.15);
+    outline: none;
+}
+
+.submit-error-alert {
+    display: flex;
+    align-items: center;
+    font-size: 0.84rem;
+    padding: 0.65rem 0.85rem;
+    margin-bottom: 0;
+    border-radius: 4px;
+}
+
+/* FOOTER */
+.submit-review-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    background-color: #F9FAFB;
+    border-top: 1px solid #E5E7EB;
+}
+
+.btn-cancel {
+    padding: 0.55rem 1.25rem;
+    background-color: #FFFFFF;
+    border: 1px solid #D1D5DB;
+    border-radius: 4px;
+    color: #374151;
+    font-size: 0.86rem;
+    font-weight: 650;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.btn-cancel:hover:not(:disabled) {
+    background-color: #F3F4F6;
+}
+
+.btn-submit {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.55rem 1.35rem;
+    background-color: #174F45;
+    border: none;
+    border-radius: 4px;
+    color: #FFFFFF;
+    font-size: 0.86rem;
+    font-weight: 750;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.btn-submit:hover:not(:disabled) {
+    background-color: #113c34;
+}
+
+.btn-submit:disabled,
+.btn-cancel:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}

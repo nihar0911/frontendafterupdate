@@ -1,0 +1,1293 @@
+@page "/organization/purchase-orders"
+@page "/organization/purchase-orders/{PurchaseOrderId:int}"
+@namespace VenodorManagementFrontend.Components.Pages.OrgPurchaseOrders
+@inject AuthService Auth
+@inject NavigationManager Nav
+@inject ApiService Api
+
+<PageTitle>Purchase Orders - @OrganizationName</PageTitle>
+
+@if (!Auth.IsAuthenticated)
+{
+    <div class="org-po-warning-wrap">
+        <div class="org-po-warning-card">
+            <h4 class="fw-bold mb-2 text-dark">Authentication Required</h4>
+            <p class="text-muted mb-3">Please log in to access Purchase Orders.</p>
+            <button class="btn btn-primary" @onclick='() => Nav.NavigateTo(Auth.IsPurchaseManager ? "/purchase-manager/login" : "/login")'>Go to Login</button>
+        </div>
+    </div>
+}
+else if (!Auth.IsOrgManager && !Auth.IsAdmin && !Auth.IsPurchaseManager)
+{
+    <div class="org-po-warning-wrap">
+        <div class="org-po-warning-card">
+            <h4 class="fw-bold mb-2 text-danger">Access Denied</h4>
+            <p class="text-muted mb-3">You do not have privileges to manage purchase orders.</p>
+            <button class="btn btn-outline-secondary" @onclick='() => Nav.NavigateTo("/")'>Return to Home</button>
+        </div>
+    </div>
+}
+else if (Auth.IsPurchaseManager && (!Auth.OutletID.HasValue || Auth.OutletID.Value <= 0))
+{
+    <div class="org-po-warning-wrap">
+        <div class="org-po-warning-card">
+            <h4 class="fw-bold mb-2 text-warning">No Outlet Assigned</h4>
+            <p class="text-muted mb-3">No outlet is assigned to this Purchase Manager.</p>
+            <button class="btn btn-outline-secondary" @onclick='() => Nav.NavigateTo("/purchase-manager")'>Return to Dashboard</button>
+        </div>
+    </div>
+}
+else
+{
+    <div class="org-app-layout @(IsSidebarCollapsed ? "sidebar-collapsed" : "")">
+        
+        <!-- =======================================================================
+             LEFT SIDEBAR NAVIGATION (ENTERPRISE DARK GREEN)
+             ======================================================================= -->
+        <aside class="org-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-branding" @onclick='() => Nav.NavigateTo(Auth.IsPurchaseManager ? "/purchase-manager" : "/org-dashboard")'>
+                    <div class="brand-emblem">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="brand-text">
+                        <span class="brand-name">Smart Vendor</span>
+                        <span class="brand-sub">Management</span>
+                    </div>
+                </div>
+                <button class="sidebar-collapse-btn" @onclick="ToggleSidebar" title="Toggle Sidebar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        @if (IsSidebarCollapsed)
+                        {
+                            <polyline points="13 17 18 12 13 7"></polyline>
+                            <polyline points="6 17 11 12 6 7"></polyline>
+                        }
+                        else
+                        {
+                            <polyline points="11 17 6 12 11 7"></polyline>
+                            <polyline points="18 17 13 12 18 7"></polyline>
+                        }
+                    </svg>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo(Auth.IsPurchaseManager ? "/purchase-manager" : "/org-dashboard")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Dashboard</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/organization/outlets")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                    <path d="M9 22V12h6v10"></path>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Outlets</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/procurement")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Purchase Requests</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/quotations")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="12" y1="18" x2="12" y2="12"></line>
+                                    <line x1="9" y1="15" x2="15" y2="15"></line>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Quotations</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/organization/contracts")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Contracts</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link active" @onclick='() => { if (IsViewingPoDetails) { BackToPoList(); } else { Nav.NavigateTo("/organization/purchase-orders"); } }'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="1" y="3" width="15" height="13"></rect>
+                                    <polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon>
+                                    <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                    <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Purchase Orders</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/organization/invoices")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    <polyline points="10 9 9 9 8 9"></polyline>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Invoices</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/organization/payments")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                    <line x1="1" y1="10" x2="23" y2="10"></line>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Payments</span>
+                        </button>
+                    </li>
+                </ul>
+
+                <ul class="nav-list nav-list-bottom">
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo(Auth.IsPurchaseManager ? "/purchase-manager" : "/org-dashboard")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </span>
+                            <span class="nav-label">My Profile</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link nav-logout" @onclick="HandleLogout">
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                    <polyline points="16 17 21 12 16 7"></polyline>
+                                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Logout</span>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- MAIN WRAPPER -->
+        <div class="org-main-wrapper">
+            
+            <!-- TOP HEADER -->
+            <header class="org-top-header">
+                <div class="d-flex align-items-center gap-3">
+                    <button class="menu-toggle-btn d-lg-none" @onclick="ToggleSidebar" title="Toggle Menu">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <h1 class="topbar-page-title mb-0">@(IsViewingPoDetails ? "Purchase Order Details" : "Purchase Orders")</h1>
+                    <span class="topbar-org-badge">@OrganizationName</span>
+                </div>
+
+                <div class="header-right d-flex align-items-center gap-3">
+                    
+                    <!-- NOTIFICATIONS POPUP -->
+                    <div class="position-relative">
+                        <button type="button" class="btn btn-light border shadow-sm px-3 py-1.5 fw-semibold d-flex align-items-center gap-2 rounded-3" @onclick="ToggleNotifications" title="Notifications">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                            </svg>
+                            <span>Notifications</span>
+                            @if (UnreadNotificationCount > 0)
+                            {
+                                <span class="badge bg-danger rounded-pill">@UnreadNotificationCount</span>
+                            }
+                        </button>
+
+                        @if (ShowNotificationDropdown)
+                        {
+                            <div class="card position-absolute end-0 mt-2 shadow-lg border-0 rounded-3 p-3 bg-white" style="width: 360px; z-index: 1050;">
+                                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                                    <h6 class="fw-bold text-dark mb-0">Notifications</h6>
+                                    @if (UnreadNotificationCount > 0)
+                                    {
+                                        <span class="badge bg-danger">@UnreadNotificationCount new</span>
+                                    }
+                                </div>
+                                @if (Notifications.Count == 0)
+                                {
+                                    <p class="text-muted small mb-0 py-2 text-center">No notifications.</p>
+                                }
+                                else
+                                {
+                                    <div style="max-height: 320px; overflow-y: auto;">
+                                        @foreach (var notif in Notifications.Take(8))
+                                        {
+                                            <div class="p-2.5 border-bottom small rounded-2 mb-1 @(notif.IsRead ? "bg-light" : "bg-warning bg-opacity-10 border-warning")" style="cursor: pointer;" @onclick="() => HandleNotificationClick(notif)">
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <strong class="@(notif.NotificationType == "OpportunityRejected" ? "text-danger" : "text-primary")">
+                                                        @notif.Title
+                                                    </strong>
+                                                    <small class="text-muted" style="font-size: 0.7rem;">@notif.CreatedDate.ToString("dd MMM, hh:mm tt")</small>
+                                                </div>
+                                                <p class="text-dark mb-1" style="font-size: 0.8rem; line-height: 1.3;">
+                                                    @notif.Message
+                                                </p>
+                                                <div class="d-flex justify-content-between align-items-center mt-1">
+                                                    <span class="text-primary fw-semibold" style="font-size: 0.72rem;">View Details &rarr;</span>
+                                                    @if (!notif.IsRead)
+                                                    {
+                                                        <button class="btn btn-link btn-sm p-0 text-muted" style="font-size: 0.72rem;" @onclick='() => MarkAsRead(notif.NotificationID)' @onclick:stopPropagation="true">
+                                                            Mark read
+                                                        </button>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Profile Capsule -->
+                    <div class="profile-capsule-wrapper">
+                        <div class="profile-capsule" @onclick="ToggleProfileDropdown">
+                            <div class="profile-avatar">@GetUserInitial()</div>
+                            <div class="profile-meta">
+                                <span class="profile-name">@(string.IsNullOrWhiteSpace(Auth.UserName) ? (Auth.CurrentUser?.Name ?? (Auth.IsPurchaseManager ? "Purchase Manager" : "Organization Manager")) : Auth.UserName)</span>
+                                <span class="profile-role">@(Auth.IsPurchaseManager ? "Purchase Manager" : (Auth.IsAdmin ? "System Administrator" : "Organization Manager"))</span>
+                            </div>
+                            <svg class="dropdown-arrow @(IsProfileDropdownOpen ? "open" : "")" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+                        @if (IsProfileDropdownOpen)
+                        {
+                            <div class="profile-menu">
+                                <button class="profile-menu-item" @onclick='() => Nav.NavigateTo(Auth.IsPurchaseManager ? "/purchase-manager" : "/org-dashboard")'>Dashboard</button>
+                                <hr class="menu-divider" />
+                                <button class="profile-menu-item text-danger" @onclick="HandleLogout">Logout</button>
+                            </div>
+                        }
+                    </div>
+
+                    <button class="header-logout-btn" @onclick="HandleLogout" title="Sign out">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        <span>Logout</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- CONTENT -->
+            <main class="org-main-content">
+                
+                @if (!string.IsNullOrEmpty(ActionSuccessMessage))
+                {
+                    <div class="alert alert-success alert-dismissible fade show mb-4 d-flex align-items-center justify-content-between rounded-3 shadow-sm" role="alert">
+                        <div class="d-flex align-items-center gap-2">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                            <span>@ActionSuccessMessage</span>
+                        </div>
+                        <button type="button" class="btn-close" @onclick="() => ActionSuccessMessage = null" aria-label="Close"></button>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(ActionErrorMessage))
+                {
+                    <div class="alert alert-danger alert-dismissible fade show mb-4 d-flex align-items-center justify-content-between rounded-3 shadow-sm" role="alert">
+                        <div class="d-flex align-items-center gap-2">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                            <span>@ActionErrorMessage</span>
+                        </div>
+                        <button type="button" class="btn-close" @onclick="() => ActionErrorMessage = null" aria-label="Close"></button>
+                    </div>
+                }
+                
+                @if (IsLoading)
+                {
+                    <div class="po-loading-container">
+                        <div class="spinner-border text-success" role="status"></div>
+                        <p class="mt-2 text-muted">Loading purchase orders...</p>
+                    </div>
+                }
+                else if (IsViewingPoDetails && SelectedPoForDetail != null)
+                {
+                    <!-- =======================================================
+                         PURCHASE ORDER DETAILS VIEW (MATCHES SCREENSHOT 2)
+                         ======================================================= -->
+                    var po = SelectedPoForDetail;
+                    var firstItem = po.Items?.FirstOrDefault();
+                    string prodName = firstItem != null && ProductNames.TryGetValue(firstItem.ProductID, out var pn) ? pn : "Fresh Goods";
+                    string unit = firstItem != null ? GetProductUnit(firstItem.ProductID) : "Kg";
+                    decimal orderedQty = firstItem?.Quantity ?? 0m;
+                    decimal unitPrice = firstItem?.UnitPrice ?? (orderedQty > 0 ? po.TotalAmount / orderedQty : 0m);
+                    decimal subtotal = orderedQty * unitPrice;
+                    decimal taxAmount = subtotal * 0.05m;
+                    decimal totalAmount = po.TotalAmount > 0 ? po.TotalAmount : (subtotal + taxAmount);
+
+                    string vendorName = !string.IsNullOrWhiteSpace(po.VendorName) ? po.VendorName : (VendorNames.TryGetValue(po.VendorID, out var vn) ? vn : $"Vendor #{po.VendorID}");
+                    string outletName = OutletNames.TryGetValue(po.OutletID, out var on) ? on : $"Outlet #{po.OutletID}";
+                    var outletObj = OutletsMap.TryGetValue(po.OutletID, out var outObj) ? outObj : null;
+                    string outletAddress = !string.IsNullOrWhiteSpace(outletObj?.Address) ? outletObj.Address : (!string.IsNullOrWhiteSpace(outletObj?.OutletName) ? outletObj.OutletName : $"Outlet #{po.OutletID}");
+
+                    var primaryDeliveryRecord = SelectedPoDeliveryRecords.FirstOrDefault();
+                    bool isDelivered = po.Status == "Delivered" || po.Status == "Completed";
+                    bool isDispatched = po.Status == "Dispatched" || po.Status == "In Transit" || isDelivered;
+                    bool isAccepted = po.Status == "Accepted" || isDispatched;
+
+                    <div class="po-detail-page-container">
+                        
+                        <!-- TOP ACTION BAR -->
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <button type="button" class="btn btn-outline-secondary d-flex align-items-center gap-2 fw-semibold px-3 py-2 rounded-3" @onclick="BackToPoList">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                                    <polyline points="12 19 5 12 12 5"></polyline>
+                                </svg>
+                                <span>Back to Purchase Orders</span>
+                            </button>
+
+                            <div class="d-flex align-items-center gap-2">
+                                @if (Auth.IsOrgManager && (po.Status == "Awaiting Approval" || po.Status == "AwaitingApproval"))
+                                {
+                                    <button type="button" class="btn btn-success d-flex align-items-center gap-2 fw-semibold px-3 py-2 rounded-3 shadow-sm" @onclick="() => HandleApprovePo(po.PurchaseOrderID)" disabled="@IsActionProcessing">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                        </svg>
+                                        <span>@(IsActionProcessing ? "Approving..." : "Approve Purchase Order")</span>
+                                    </button>
+                                    <button type="button" class="btn btn-danger d-flex align-items-center gap-2 fw-semibold px-3 py-2 rounded-3 shadow-sm" @onclick="() => HandleRejectPo(po.PurchaseOrderID)" disabled="@IsActionProcessing">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="10"></circle>
+                                            <line x1="15" y1="9" x2="9" y2="15"></line>
+                                            <line x1="9" y1="9" x2="15" y2="15"></line>
+                                        </svg>
+                                        <span>@(IsActionProcessing ? "Rejecting..." : "Reject Purchase Order")</span>
+                                    </button>
+                                }
+
+                                @if (Auth.IsPurchaseManager && po.Status == "Approved")
+                                {
+                                    <button type="button" class="btn btn-primary d-flex align-items-center gap-2 fw-semibold px-3 py-2 rounded-3 shadow-sm" @onclick="() => HandleSendPo(po.PurchaseOrderID)" disabled="@IsActionProcessing">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                        </svg>
+                                        <span>@(IsActionProcessing ? "Sending..." : "Send to Vendor")</span>
+                                    </button>
+                                }
+
+                                @if (Auth.IsPurchaseManager && (po.Status == "Dispatched" || po.Status == "In Transit") && !IsRecordingDelivery && !IsReviewingDelivery)
+                                {
+                                    <button type="button" class="btn btn-success d-flex align-items-center gap-2 fw-semibold px-3 py-2 rounded-3 shadow-sm" @onclick="StartRecordDelivery">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="1" y="3" width="15" height="13"></rect>
+                                            <polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon>
+                                            <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                            <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                                        </svg>
+                                        <span>Record Delivery</span>
+                                    </button>
+                                }
+
+                                @if (isDelivered)
+                                {
+                                    <button type="button" class="btn btn-success d-flex align-items-center gap-2 fw-semibold px-3 py-2 rounded-3 shadow-sm" @onclick="OpenReviewModalForSelectedPo">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                        </svg>
+                                        <span>@(IsSelectedPoReviewed ? "Vendor Review Details" : "Review Vendor")</span>
+                                    </button>
+                                }
+
+                                <button type="button" class="btn btn-light border shadow-sm d-flex align-items-center gap-2 fw-semibold px-3 py-2 rounded-3" onclick="window.print()">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                                        <rect x="6" y="14" width="12" height="8"></rect>
+                                    </svg>
+                                    <span>Print / Download</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- ALERTS -->
+                        @if (!string.IsNullOrWhiteSpace(DeliverySuccessMessage))
+                        {
+                            <div class="alert alert-success d-flex align-items-center justify-content-between mb-4 shadow-sm rounded-3 py-2 px-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                    <span class="small fw-semibold">@DeliverySuccessMessage</span>
+                                </div>
+                                <button type="button" class="btn-close btn-close-sm" @onclick="() => DeliverySuccessMessage = string.Empty"></button>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(DeliveryFormError))
+                        {
+                            <div class="alert alert-danger d-flex align-items-center justify-content-between mb-4 shadow-sm rounded-3 py-2 px-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                    </svg>
+                                    <span class="small fw-semibold">@DeliveryFormError</span>
+                                </div>
+                                <button type="button" class="btn-close btn-close-sm" @onclick="() => DeliveryFormError = string.Empty"></button>
+                            </div>
+                        }
+
+                        <!-- =======================================================
+                             STEP 1: RECORD DELIVERY INPUT FORM (PHASE 2Q-C)
+                             ======================================================= -->
+                        @if (IsRecordingDelivery && !IsReviewingDelivery)
+                        {
+                            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+                                <div class="d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom flex-wrap gap-2">
+                                    <div>
+                                        <h5 class="fw-bold text-dark mb-1">Record Goods Delivery</h5>
+                                        <p class="text-muted small mb-0">Verify quantities received for <strong>PO-@po.PurchaseOrderID</strong> (@prodName).</p>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="CancelRecordDelivery">Cancel</button>
+                                </div>
+
+                                <div class="mb-3 p-3 bg-light rounded-3">
+                                    <div class="row g-2 small">
+                                        <div class="col-sm-4">
+                                            <span class="text-muted d-block">Ordered Quantity:</span>
+                                            <strong class="text-dark">@orderedQty.ToString("0.##") @unit</strong>
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <span class="text-muted d-block">Remaining to Receive:</span>
+                                            @{
+                                                var alreadyRec = SelectedPoDeliveryRecords?
+                                                    .Where(d => d.POItemID == firstItem?.POItemID && !string.Equals(d.Status, "Rejected", StringComparison.OrdinalIgnoreCase))
+                                                    .Sum(d => d.ReceivedQuantity) ?? 0;
+                                                decimal remQty = Math.Max(0, orderedQty - alreadyRec);
+                                            }
+                                            <strong class="text-primary">@remQty.ToString("0.##") @unit</strong>
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <span class="text-muted d-block">Vendor:</span>
+                                            <strong class="text-dark">@vendorName</strong>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-dark">Received Quantity (@unit) <span class="text-danger">*</span></label>
+                                        <input type="number" step="0.01" min="0" class="form-control" @bind="DeliveryReceivedQuantity" placeholder="e.g. 10.00" />
+                                        <span class="text-muted" style="font-size: 0.75rem;">Enter the actual acceptable quantity received in good condition.</span>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-dark">Spoiled / Damaged Quantity (@unit)</label>
+                                        <input type="number" step="0.01" min="0" class="form-control" @bind="DeliverySpoiledQuantity" placeholder="e.g. 0.00" />
+                                        <span class="text-muted" style="font-size: 0.75rem;">Enter quantity rejected due to damage or spoilage, if any.</span>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-dark">Actual Delivery Date <span class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" @bind="DeliveryActualDate" />
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-dark">Delivery Notes / Remarks (Optional)</label>
+                                        <textarea class="form-control" rows="2" @bind="DeliveryNotes" placeholder="e.g. Goods received in good condition. Inspected by purchase manager."></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex align-items-center justify-content-between pt-3 border-top">
+                                    <button type="button" class="btn btn-outline-secondary px-3" @onclick="CancelRecordDelivery">
+                                        Cancel
+                                    </button>
+                                    <button type="button" class="btn btn-success fw-bold px-4" @onclick="ProceedToReviewDelivery">
+                                        <span>Review Delivery</span>
+                                        <span class="ms-1">&rarr;</span>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- =======================================================
+                             STEP 2: REVIEW & CONFIRM DELIVERY (PHASE 2Q-C)
+                             ======================================================= -->
+                        @if (IsReviewingDelivery)
+                        {
+                            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+                                <div class="d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom flex-wrap gap-2">
+                                    <div>
+                                        <h5 class="fw-bold text-dark mb-1">Review &amp; Confirm Delivery</h5>
+                                        <p class="text-muted small mb-0">Please verify the delivery summary before final submission.</p>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="BackToEditDelivery" disabled="@IsSubmittingDelivery">&larr; Edit Details</button>
+                                </div>
+
+                                <div class="card border rounded-3 p-3 mb-4 shadow-sm bg-white">
+                                    <div class="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom">
+                                        <span class="text-muted small">Purchase Order</span>
+                                        <strong class="text-dark">PO-@po.PurchaseOrderID</strong>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom">
+                                        <span class="text-muted small">Product</span>
+                                        <strong class="text-dark">@prodName</strong>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom">
+                                        <span class="text-muted small">Ordered Quantity</span>
+                                        <span class="text-dark">@orderedQty.ToString("0.##") @unit</span>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom">
+                                        <span class="text-muted small">Received Quantity</span>
+                                        <strong class="text-success fs-6">@DeliveryReceivedQuantity.ToString("0.##") @unit</strong>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom">
+                                        <span class="text-muted small">Spoiled / Damaged</span>
+                                        <strong class="@(DeliverySpoiledQuantity > 0 ? "text-danger" : "text-dark")">
+                                            @DeliverySpoiledQuantity.ToString("0.##") @unit
+                                            @if (DeliverySpoiledQuantity > 0 && DeliveryReceivedQuantity > 0)
+                                            {
+                                                decimal revPct = Math.Round((DeliverySpoiledQuantity / DeliveryReceivedQuantity) * 100m, 2);
+                                                <span class="badge bg-danger text-white ms-1" style="font-size: 0.7rem;">@revPct.ToString("0.##")% Spoilage</span>
+                                            }
+                                        </strong>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom">
+                                        <span class="text-muted small">Actual Delivery Date</span>
+                                        <span class="text-dark fw-semibold">@DeliveryActualDate.ToString("dd MMM yyyy")</span>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <span class="text-muted small">Delivery Performance</span>
+                                        @{
+                                            DateTime expDate = po.ExpectedDeliveryDate ?? po.OrderDate.AddDays(2);
+                                            bool isOnTime = DeliveryActualDate.Date <= expDate.Date;
+                                        }
+                                        <span class="badge @(isOnTime ? "bg-success" : "bg-danger")">
+                                            @(isOnTime ? "On Time" : $"Delayed by {(DeliveryActualDate.Date - expDate.Date).Days} days")
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex align-items-center justify-content-between pt-2 border-top">
+                                    <button type="button" class="btn btn-outline-secondary px-3" @onclick="BackToEditDelivery" disabled="@IsSubmittingDelivery">
+                                        &larr; Edit Details
+                                    </button>
+                                    <button type="button" class="btn btn-success fw-bold px-4 d-flex align-items-center gap-2" @onclick="ConfirmDeliveryAsync" disabled="@IsSubmittingDelivery">
+                                        @if (IsSubmittingDelivery)
+                                        {
+                                            <span class="spinner-border spinner-border-sm" role="status"></span>
+                                            <span>Confirming...</span>
+                                        }
+                                        else
+                                        {
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
+                                            <span>Confirm Delivery</span>
+                                        }
+                                    </button>
+                                </div>
+                            </div>
+                        }
+
+                        @if (!IsRecordingDelivery && !IsReviewingDelivery)
+                        {
+                            <!-- RECORD DELIVERY PROMPT BOX FOR DISPATCHED PO (PHASE 2Q-C) -->
+                            @if (Auth.IsPurchaseManager && (po.Status == "Dispatched" || po.Status == "In Transit"))
+                            {
+                                <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white border-start border-4 border-success">
+                                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                                        <div>
+                                            <h5 class="fw-bold text-dark mb-1">Record Goods Delivery</h5>
+                                            <p class="text-muted small mb-0">Goods received at your outlet? Record the received quantity and confirm delivery to update PO status.</p>
+                                        </div>
+                                        <button type="button" class="btn btn-success fw-bold px-4 py-2 shadow-sm d-flex align-items-center gap-2" @onclick="StartRecordDelivery">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="1" y="3" width="15" height="13"></rect>
+                                                <polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon>
+                                                <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                                <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                                            </svg>
+                                            <span>Record Delivery</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+
+                            <!-- 1. PO HEADER CARD -->
+                            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+                                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 pb-3 mb-3 border-bottom">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="bg-success bg-opacity-10 text-success p-2.5 rounded-3 d-flex align-items-center justify-content-center">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="2" y="7" width="20" height="14" rx="2"></rect>
+                                                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <h4 class="fw-bold mb-0 text-dark">PO-@po.PurchaseOrderID</h4>
+                                                <span class="po-badge @GetStatusBadgeClass(po.Status)">@po.Status</span>
+                                            </div>
+                                            <span class="text-muted small">Purchase Order Reference</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row g-3">
+                                    <div class="col-md-3 col-sm-6">
+                                        <span class="text-muted small d-block">PO Reference</span>
+                                        <strong class="text-dark fs-6">PO-@po.PurchaseOrderID</strong>
+                                    </div>
+                                    <div class="col-md-3 col-sm-6">
+                                        <span class="text-muted small d-block">Outlet</span>
+                                        <strong class="text-dark fs-6 d-block">@outletName</strong>
+                                        <small class="text-muted">@outletAddress</small>
+                                    </div>
+                                    <div class="col-md-3 col-sm-6">
+                                        <span class="text-muted small d-block">Vendor</span>
+                                        <strong class="text-dark fs-6">@vendorName</strong>
+                                    </div>
+                                    <div class="col-md-3 col-sm-6">
+                                        <span class="text-muted small d-block">Order Date</span>
+                                        <strong class="text-dark fs-6">@po.OrderDate.ToString("dd MMM yyyy, hh:mm tt")</strong>
+                                    </div>
+                                    <div class="col-md-3 col-sm-6">
+                                        <span class="text-muted small d-block">Expected Delivery</span>
+                                        <strong class="text-dark fs-6">@(po.ExpectedDeliveryDate.HasValue ? po.ExpectedDeliveryDate.Value.ToString("dd MMM yyyy") : po.OrderDate.AddDays(2).ToString("dd MMM yyyy"))</strong>
+                                    </div>
+                                    <div class="col-md-3 col-sm-6">
+                                        <span class="text-muted small d-block">Delivered On</span>
+                                        @if (isDelivered)
+                                        {
+                                            <strong class="text-success fs-6">@((po.ActualDeliveryDate ?? primaryDeliveryRecord?.DeliveryDate ?? po.OrderDate).ToString("dd MMM yyyy, hh:mm tt"))</strong>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Pending Delivery</span>
+                                        }
+                                    </div>
+                                    <div class="col-md-3 col-sm-6">
+                                        <span class="text-muted small d-block">Status</span>
+                                        <span class="po-badge @GetStatusBadgeClass(po.Status) mt-1">@po.Status</span>
+                                    </div>
+                                    <div class="col-md-3 col-sm-6">
+                                        <span class="text-muted small d-block">Delivery Performance</span>
+                                        @if (isDelivered)
+                                        {
+                                            <span class="@GetDeliveryPerformanceBadge(po, primaryDeliveryRecord) mt-1">
+                                                @GetDeliveryPerformanceText(po, primaryDeliveryRecord)
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small">Awaiting delivery</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 2. ORDER ITEMS TABLE CARD -->
+                            <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+                                <div class="card-header bg-white py-3 px-4 border-bottom">
+                                    <h5 class="fw-bold mb-0 text-dark">Order Items</h5>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table align-middle mb-0">
+                                        <thead class="bg-light text-muted small">
+                                            <tr>
+                                                <th class="ps-4">PRODUCT</th>
+                                                <th>ORDERED QUANTITY</th>
+                                                <th>UNIT PRICE</th>
+                                                <th>TAX (5%)</th>
+                                                <th class="text-end pe-4">TOTAL</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @if (po.Items != null && po.Items.Count > 0)
+                                            {
+                                                @foreach (var item in po.Items)
+                                                {
+                                                    string pItemName = ProductNames.TryGetValue(item.ProductID, out var itmName) ? itmName : $"Product #{item.ProductID}";
+                                                    string pItemUnit = GetProductUnit(item.ProductID);
+                                                    decimal itmSubtotal = item.Quantity * item.UnitPrice;
+                                                    decimal itmTax = itmSubtotal * 0.05m;
+                                                    decimal itmTotal = itmSubtotal + itmTax;
+
+                                                    <tr>
+                                                        <td class="ps-4 fw-bold text-dark">@pItemName</td>
+                                                        <td>@item.Quantity.ToString("0.##") @pItemUnit</td>
+                                                        <td>@CurrencyHelper.Format(item.UnitPrice) / @pItemUnit</td>
+                                                        <td>@CurrencyHelper.Format(itmTax)</td>
+                                                        <td class="text-end pe-4 fw-bold text-dark">@CurrencyHelper.Format(itmTotal)</td>
+                                                    </tr>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <tr>
+                                                    <td class="ps-4 fw-bold text-dark">@prodName</td>
+                                                    <td>@orderedQty.ToString("0.##") @unit</td>
+                                                    <td>@CurrencyHelper.Format(unitPrice) / @unit</td>
+                                                    <td>@CurrencyHelper.Format(taxAmount)</td>
+                                                    <td class="text-end pe-4 fw-bold text-dark">@CurrencyHelper.Format(totalAmount)</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                        <tfoot class="bg-light fw-bold">
+                                            <tr>
+                                                <td colspan="4" class="text-end pe-3">Grand Total:</td>
+                                                <td class="text-end pe-4 text-success fs-6">@CurrencyHelper.Format(totalAmount)</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="row g-4 mb-4">
+                                <!-- 3. DELIVERY INFORMATION CARD -->
+                                <div class="col-lg-6">
+                                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
+                                        <div class="d-flex align-items-center gap-2 pb-3 mb-3 border-bottom">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2D6A4F" stroke-width="2">
+                                                <rect x="1" y="3" width="15" height="13"></rect>
+                                                <polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon>
+                                                <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                                <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                                            </svg>
+                                            <h5 class="fw-bold mb-0 text-dark">Delivery Information</h5>
+                                        </div>
+
+                                        <div class="row g-3 small">
+                                            <div class="col-sm-6">
+                                                <span class="text-muted d-block">Dispatched On</span>
+                                                <strong class="text-dark">@(isDispatched ? (po.DispatchDateTime.HasValue ? po.DispatchDateTime.Value.ToString("dd MMM yyyy, hh:mm tt") : "Dispatched") : "Pending")</strong>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <span class="text-muted d-block">Delivered On</span>
+                                                <strong class="text-dark">@(isDelivered ? (po.ActualDeliveryDate ?? primaryDeliveryRecord?.DeliveryDate ?? po.OrderDate).ToString("dd MMM yyyy, hh:mm tt") : "Pending")</strong>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <span class="text-muted d-block">Received Quantity</span>
+                                                <strong class="text-success fs-6">@(isDelivered ? $"{(primaryDeliveryRecord?.ReceivedQuantity ?? orderedQty):0.##} {unit}" : "Pending")</strong>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <span class="text-muted d-block">Spoiled / Damaged Quantity</span>
+                                                <strong class="@(primaryDeliveryRecord?.SpoiledQuantity > 0 ? "text-danger" : "text-dark")">
+                                                    @if (isDelivered)
+                                                    {
+                                                        decimal spQty = primaryDeliveryRecord?.SpoiledQuantity ?? 0;
+                                                        decimal spPct = primaryDeliveryRecord?.SpoilagePercentage ?? 0;
+                                                        if (spQty > 0)
+                                                        {
+                                                            <span>@spQty.ToString("0.##") @unit <span class="badge bg-danger text-white ms-1" style="font-size: 0.7rem;">@spPct.ToString("0.##")% Spoilage</span></span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span>0.00 @unit (0% Spoilage)</span>
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        <span>0.00</span>
+                                                    }
+                                                </strong>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <span class="text-muted d-block">Delivery Status</span>
+                                                <span class="po-badge @GetStatusBadgeClass(po.Status)">@(isDelivered ? "Completed" : (isDispatched ? "In Transit" : "Pending"))</span>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <span class="text-muted d-block">Delivery Performance</span>
+                                                @if (isDelivered)
+                                                {
+                                                    <span class="@GetDeliveryPerformanceBadge(po, primaryDeliveryRecord)">
+                                                        @GetDeliveryPerformanceText(po, primaryDeliveryRecord)
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">Awaiting Delivery</span>
+                                                }
+                                            </div>
+                                            <div class="col-12 mt-2">
+                                                <span class="text-muted d-block">Notes / Observations</span>
+                                                <p class="text-dark mb-0 p-2.5 bg-light rounded-3 mt-1">
+                                                    @(isDelivered ? "Goods received in excellent condition and verified by outlet manager." : "Order is being fulfilled by the vendor.")
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 4. DELIVERY TIMELINE CARD -->
+                                <div class="col-lg-6">
+                                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
+                                        <div class="d-flex align-items-center gap-2 pb-3 mb-3 border-bottom">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2D6A4F" stroke-width="2">
+                                                <circle cx="12" cy="12" r="10"></circle>
+                                                <polyline points="12 6 12 12 16 14"></polyline>
+                                            </svg>
+                                            <h5 class="fw-bold mb-0 text-dark">Delivery Timeline</h5>
+                                        </div>
+
+                                        <div class="delivery-vertical-timeline">
+                                            <!-- 1. Order Placed -->
+                                            <div class="d-flex gap-3 mb-3">
+                                                <div class="timeline-step-icon completed">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <strong class="d-block text-dark small">Order Placed</strong>
+                                                    <span class="text-muted small">By Organization Manager &bull; @po.OrderDate.ToString("dd MMM yyyy, hh:mm tt")</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- 2. Order Accepted -->
+                                            <div class="d-flex gap-3 mb-3">
+                                                <div class="timeline-step-icon @(isAccepted ? "completed" : "pending")">
+                                                    @if (isAccepted)
+                                                    {
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                                        </svg>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span>2</span>
+                                                    }
+                                                </div>
+                                                <div>
+                                                    <strong class="d-block text-dark small">Order Accepted</strong>
+                                                    <span class="text-muted small">@(isAccepted ? $"By {vendorName} • {po.OrderDate.AddHours(1).ToString("dd MMM yyyy, hh:mm tt")}" : "Pending vendor acceptance")</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- 3. Dispatched -->
+                                            <div class="d-flex gap-3 mb-3">
+                                                <div class="timeline-step-icon @(isDispatched ? "completed" : "pending")">
+                                                    @if (isDispatched)
+                                                    {
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                                        </svg>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span>3</span>
+                                                    }
+                                                </div>
+                                                <div>
+                                                    <strong class="d-block text-dark small">Dispatched</strong>
+                                                    <span class="text-muted small">@(isDispatched ? (po.DispatchDateTime.HasValue ? $"By {vendorName} • {po.DispatchDateTime.Value.ToString("dd MMM yyyy, hh:mm tt")}" : $"By {vendorName} • Dispatched") : "Pending vendor dispatch")</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- 4. Delivered -->
+                                            <div class="d-flex gap-3">
+                                                <div class="timeline-step-icon @(isDelivered ? "completed" : "pending")">
+                                                    @if (isDelivered)
+                                                    {
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                                        </svg>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span>4</span>
+                                                    }
+                                                </div>
+                                                <div>
+                                                    <strong class="d-block text-dark small">Delivered</strong>
+                                                    <span class="text-muted small">@(isDelivered ? $"By {outletName} Manager • {(po.ActualDeliveryDate ?? primaryDeliveryRecord?.DeliveryDate ?? po.OrderDate).ToString("dd MMM yyyy, hh:mm tt")}" : "Awaiting receipt at outlet")</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 5. RELATED DOCUMENTS CARD -->
+                            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                                <h5 class="fw-bold mb-3 text-dark">Related Documents</h5>
+                                <div class="d-flex align-items-center gap-3 p-3 bg-light rounded-3" style="max-width: 450px;">
+                                    <div class="bg-danger bg-opacity-10 text-danger p-2.5 rounded-3 d-flex align-items-center justify-content-center">
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                            <polyline points="14 2 14 8 20 8"></polyline>
+                                        </svg>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <strong class="d-block text-dark small">PO-@(po.PurchaseOrderID).pdf</strong>
+                                        <span class="text-muted" style="font-size: 0.75rem;">Official Purchase Order Document &bull; Generated</span>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-success btn-sm fw-semibold" onclick="window.print()">
+                                        Download
+                                    </button>
+                                </div>
+                            </div>
+                        }
+
+                    </div>
+                }
+                else
+                {
+                    <!-- METRIC CARDS -->
+                    <div class="po-metrics-grid">
+                        <div class="po-metric-card">
+                            <div class="metric-icon metric-icon-total">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2D6A4F" stroke-width="2">
+                                    <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                                    <line x1="2" y1="10" x2="22" y2="10"></line>
+                                </svg>
+                            </div>
+                            <div class="metric-details">
+                                <span class="metric-val">@AllPurchaseOrders.Count</span>
+                                <span class="metric-lbl">Total Purchase Orders</span>
+                            </div>
+                        </div>
+
+                        <div class="po-metric-card">
+                            <div class="metric-icon metric-icon-pending">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                            </div>
+                            <div class="metric-details">
+                                <span class="metric-val">@AllPurchaseOrders.Count(p => p.Status == "Pending")</span>
+                                <span class="metric-lbl">Pending Vendor Confirmation</span>
+                            </div>
+                        </div>
+
+                        <div class="po-metric-card">
+                            <div class="metric-icon metric-icon-dispatched">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2">
+                                    <rect x="1" y="3" width="15" height="13"></rect>
+                                    <polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon>
+                                    <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                    <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                                </svg>
+                            </div>
+                            <div class="metric-details">
+                                <span class="metric-val">@AllPurchaseOrders.Count(p => p.Status == "Dispatched" || p.Status == "Accepted")</span>
+                                <span class="metric-lbl">In Fulfillment / Transit</span>
+                            </div>
+                        </div>
+
+                        <div class="po-metric-card">
+                            <div class="metric-icon metric-icon-delivered">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                </svg>
+                            </div>
+                            <div class="metric-details">
+                                <span class="metric-val">@AllPurchaseOrders.Count(p => p.Status == "Delivered")</span>
+                                <span class="metric-lbl">Delivered &amp; Verified</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ACTION HEADER & FILTERS -->
+                    <div class="po-toolbar-card">
+                        <div class="po-toolbar-left">
+                            <div class="po-search-box">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                                <input type="text" placeholder="Search by PO#, vendor, outlet, product..." @bind="SearchQuery" @bind:event="oninput" />
+                            </div>
+
+                            <div class="po-select-box">
+                                <select @bind="StatusFilter">
+                                    <option value="All">All</option>
+                                    <option value="Awaiting Approval">Awaiting Approval</option>
+                                    <option value="Approved">Approved</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Accepted">Accepted</option>
+                                    <option value="Rejected">Rejected</option>
+                                    <option value="Dispatched">Dispatched</option>
+                                    <option value="Delivered">Delivered</option>
+                                </select>
+                            </div>
+
+                            @if (!Auth.IsPurchaseManager && OrgOutlets.Count > 1)
+                            {
+                                <div class="po-select-box">
+                                    <select @bind="SelectedOutletId">
+                                        <option value="0">All Outlets</option>
+                                        @foreach (var o in OrgOutlets)
+                                        {
+                                            <option value="@o.OutletID">@(OutletNames.TryGetValue(o.OutletID, out var on) ? on : $"Outlet #{o.OutletID}")</option>
+                                        }
+                                    </select>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="po-toolbar-right">
+                            <button type="button" class="btn-issue-po" @onclick="OpenCreateModal">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                                <span>Issue Purchase Order</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ORDERS TABLE -->
+                    <div class="po-table-card">
+                        @if (FilteredPurchaseOrders.Count == 0)
+                        {
+                            <div class="po-empty-state">
+                                <div class="empty-icon">
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.5">
+                                        <rect x="1" y="3" width="15" height="13"></rect>
+                                        <polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon>
+                                        <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                        <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                                    </svg>
+                                </div>
+                                <h5>No Purchase Orders Found</h5>
+                                <p class="text-muted">There are no purchase orders matching your search or filter criteria.</p>
+                                @if (EligiblePoOptions.Count > 0)
+                                {
+                                    <button class="btn btn-outline-success mt-2" @onclick="OpenCreateModal">
+                                        + Issue Purchase Order for Accepted Quotation
+                                    </button>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="po-table">
+                                    <thead>
+                                        <tr>
+                                            <th>PO Number</th>
+                                            <th>Outlet</th>
+                                            <th>Product &amp; Quantity</th>
+                                            <th>Vendor</th>
+                                            <th>Order Date</th>
+                                            <th>Expected Delivery</th>
+                                            <th>Status</th>
+                                            <th class="text-end">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var p in FilteredPurchaseOrders)
+                                        {
+                                            var poItem = p.Items?.FirstOrDefault();
+                                            string pName = poItem != null && ProductNames.TryGetValue(poItem.ProductID, out var pn) ? pn : "General Product";
+                                            string qtyStr = poItem != null ? $"{poItem.Quantity:0.##} {GetProductUnit(poItem.ProductID)}" : "N/A";
+                                            string vName = VendorNames.TryGetValue(p.VendorID, out var vn) ? vn : $"Vendor #{p.VendorID}";
+                                            string oName = OutletNames.TryGetValue(p.OutletID, out var on) ? on : $"Outlet #{p.OutletID}";
+                                            string badgeClass = GetStatusBadgeClass(p.Status);
+
+                                            <tr class="po-row" style="cursor: pointer;" @onclick="() => OpenPoDetails(p.PurchaseOrderID)">
+                                                <td class="po-ref-col">
+                                                    <span class="po-ref-pill">PO-@p.PurchaseOrderID</span>
+                                                </td>
+                                                <td class="po-outlet-col">
+                                                    <div class="outlet-bold">@oName</div>
+                                                </td>
+                                                <td class="po-prod-col">
+                                                    <div class="prod-bold">@pName</div>
+                                                    <div class="prod-sub">@qtyStr</div>
+                                                </td>
+                                                <td class="po-vendor-col">
+                                                    <span class="vendor-name-text">@vName</span>
+                                                </td>
+                                                <td class="po-date-col">
+                                                    @p.OrderDate.ToString("dd MMM yyyy")
+                                                </td>
+                                                <td class="po-date-col">
+                                                    @(p.ExpectedDeliveryDate.HasValue ? p.ExpectedDeliveryDate.Value.ToString("dd MMM yyyy") : "N/A")
+                                                </td>
+                                                <td class="po-status-col">
+                                                    <span class="po-badge @badgeClass">@p.Status</span>
+                                                </td>
+                                                <td class="text-end pe-3">
+                                                    <button type="button" class="btn btn-sm btn-outline-success fw-semibold px-2 py-1" @onclick="() => OpenPoDetails(p.PurchaseOrderID)" @onclick:stopPropagation="true">
+                                                        Details &rarr;
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+
+                }
+
+            </main>
+        </div>
+
+    </div>
+
+    <!-- CREATE PURCHASE ORDER MODAL -->
+    @if (ShowCreatePoModal)
+    {
+        <div class="modal-backdrop-custom">
+            <div class="create-po-modal-card">
+                <div class="modal-header-custom">
+                    <h4 class="modal-title-custom">Issue Purchase Order</h4>
+                    <button type="button" class="modal-close-btn" @onclick="CloseCreateModal" title="Close">&times;</button>
+                </div>
+
+                <div class="modal-body-custom">
+                    @if (!string.IsNullOrEmpty(ModalErrorMessage))
+                    {
+                        <div class="alert alert-danger py-2 mb-3 small" style="border-radius: 4px;">@ModalErrorMessage</div>
+                    }
+
+                    @if (EligiblePoOptions.Count == 0)
+                    {
+                        <div class="p-4 text-center text-muted">
+                            <p class="mb-2">There are currently no accepted quotations awaiting a purchase order.</p>
+                            <p class="small text-secondary">Please accept a vendor quotation in Quotations Evaluation first.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="form-group mb-4">
+                            <label class="form-label-custom">Eligible Vendor &amp; Product Quotation</label>
+                            <div class="quotation-selection-list">
+                                @foreach (var opt in EligiblePoOptions)
+                                {
+                                    bool isSelected = SelectedQuotationId == opt.QuotationID;
+                                    <div class="quotation-option-card @(isSelected ? "selected" : "")" @onclick="() => SelectedQuotationId = opt.QuotationID">
+                                        <div class="opt-main-info">
+                                            <div class="opt-vendor-header">
+                                                <strong class="opt-vendor-name">@opt.VendorName</strong>
+                                                @if (!string.IsNullOrWhiteSpace(opt.RecommendationBadge))
+                                                {
+                                                    <span class="opt-rec-badge @(opt.IsRecommended ? "badge-recommended" : (opt.RecommendationBadge.Contains("Best Price") ? "badge-best-price" : "badge-alternative"))">
+                                                        @opt.RecommendationBadge
+                                                    </span>
+                                                }
+                                            </div>
+                                            <div class="opt-details-grid">
+                                                <div class="opt-detail-cell">
+                                                    <span class="opt-detail-label">Product</span>
+                                                    <span class="opt-detail-val">@opt.ProductName</span>
+                                                </div>
+                                                <div class="opt-detail-cell">
+                                                    <span class="opt-detail-label">Quantity</span>
+                                                    <span class="opt-detail-val">@opt.Quantity.ToString("N2") @opt.Unit</span>
+                                                </div>
+                                                <div class="opt-detail-cell">
+                                                    <span class="opt-detail-label">Outlet</span>
+                                                    <span class="opt-detail-val">@opt.OutletName</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="opt-pricing-box">
+                                            <span class="opt-price-label">Estimated Total</span>
+                                            <span class="opt-price-val">Rs. @opt.TotalAmount.ToString("N2")</span>
+                                            <span class="opt-unit-rate">Rs. @opt.UnitPrice.ToString("N2") / @opt.Unit</span>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-2">
+                            <label class="form-label-custom">Expected Delivery Date</label>
+                            <input type="date" class="form-control-custom" @bind="ExpectedDeliveryDate" />
+                        </div>
+                    }
+                </div>
+
+                <div class="modal-footer-custom">
+                    <button type="button" class="btn-cancel" @onclick="CloseCreateModal">Cancel</button>
+                    @if (EligiblePoOptions.Count > 0)
+                    {
+                        <button type="button" class="btn-confirm-po" @onclick="HandleSubmitPo" disabled="@IsProcessingPo">
+                            @if (IsProcessingPo)
+                            {
+                                <span>Issuing PO...</span>
+                            }
+                            else
+                            {
+                                <span>Confirm &amp; Issue Purchase Order</span>
+                            }
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- SUBMIT REVIEW MODAL -->
+    <SubmitReviewModal @bind-IsOpen="IsReviewModalOpen"
+                       Item="ReviewOrderItem"
+                       OnReviewSubmitted="HandleReviewSubmitted" />
+}
+
+

@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.37516.0 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VenodorManagementFrontend", "VenodorManagementFrontend\VenodorManagementFrontend.csproj", "{EB526F32-00D3-44BA-8CA9-1DF564129F41}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EB526F32-00D3-44BA-8CA9-1DF564129F41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB526F32-00D3-44BA-8CA9-1DF564129F41}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB526F32-00D3-44BA-8CA9-1DF564129F41}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB526F32-00D3-44BA-8CA9-1DF564129F41}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D24D96BC-0075-4454-983C-2F5F0D8337C0}
+	EndGlobalSection
+EndGlobal

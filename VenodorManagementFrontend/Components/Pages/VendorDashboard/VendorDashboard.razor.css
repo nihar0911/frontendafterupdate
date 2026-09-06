@@ -1,0 +1,1046 @@
+/* ==========================================================================
+   VENDOR MANAGER DASHBOARD SCOPED STYLES
+   Design System: Dark Green (#174F45), Clean White (#FFFFFF), Modern Enterprise
+   ========================================================================== */
+
+/* Base Layout */
+.vd-layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: #F4F7F5;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    color: #1F2933;
+    margin: -1.5rem -1.5rem -2.5rem -1.5rem;
+}
+
+/* ==========================================================================
+   1. FIXED FULL-HEIGHT DARK GREEN SIDEBAR (#174F45)
+   ========================================================================== */
+.vd-sidebar {
+    width: 250px;
+    background-color: #174F45;
+    color: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 1.5rem 1rem;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    height: 100vh;
+    min-height: 100vh;
+    z-index: 100;
+    box-shadow: 2px 0 12px rgba(19, 78, 72, 0.12);
+    box-sizing: border-box;
+}
+
+.vd-sidebar-top {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.vd-sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.25rem 0.5rem 1.5rem 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.vd-brand-icon-box {
+    width: 34px;
+    height: 34px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFFFFF;
+    flex-shrink: 0;
+}
+
+.vd-brand-text {
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: #FFFFFF;
+}
+
+.vd-nav-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 1.25rem 0;
+    flex: 1;
+}
+
+.vd-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    color: #D1E0D9;
+    background: transparent;
+    border: none;
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    width: 100%;
+}
+
+.vd-nav-item:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: #FFFFFF;
+}
+
+.vd-nav-item.active {
+    background-color: #24584D;
+    color: #FFFFFF;
+    font-weight: 700;
+}
+
+.vd-nav-icon {
+    flex-shrink: 0;
+}
+
+.vd-sidebar-bottom {
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.vd-user-profile-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+    padding: 0 0.25rem;
+}
+
+.vd-avatar-circle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #2E7D61;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFFFFF;
+    flex-shrink: 0;
+}
+
+.vd-user-info-text {
+    overflow: hidden;
+}
+
+.vd-user-name {
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: #FFFFFF;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.vd-user-role {
+    font-size: 0.75rem;
+    color: #A3C2B6;
+    margin-top: 2px;
+}
+
+.vd-logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    padding: 0.6rem 0.85rem;
+    border-radius: 4px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #D1E0D9;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.vd-logout-btn:hover {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: #EF4444;
+    color: #FCA5A5;
+}
+
+/* ==========================================================================
+   2. MAIN CANVAS & TOP HEADER
+   ========================================================================== */
+.vd-main-canvas {
+    flex: 1;
+    margin-left: 250px;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 100vh;
+    background-color: #F4F7F5;
+}
+
+.vd-top-header {
+    background-color: #FFFFFF;
+    border-bottom: 1px solid #E5E7EB;
+    padding: 1.1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 90;
+}
+
+.vd-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.vd-menu-btn {
+    background: transparent;
+    border: none;
+    color: #4B5563;
+    padding: 0.35rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+.vd-menu-btn:hover {
+    background-color: #F3F4F6;
+    color: #111827;
+}
+
+.vd-welcome-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #111827;
+    margin: 0;
+    letter-spacing: -0.01em;
+}
+
+.vd-welcome-subtitle {
+    font-size: 0.82rem;
+    color: #6B7280;
+    margin: 0.15rem 0 0 0;
+}
+
+.vd-accent-text {
+    color: #174F45;
+    font-weight: 700;
+}
+
+.vd-header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.vd-header-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.5rem 0.9rem;
+    border-radius: 4px;
+    border: 1px solid #E5E7EB;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    line-height: 1;
+}
+
+.vd-notif-pill {
+    background-color: #FFFFFF;
+    color: #374151;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.15s ease;
+}
+
+.vd-notif-pill:hover {
+    background-color: #F9FAFB;
+    border-color: #D1D5DB;
+}
+
+.vd-notif-badge {
+    background-color: #EF4444;
+    color: #FFFFFF;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 1px 6px;
+    margin-left: 2px;
+}
+
+.vd-vendor-pill {
+    background-color: #174F45;
+    color: #FFFFFF;
+    border-color: #174F45;
+    cursor: default;
+}
+
+.vd-vendor-pill-text {
+    font-weight: 700;
+    color: #FFFFFF;
+}
+
+.vd-logout-header-pill {
+    background-color: #FFFFFF;
+    border-color: #E5E7EB;
+    color: #DC2626;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.vd-logout-header-pill:hover {
+    background-color: #FEE2E2;
+    border-color: #FCA5A5;
+    color: #B91C1C;
+}
+
+/* Notifications Dropdown */
+.vd-notif-container {
+    position: relative;
+}
+
+.vd-notif-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 350px;
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 4px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    overflow: hidden;
+}
+
+.vd-notif-dropdown-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid #E5E7EB;
+    background-color: #F9FAFB;
+}
+
+.vd-notif-dropdown-body {
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.vd-notif-item {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #F3F4F6;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.5rem;
+    transition: background-color 0.15s ease;
+}
+
+.vd-notif-item:hover {
+    background-color: #F9FAFB;
+}
+
+.vd-notif-item.unread {
+    background-color: #F0FDF4;
+}
+
+.vd-notif-content {
+    flex: 1;
+}
+
+.vd-notif-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.vd-notif-msg {
+    font-size: 0.76rem;
+    color: #6B7280;
+    line-height: 1.35;
+}
+
+.vd-notif-time {
+    font-size: 0.68rem;
+    color: #9CA3AF;
+    display: block;
+    margin-top: 3px;
+}
+
+.vd-notif-mark {
+    background: none;
+    border: none;
+    color: #059669;
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 4px;
+}
+
+/* ==========================================================================
+   3. DASHBOARD BODY & CARDS
+   ========================================================================== */
+.vd-dashboard-body {
+    padding: 1.5rem 2rem 3rem 2rem;
+}
+
+.vd-card {
+    background: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+/* Back Button */
+.vd-back-btn {
+    background-color: #FFFFFF;
+    color: #374151;
+    border: 1px solid #D1D5DB;
+    border-radius: 4px;
+    padding: 0.45rem 0.95rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.15s ease;
+}
+
+.vd-back-btn:hover {
+    background-color: #F9FAFB;
+    border-color: #9CA3AF;
+    color: #111827;
+}
+
+.vd-metric-icon-lg {
+    width: 46px;
+    height: 46px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.vd-section-icon-box {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* Progress Bar for Allocations & Used */
+.vd-mini-progress {
+    width: 75px;
+    height: 4px;
+    background-color: #E5E7EB;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 4px;
+}
+
+.vd-progress-fill-blue {
+    height: 100%;
+    background-color: #2563EB;
+    border-radius: 2px;
+}
+
+.vd-progress-fill-green {
+    height: 100%;
+    background-color: #059669;
+    border-radius: 2px;
+}
+
+.vd-pct-label {
+    font-size: 0.72rem;
+    color: #6B7280;
+    margin-top: 2px;
+    display: block;
+}
+
+/* Opportunity Highlight Banner */
+.vd-opportunity-banner {
+    background: linear-gradient(135deg, #EFF6FF 0%, #E0F2FE 100%);
+    border: 1px solid #BAE6FD;
+    border-left: 5px solid #0284C7;
+    border-radius: 4px;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.25rem;
+    box-shadow: 0 2px 5px rgba(2, 132, 199, 0.06);
+}
+
+.vd-opportunity-banner-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.vd-banner-icon-box {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(2, 132, 199, 0.12);
+    flex-shrink: 0;
+}
+
+.vd-banner-title {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #0369A1;
+    margin: 0 0 0.2rem 0;
+}
+
+.vd-banner-desc {
+    font-size: 0.84rem;
+    color: #334155;
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* 4 Summary Metric Cards Grid */
+.vd-metric-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+}
+
+.vd-metric-card {
+    background: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 4px;
+    padding: 1.25rem 1.4rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.vd-metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: #D1D5DB;
+}
+
+.vd-metric-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.vd-metric-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bg-light-green {
+    background-color: #DEF7EC;
+}
+
+.text-green {
+    color: #03543F;
+}
+
+.bg-light-amber {
+    background-color: #FEF3C7;
+}
+
+.text-amber {
+    color: #92400E;
+}
+
+.bg-light-blue {
+    background-color: #E0F2FE;
+}
+
+.text-blue {
+    color: #0284C7;
+}
+
+.vd-metric-label {
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: #6B7280;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.vd-metric-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem 0;
+}
+
+.vd-metric-value {
+    font-size: 2.1rem;
+    font-weight: 800;
+    color: #111827;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+.vd-metric-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #174F45;
+}
+
+/* ==========================================================================
+   4. STATUS TABS ROW
+   ========================================================================== */
+.vd-status-tabs-row {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.vd-status-tab {
+    padding: 0.55rem 1.25rem;
+    border-radius: 4px;
+    border: 1px solid #E5E7EB;
+    background-color: #FFFFFF;
+    color: #4B5563;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.vd-status-tab:hover {
+    background-color: #F9FAFB;
+    border-color: #D1D5DB;
+    color: #111827;
+}
+
+.vd-status-tab.active {
+    background-color: #174F45;
+    color: #FFFFFF;
+    border-color: #174F45;
+    font-weight: 700;
+    box-shadow: 0 2px 6px rgba(23, 79, 69, 0.25);
+}
+
+/* ==========================================================================
+   5. TABLE & TOOLBAR
+   ========================================================================== */
+.vd-card-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.vd-card-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #111827;
+    letter-spacing: -0.01em;
+}
+
+.vd-search-filter-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.vd-search-box {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: #F9FAFB;
+    border: 1px solid #D1D5DB;
+    border-radius: 4px;
+    padding: 0.45rem 0.85rem;
+    width: 320px;
+    color: #6B7280;
+}
+
+.vd-search-input {
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 0.82rem;
+    width: 100%;
+    color: #111827;
+}
+
+.vd-search-input::placeholder {
+    color: #9CA3AF;
+}
+
+.vd-filter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background-color: #FFFFFF;
+    border: 1px solid #D1D5DB;
+    border-radius: 4px;
+    padding: 0.45rem 0.85rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.vd-filter-btn:hover {
+    background-color: #F9FAFB;
+    border-color: #9CA3AF;
+}
+
+/* Table Design */
+.vd-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 0.5rem;
+}
+
+.vd-table th {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid #E5E7EB;
+    background-color: #F9FAFB;
+}
+
+.vd-table td {
+    padding: 1.1rem 1rem;
+    font-size: 0.85rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #F3F4F6;
+}
+
+.vd-table tr:hover td {
+    background-color: #F9FAFB;
+}
+
+.vd-pr-ref-link {
+    color: #174F45;
+    font-weight: 800;
+    text-decoration: none;
+    font-size: 0.88rem;
+    cursor: pointer;
+}
+
+.vd-pr-ref-link:hover {
+    text-decoration: underline;
+}
+
+.vd-sub-text {
+    font-size: 0.75rem;
+    color: #6B7280;
+    margin-top: 2px;
+}
+
+/* Status Badges */
+.vd-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.status-approved {
+    background-color: #DEF7EC;
+    color: #03543F;
+    border: 1px solid #BCF0DA;
+}
+
+.status-pending {
+    background-color: #FEF3C7;
+    color: #92400E;
+    border: 1px solid #FDE68A;
+}
+
+.status-rejected {
+    background-color: #FDE8E8;
+    color: #9B1C1C;
+    border: 1px solid #FBD5D5;
+}
+
+.status-dispatched {
+    background-color: #EFF6FF;
+    color: #1D4ED8;
+    border: 1px solid #BFDBFE;
+}
+
+.vd-nav-badge {
+    font-size: 0.7rem;
+    border-radius: 4px;
+}
+
+/* Buttons */
+.vd-btn-dark-green {
+    background-color: #174F45;
+    color: #FFFFFF;
+    border: none;
+    font-weight: 700;
+    border-radius: 4px;
+    padding: 0.5rem 1rem;
+    font-size: 0.82rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    box-shadow: 0 1px 3px rgba(23, 79, 69, 0.2);
+}
+
+.vd-btn-dark-green:hover {
+    background-color: #0F3A32;
+    color: #FFFFFF;
+    transform: translateY(-1px);
+}
+
+.vd-btn-outline-subtle {
+    background-color: #FFFFFF;
+    color: #4B5563;
+    border: 1px solid #D1D5DB;
+    font-weight: 600;
+    border-radius: 4px;
+    padding: 0.5rem 1rem;
+    font-size: 0.82rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.vd-btn-outline-subtle:hover {
+    background-color: #F9FAFB;
+    color: #111827;
+    border-color: #9CA3AF;
+}
+
+.vd-btn-sm {
+    padding: 0.42rem 0.85rem;
+    font-size: 0.8rem;
+}
+
+.vd-btn-primary {
+    background-color: #174F45;
+    color: #FFFFFF;
+    font-weight: 700;
+    border-radius: 4px;
+    padding: 0.6rem 1.25rem;
+    border: none;
+}
+
+/* Loading & Empty States */
+.vd-loading-state,
+.vd-empty-state {
+    text-align: center;
+    padding: 3rem 1.5rem;
+}
+
+.vd-auth-warning-wrap {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.vd-auth-warning-card {
+    background: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 4px;
+    padding: 2.5rem;
+    max-width: 460px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+/* Responsive Rules */
+@media (max-width: 1024px) {
+    .vd-metric-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .vd-layout {
+        flex-direction: column;
+        margin: -1rem;
+    }
+    .vd-sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+    }
+    .vd-main-canvas {
+        margin-left: 0;
+    }
+    .vd-top-header {
+        padding: 1rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    .vd-header-right {
+        width: 100%;
+        justify-content: space-between;
+    }
+    .vd-dashboard-body {
+        padding: 1rem;
+    }
+    .vd-metric-grid {
+        grid-template-columns: 1fr;
+    }
+    .vd-opportunity-banner {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .vd-search-box {
+        width: 100%;
+    }
+    .vd-card-toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+/* Modal Styles */
+.vd-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+    padding: 1.5rem;
+}
+
+.vd-modal-dialog {
+    background: #FFFFFF;
+    border-radius: 4px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: vdModalFadeIn 0.2s ease-out;
+}
+
+.vd-modal-lg {
+    max-width: 860px;
+}
+
+@keyframes vdModalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.vd-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.vd-modal-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+}
+
+.vd-modal-subtitle {
+    font-size: 0.85rem;
+}
+
+.vd-modal-close {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    line-height: 1;
+    color: #6B7280;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+}
+
+.vd-modal-close:hover {
+    color: #111827;
+    background: #F3F4F6;
+}
+
+.vd-modal-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.vd-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #E5E7EB;
+    background: #F9FAFB;
+}
+

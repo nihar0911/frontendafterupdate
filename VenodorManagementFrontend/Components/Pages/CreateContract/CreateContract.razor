@@ -1,0 +1,585 @@
+@page "/contract/create"
+@page "/contract/create/{QuotationId:int}"
+@page "/create-contract/{QuotationId:int}"
+@rendermode InteractiveServer
+@inject ApiService Api
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+<PageTitle>Contract Creation &amp; Vendor Allocation - Smart Vendor Management System</PageTitle>
+
+@if (!Auth.IsAuthenticated)
+{
+    <div class="unauth-container">
+        <div class="unauth-card">
+            <h4 class="unauth-title">Authentication Required</h4>
+            <p class="unauth-desc">Please log in as an Organization Manager to create contracts.</p>
+            <button class="btn-login-redirect" @onclick='() => Nav.NavigateTo("/login")'>Go to Login</button>
+        </div>
+    </div>
+}
+else if (!Auth.IsOrgManager && !Auth.IsAdmin)
+{
+    <div class="unauth-container">
+        <div class="unauth-card">
+            <h4 class="unauth-title text-danger">Access Denied</h4>
+            <p class="unauth-desc">You do not have Organization Manager privileges to establish contracts.</p>
+            <button class="btn-login-redirect" @onclick='() => Nav.NavigateTo("/")'>Return to Home</button>
+        </div>
+    </div>
+}
+else
+{
+    <div class="org-app-layout @(IsSidebarCollapsed ? "sidebar-collapsed" : "")">
+
+        <!-- =======================================================================
+             LEFT SIDEBAR NAVIGATION (ENTERPRISE DARK GREEN)
+             ======================================================================= -->
+        <aside class="org-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-branding" @onclick='() => Nav.NavigateTo("/org-dashboard")'>
+                    <div class="brand-emblem">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="brand-text">
+                        <span class="brand-name">Smart Vendor</span>
+                        <span class="brand-sub">Management</span>
+                    </div>
+                </div>
+                <button class="sidebar-collapse-btn" @onclick="ToggleSidebar" title="Toggle Sidebar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        @if (IsSidebarCollapsed)
+                        {
+                            <polyline points="13 17 18 12 13 7"></polyline>
+                            <polyline points="6 17 11 12 6 7"></polyline>
+                        }
+                        else
+                        {
+                            <polyline points="11 17 6 12 11 7"></polyline>
+                            <polyline points="18 17 13 12 18 7"></polyline>
+                        }
+                    </svg>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/org-dashboard")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Dashboard</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/organization/outlets")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                    <path d="M9 22V12h6v10"></path>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Outlets</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/procurement")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Purchase Requests</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/quotations")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="12" y1="18" x2="12" y2="12"></line>
+                                    <line x1="9" y1="15" x2="15" y2="15"></line>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Quotations</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link active" @onclick='() => Nav.NavigateTo("/organization/contracts")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <path d="M9 12l2 2 4-4"></path>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Contracts</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/organization/purchase-orders")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="1" y="3" width="15" height="13"></rect>
+                                    <polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon>
+                                    <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                    <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Purchase Orders</span>
+                        </button>
+                    </li>
+                </ul>
+
+                <ul class="nav-list nav-list-bottom">
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/org-dashboard")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </span>
+                            <span class="nav-label">My Profile</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link nav-logout" @onclick="HandleLogout">
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                    <polyline points="16 17 21 12 16 7"></polyline>
+                                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Logout</span>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- =======================================================================
+             MAIN BODY WRAPPER
+             ======================================================================= -->
+        <div class="org-main-wrapper">
+
+            <!-- TOP HEADER -->
+            <header class="org-top-header">
+                <button class="menu-toggle-btn" @onclick="ToggleSidebar" title="Toggle Menu">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+
+                <div class="header-right">
+                    <div class="profile-capsule-wrapper">
+                        <div class="profile-capsule" @onclick="ToggleProfileDropdown">
+                            <div class="profile-avatar">@GetUserInitial()</div>
+                            <div class="profile-meta">
+                                <span class="profile-name">@(string.IsNullOrWhiteSpace(Auth.UserName) ? (Auth.CurrentUser?.Name ?? "Organization Manager") : Auth.UserName)</span>
+                                <span class="profile-role">Organization Manager</span>
+                            </div>
+                            <svg class="dropdown-arrow @(IsProfileDropdownOpen ? "open" : "")" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <button class="header-logout-btn" @onclick="HandleLogout" title="Sign out">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        <span>Logout</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- MAIN CONTENT CANVAS -->
+            <main class="org-main-content">
+                <div class="content-container">
+
+                    <!-- BREADCRUMB & TOP BACK ACTION -->
+                    <div class="top-breadcrumb-row">
+                        <div class="breadcrumb-links">
+                            <a href="/org-dashboard" class="bc-link">Dashboard</a>
+                            <span class="bc-sep">&rsaquo;</span>
+                            <a href="/organization/contracts" class="bc-link">Contracts</a>
+                            <span class="bc-sep">&rsaquo;</span>
+                            <span class="bc-current">Contract Creation</span>
+                        </div>
+
+                        <button type="button" class="btn-back-dashboard" @onclick="GoBack">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="19" y1="12" x2="5" y2="12"></line>
+                                <polyline points="12 19 5 12 12 5"></polyline>
+                            </svg>
+                            <span>Back</span>
+                        </button>
+                    </div>
+
+                    <!-- PAGE MAIN HEADING -->
+                    <div class="page-title-section">
+                        <h1 class="page-main-heading">Contract Creation &amp; Vendor Allocation</h1>
+                        <p class="page-sub-heading">Create a contract and allocate the contract quantity among eligible vendors.</p>
+                    </div>
+
+                    @if (IsLoading)
+                    {
+                        <div class="loading-state">
+                            <div class="loading-spinner"></div>
+                            <h4 class="loading-text">Loading contract specifications...</h4>
+                            <p class="loading-sub">Fetching quotation details and active vendor allocations</p>
+                        </div>
+                    }
+                    else if (!string.IsNullOrEmpty(ErrorMessage))
+                    {
+                        <div class="error-banner">
+                            <div class="error-banner-content">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                </svg>
+                                <span>@ErrorMessage</span>
+                            </div>
+                            <button type="button" class="btn-back-dashboard" @onclick="GoBack">Return</button>
+                        </div>
+                    }
+                    else
+                    {
+                        @if (!string.IsNullOrEmpty(ValidationMessage))
+                        {
+                            <div class="warning-banner">
+                                <div class="warning-banner-content">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                    </svg>
+                                    <span>@ValidationMessage</span>
+                                </div>
+                                <button type="button" class="btn-close-banner" @onclick="() => ValidationMessage = null">&times;</button>
+                            </div>
+                        }
+
+                        <!-- TWO COLUMN MAIN LAYOUT (MATCHING REFERENCE IMAGE) -->
+                        <div class="contract-two-col-grid">
+
+                            <!-- =======================================================
+                                 LEFT COLUMN: SPECIFICATIONS & SCHEDULE
+                                 ======================================================= -->
+                            <div class="col-left">
+
+                                <!-- INHERITED CONTRACT SPECIFICATIONS CARD -->
+                                <div class="content-card mb-4">
+                                    <div class="card-header-row">
+                                        <div class="card-icon-box">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                                <polyline points="14 2 14 8 20 8"></polyline>
+                                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                            </svg>
+                                        </div>
+                                        <h3 class="card-section-title">Inherited Contract Specifications</h3>
+                                    </div>
+
+                                    <div class="specs-grid">
+                                        <div class="specs-cell">
+                                            <span class="specs-label">Quotation ID</span>
+                                            <span class="specs-val text-success fw-bold">@(Quotation?.QuotationID ?? QuotationId ?? 0)</span>
+                                        </div>
+                                        <div class="specs-cell">
+                                            <span class="specs-label">Purchase Request ID</span>
+                                            <span class="specs-val text-success fw-bold">PR-@(PurchaseRequest?.RequestID ?? Quotation?.RequestID ?? 0)</span>
+                                        </div>
+                                        <div class="specs-cell">
+                                            <span class="specs-label">Organization</span>
+                                            <span class="specs-val">@OrganizationName</span>
+                                        </div>
+                                        <div class="specs-cell">
+                                            <span class="specs-label">Outlet</span>
+                                            <span class="specs-val">@OutletName</span>
+                                        </div>
+                                        <div class="specs-cell-full">
+                                            <span class="specs-label">Product</span>
+                                            <div class="product-val-wrap">
+                                                <span class="specs-val">@ProductName</span>
+                                                @if (!string.IsNullOrEmpty(ProductCategory))
+                                                {
+                                                    <span class="badge-tag">@ProductCategory.ToLowerInvariant()</span>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 4 METRICS AT BOTTOM OF SPECS CARD -->
+                                    <div class="specs-metrics-grid">
+                                        <div class="spec-metric-item">
+                                            <span class="spec-metric-label">Total Contract Quantity</span>
+                                            <span class="spec-metric-val text-success">@TotalContractQuantity.ToString("N2") @Unit</span>
+                                        </div>
+                                        <div class="spec-metric-item">
+                                            <span class="spec-metric-label">Unit Price</span>
+                                            <span class="spec-metric-val">Rs. @UnitPrice.ToString("N2")</span>
+                                        </div>
+                                        <div class="spec-metric-item">
+                                            <span class="spec-metric-label">Estimated Tax</span>
+                                            <span class="spec-metric-val">Rs. @TaxAmount.ToString("N2")</span>
+                                        </div>
+                                        <div class="spec-metric-item">
+                                            <span class="spec-metric-label">Total Contract Value</span>
+                                            <span class="spec-metric-val">Rs. @TotalContractValue.ToString("N2")</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- CONTRACT TERMS & SCHEDULE CARD -->
+                                <div class="content-card">
+                                    <div class="card-header-row">
+                                        <div class="card-icon-box">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                                            </svg>
+                                        </div>
+                                        <h3 class="card-section-title">Contract Terms &amp; Schedule</h3>
+                                    </div>
+
+                                    <div class="dates-form-row">
+                                        <div class="form-group-item">
+                                            <label class="form-label-custom">Start Date</label>
+                                            <input type="date" class="form-input-custom" @bind="StartDate" />
+                                        </div>
+                                        <div class="form-group-item">
+                                            <label class="form-label-custom">End Date</label>
+                                            <input type="date" class="form-input-custom" @bind="EndDate" />
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group-item mt-3">
+                                        <label class="form-label-custom">Payment Method</label>
+                                        <div class="select-wrapper-custom">
+                                            <select class="form-select-custom" @bind="PaymentMethod">
+                                                <option value="Bank Transfer">Bank Transfer</option>
+                                                <option value="Cash on Delivery">Cash on Delivery</option>
+                                                <option value="Net 30">Net 30</option>
+                                                <option value="Credit Card">Credit Card</option>
+                                            </select>
+                                            <svg class="select-arrow-custom" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <polyline points="6 9 12 15 18 9"></polyline>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <!-- =======================================================
+                                 RIGHT COLUMN: VENDOR ALLOCATION (MATCHING REFERENCE IMAGE)
+                                 ======================================================= -->
+                            <div class="col-right">
+                                <div class="content-card">
+
+                                    <!-- VENDOR ALLOCATION HEADER -->
+                                    <div class="alloc-card-header">
+                                        <div class="alloc-header-left">
+                                            <div class="card-icon-box">
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <circle cx="18" cy="5" r="3"></circle>
+                                                    <circle cx="6" cy="12" r="3"></circle>
+                                                    <circle cx="18" cy="19" r="3"></circle>
+                                                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                                                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                                                </svg>
+                                            </div>
+                                            <h3 class="card-section-title">Vendor Allocation</h3>
+                                        </div>
+
+                                        <div class="alloc-header-right">
+                                            <span class="total-qty-label">Total Quantity</span>
+                                            <span class="total-qty-val">@TotalContractQuantity.ToString("N2") @Unit</span>
+                                        </div>
+                                    </div>
+
+                                    <p class="alloc-sub-desc">
+                                        Allocate the total contract quantity (<strong>@TotalContractQuantity.ToString("N2") @Unit</strong>) across one or more eligible vendors for <strong>@ProductName</strong>.
+                                    </p>
+
+                                    <!-- ALLOCATION TABLE -->
+                                    <div class="alloc-table-wrap">
+                                        <table class="alloc-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>ELIGIBLE VENDOR</th>
+                                                    <th class="text-center" style="width: 140px;">ALLOCATION %</th>
+                                                    <th class="text-center" style="width: 140px;">ALLOCATED QTY</th>
+                                                    <th class="text-center" style="width: 80px;">ACTION</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var row in AllocationRows)
+                                                {
+                                                    var currentRow = row;
+                                                    <tr>
+                                                        <td class="vendor-name-cell">
+                                                            <strong>@currentRow.VendorName</strong>
+                                                            @if (currentRow.IsWinner)
+                                                            {
+                                                                <span class="badge-winner">Quotation Winner</span>
+                                                            }
+                                                        </td>
+                                                        <td class="text-center">
+                                                            <div class="percent-input-box">
+                                                                <input type="number" step="1" min="0" max="100" class="percent-control"
+                                                                       @bind="currentRow.AllocationPercentage"
+                                                                       @bind:after="OnAllocationPercentageChanged" />
+                                                                <span class="percent-sign">%</span>
+                                                            </div>
+                                                        </td>
+                                                        <td class="text-center allocated-qty-cell">
+                                                            <strong>@currentRow.AllocatedQuantity.ToString("N2") @Unit</strong>
+                                                        </td>
+                                                        <td class="text-center">
+                                                            @if (currentRow.IsWinner || AllocationRows.Count <= 1)
+                                                            {
+                                                                <span class="text-muted">&mdash;</span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <button type="button" class="btn-remove-vendor" @onclick="() => RemoveVendorAllocation(currentRow.VendorID)" title="Remove vendor allocation">
+                                                                    &times;
+                                                                </button>
+                                                            }
+                                                        </td>
+                                                    </tr>
+                                                }
+
+                                                <!-- TOTAL ALLOCATION FOOTER ROW -->
+                                                <tr class="total-allocation-row">
+                                                    <td><strong>Total Allocation</strong></td>
+                                                    <td class="text-center total-pct-cell">
+                                                        <strong>@TotalAllocationPercentage.ToString("0.##")%</strong>
+                                                    </td>
+                                                    <td class="text-center total-qty-cell">
+                                                        <strong>@TotalAllocatedQuantity.ToString("N2") @Unit</strong>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        @if (TotalAllocationPercentage == 100m)
+                                                        {
+                                                            <span class="check-valid-icon" title="Valid Allocation">&#10003;</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="check-invalid-icon" title="Must equal 100%">!</span>
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <!-- ADD SECONDARY VENDOR ROW (IF ANY REMAINING) -->
+                                    @if (UnallocatedEligibleVendors.Count > 0)
+                                    {
+                                        <div class="add-vendor-row">
+                                            <div class="select-wrapper-custom flex-grow-1">
+                                                <select class="form-select-custom" @bind="SelectedVendorToAddId">
+                                                    <option value="0">+ Add additional eligible vendor...</option>
+                                                    @foreach (var v in UnallocatedEligibleVendors)
+                                                    {
+                                                        <option value="@v.VendorID">@v.VendorName</option>
+                                                    }
+                                                </select>
+                                                <svg class="select-arrow-custom" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                                </svg>
+                                            </div>
+                                            <button type="button" class="btn-add-vendor-action" @onclick="AddSelectedVendor" disabled="@(SelectedVendorToAddId <= 0)">
+                                                + Add Vendor
+                                            </button>
+                                        </div>
+                                    }
+
+                                    <!-- VALIDATION STATUS BANNER (MATCHING REFERENCE IMAGE) -->
+                                    <div class="validation-status-card @(TotalAllocationPercentage == 100m ? "valid-card" : "invalid-card")">
+                                        <div class="status-icon-circle">
+                                            @if (TotalAllocationPercentage == 100m)
+                                            {
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                </svg>
+                                            }
+                                            else
+                                            {
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                                </svg>
+                                            }
+                                        </div>
+                                        <div class="status-text-content">
+                                            @if (TotalAllocationPercentage == 100m)
+                                            {
+                                                <span><strong>Valid:</strong> Total allocation equals 100% across @AllocationRows.Count vendor(s). Total allocated: @TotalAllocatedQuantity.ToString("N2") @Unit.</span>
+                                            }
+                                            else
+                                            {
+                                                <span><strong>Notice:</strong> Total allocation must equal exactly 100%. Current total: @TotalAllocationPercentage.ToString("0.##")% (Remaining: @((100m - TotalAllocationPercentage).ToString("0.##"))%).</span>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <!-- SUBMIT BUTTON -->
+                                    <button type="button" class="btn-submit-contract"
+                                            @onclick="SubmitContractCreation"
+                                            disabled="@(IsProcessing || TotalAllocationPercentage != 100m)">
+                                        @if (IsProcessing)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                            <span>CREATING CONTRACT &amp; ALLOCATIONS...</span>
+                                        }
+                                        else
+                                        {
+                                            <span>+ CREATE CONTRACT &amp; ALLOCATIONS &rarr;</span>
+                                        }
+                                    </button>
+
+                                </div>
+                            </div>
+
+                        </div>
+                    }
+
+                </div>
+            </main>
+        </div>
+    </div>
+}

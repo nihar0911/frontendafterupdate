@@ -1,0 +1,764 @@
+/* =============================================================================
+   ADMIN DASHBOARD — PIXEL-PERFECT ENTERPRISE STYLES (Admin.razor.css)
+   Scoped to Admin.razor via Blazor CSS Isolation.
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   1. APP LAYOUT CONTAINER
+   ----------------------------------------------------------------------------- */
+.admin-app-layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: #F8FAF9;
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #1F2937;
+    margin: -1.5rem -1.5rem -2.5rem -1.5rem; /* Compensate for outer main-content padding */
+}
+
+/* -----------------------------------------------------------------------------
+   2. LEFT SIDEBAR NAVIGATION
+   ----------------------------------------------------------------------------- */
+.admin-sidebar {
+    width: 250px;
+    background-color: #174F45;
+    color: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    transition: width 0.25s ease;
+    z-index: 100;
+}
+
+.sidebar-collapsed .admin-sidebar {
+    width: 74px;
+}
+
+/* Sidebar Header & Brand */
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-branding {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    user-select: none;
+    overflow: hidden;
+}
+
+.brand-emblem {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    background-color: rgba(255, 255, 255, 0.14);
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+    white-space: nowrap;
+}
+
+.brand-name {
+    font-size: 0.95rem;
+    font-weight: 750;
+    color: #FFFFFF;
+    letter-spacing: -0.01em;
+}
+
+.brand-sub {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.sidebar-collapse-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.sidebar-collapse-btn:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: #FFFFFF;
+}
+
+.sidebar-collapsed .brand-text,
+.sidebar-collapsed .sidebar-collapse-btn {
+    display: none;
+}
+
+/* Sidebar Navigation Items */
+.sidebar-nav {
+    flex: 1;
+    padding: 1rem 0.75rem;
+    overflow-y: auto;
+}
+
+.nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.nav-item {
+    margin: 0;
+}
+
+.nav-link {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.7rem 0.85rem;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.15s ease, color 0.15s ease;
+    white-space: nowrap;
+}
+
+.nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: #FFFFFF;
+}
+
+.nav-link.active {
+    background-color: rgba(255, 255, 255, 0.16);
+    color: #FFFFFF;
+    font-weight: 650;
+}
+
+.nav-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    flex-shrink: 0;
+}
+
+.nav-label {
+    flex: 1;
+}
+
+.nav-arrow {
+    font-size: 1.1rem;
+    opacity: 0.6;
+}
+
+.sidebar-collapsed .nav-label,
+.sidebar-collapsed .nav-arrow {
+    display: none;
+}
+
+.sidebar-collapsed .nav-link {
+    justify-content: center;
+    padding: 0.75rem 0;
+}
+
+/* Sidebar Footer */
+.sidebar-footer {
+    padding: 1rem 0.85rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.collapse-toggle-link {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.85rem;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.88rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.collapse-toggle-link:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: #FFFFFF;
+}
+
+.sidebar-collapsed .collapse-label {
+    display: none;
+}
+
+.sidebar-collapsed .collapse-toggle-link {
+    justify-content: center;
+}
+
+/* -----------------------------------------------------------------------------
+   3. MAIN BODY WRAPPER & TOP HEADER
+   ----------------------------------------------------------------------------- */
+.admin-main-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.admin-top-header {
+    height: 64px;
+    background-color: #FFFFFF;
+    border-bottom: 1px solid #E5E7EB;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.75rem;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.menu-toggle-btn {
+    background: transparent;
+    border: none;
+    color: #4B5563;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.menu-toggle-btn:hover {
+    background-color: #F3F4F6;
+    color: #111827;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+/* Notification Bell */
+.notification-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 4px;
+    color: #4B5563;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.notification-wrapper:hover {
+    background-color: #F3F4F6;
+    color: #111827;
+}
+
+.notification-badge {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 17px;
+    height: 17px;
+    background-color: #10B981;
+    color: #FFFFFF;
+    font-size: 0.68rem;
+    font-weight: 700;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #FFFFFF;
+}
+
+/* User Profile Capsule & Dropdown */
+.profile-capsule-wrapper {
+    position: relative;
+}
+
+.profile-capsule {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 4px;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.15s;
+}
+
+.profile-capsule:hover {
+    background-color: #F3F4F6;
+}
+
+.profile-avatar {
+    width: 36px;
+    height: 36px;
+    background-color: #E8F5EE;
+    color: #134E48;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.profile-meta {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    line-height: 1.2;
+}
+
+.profile-name {
+    font-size: 0.9rem;
+    font-weight: 650;
+    color: #111827;
+}
+
+.profile-role {
+    font-size: 0.78rem;
+    color: #6B7280;
+}
+
+.dropdown-arrow {
+    color: #6B7280;
+    transition: transform 0.2s ease;
+}
+
+.dropdown-arrow.open {
+    transform: rotate(180deg);
+}
+
+.profile-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 220px;
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 4px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    padding: 0.5rem;
+    z-index: 150;
+    animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.dropdown-header {
+    padding: 0.6rem 0.85rem;
+    font-size: 0.82rem;
+    color: #4B5563;
+    border-bottom: 1px solid #F3F4F6;
+    margin-bottom: 0.35rem;
+}
+
+.dropdown-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.6rem 0.85rem;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.86rem;
+    color: #374151;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.12s;
+}
+
+.dropdown-item:hover {
+    background-color: #F3F4F6;
+    color: #111827;
+}
+
+.dropdown-item.text-danger:hover {
+    background-color: #FEF2F2;
+    color: #DC2626;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background-color: #F3F4F6;
+    margin: 0.35rem 0;
+}
+
+/* -----------------------------------------------------------------------------
+   4. MAIN CONTENT CANVAS
+   ----------------------------------------------------------------------------- */
+.admin-main-content {
+    flex: 1;
+    padding: 2rem 2.25rem 3rem 2.25rem;
+    overflow-y: auto;
+}
+
+.content-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Page Title Area */
+.page-title-section {
+    margin-bottom: 1.5rem;
+}
+
+.page-heading {
+    font-size: 1.85rem;
+    font-weight: 750;
+    color: #111827;
+    letter-spacing: -0.02em;
+    margin: 0 0 0.25rem 0;
+}
+
+.page-subheading {
+    font-size: 0.92rem;
+    color: #6B7280;
+    margin: 0;
+}
+
+/* Welcome Summary Banner */
+.welcome-summary-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 4px;
+    padding: 1rem 1.35rem;
+    margin-bottom: 1.75rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+}
+
+.welcome-left {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.welcome-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background-color: #E8F5EE;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.welcome-text {
+    font-size: 0.92rem;
+    color: #374151;
+}
+
+.welcome-date {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.85rem;
+    color: #6B7280;
+    font-weight: 500;
+}
+
+/* -----------------------------------------------------------------------------
+   5. FLASH / METRIC CARDS GRID (2 ROWS OF 3)
+   ----------------------------------------------------------------------------- */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.35rem;
+    margin-bottom: 1.5rem;
+}
+
+.metric-card {
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 4px;
+    padding: 1.65rem 1.5rem;
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    outline: none;
+}
+
+.metric-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+    border-color: #CBD5E1;
+}
+
+.metric-card-body {
+    display: flex;
+    align-items: center;
+    gap: 1.35rem;
+}
+
+/* Icon Badges */
+.metric-icon-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.icon-green {
+    background-color: #E8F5EE;
+    color: #166534;
+}
+
+.icon-teal {
+    background-color: #E8F5EE;
+    color: #0F766E;
+}
+
+.icon-blue {
+    background-color: #EEF4F8;
+    color: #1E40AF;
+}
+
+.icon-orange {
+    background-color: #FDF2EA;
+    color: #C2410C;
+}
+
+.icon-slate {
+    background-color: #F1F5F9;
+    color: #475569;
+}
+
+/* Card Content & Values */
+.metric-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.metric-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #6B7280;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.25rem;
+}
+
+.metric-value {
+    font-size: 2.35rem;
+    font-weight: 750;
+    color: #111827;
+    line-height: 1.1;
+    margin: 0 0 0.35rem 0;
+}
+
+.metric-value-orange {
+    color: #C2410C;
+}
+
+.metric-value-green {
+    color: #166534;
+}
+
+.metric-action {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #D97706;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    transition: color 0.15s;
+}
+
+.metric-card:hover .metric-action {
+    color: #B45309;
+}
+
+/* -----------------------------------------------------------------------------
+   6. VENDOR PRODUCTS FEATURE CARD
+   ----------------------------------------------------------------------------- */
+.feature-card {
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 4px;
+    padding: 1.5rem 1.75rem;
+    margin-bottom: 2.5rem;
+    max-width: 580px;
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    outline: none;
+}
+
+.feature-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(99, 102, 241, 0.08);
+    border-color: #C7D2FE;
+}
+
+.feature-card-body {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.feature-icon-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background-color: #EDE9FE;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.feature-content {
+    flex: 1;
+}
+
+.feature-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #6B7280;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.2rem;
+}
+
+.feature-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 0.2rem 0;
+}
+
+.feature-desc {
+    font-size: 0.85rem;
+    color: #6B7280;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.feature-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6366F1;
+    transition: transform 0.15s ease;
+}
+
+.feature-card:hover .feature-arrow {
+    transform: translateX(4px);
+}
+
+/* -----------------------------------------------------------------------------
+   7. LOADING & ERROR STATES
+   ----------------------------------------------------------------------------- */
+.loading-state-card,
+.error-state-card {
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 4px;
+    padding: 3rem 2rem;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.error-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background-color: #FEF2F2;
+    color: #DC2626;
+    border-radius: 50%;
+    margin-bottom: 1rem;
+}
+
+/* -----------------------------------------------------------------------------
+   8. FOOTER
+   ----------------------------------------------------------------------------- */
+.admin-footer {
+    padding-top: 1.5rem;
+    border-top: 1px solid #E5E7EB;
+}
+
+.footer-text {
+    font-size: 0.82rem;
+    color: #6B7280;
+    margin: 0;
+}
+
+/* -----------------------------------------------------------------------------
+   9. RESPONSIVE DESIGN
+   ----------------------------------------------------------------------------- */
+@media (max-width: 1024px) {
+    .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-app-layout {
+        flex-direction: column;
+    }
+
+    .admin-sidebar {
+        width: 100%;
+    }
+
+    .sidebar-collapsed .admin-sidebar {
+        width: 100%;
+    }
+
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .feature-card {
+        max-width: 100%;
+    }
+
+    .admin-main-content {
+        padding: 1.5rem 1rem;
+    }
+}

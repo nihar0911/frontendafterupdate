@@ -1,0 +1,75 @@
+@rendermode InteractiveServer
+
+<div class="card @(EditingProduct == null ? "border-success" : "border-primary") shadow mb-4 bg-white">
+    <div class="card-header @(EditingProduct == null ? "bg-success text-white" : "bg-primary text-white") py-3">
+        <h5 class="fw-bold mb-0">
+            @(EditingProduct == null ? "+ Add New Product" : $"Edit Product #{EditingProduct.ProductID}")
+        </h5>
+    </div>
+    <div class="card-body p-4">
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label class="form-label small fw-bold">Product Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" @bind="ProductName" placeholder="e.g. Fresh Chicken" disabled="@IsSubmitting" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label small fw-bold">Category</label>
+                <input type="text" class="form-control" @bind="Category" placeholder="e.g. Meat, Seafood, Vegetables" disabled="@IsSubmitting" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small fw-bold">Unit <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" @bind="Unit" placeholder="e.g. Kg, Litre, Box" disabled="@IsSubmitting" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small fw-bold">Tax Rate <span class="text-danger">*</span></label>
+                <select class="form-select" @bind="SelectedTaxRateId" disabled="@IsSubmitting">
+                    @if (AvailableTaxRates == null || AvailableTaxRates.Count == 0)
+                    {
+                        <option value="0">-- No Active Tax Rates Available --</option>
+                    }
+                    else
+                    {
+                        @foreach (var tr in AvailableTaxRates)
+                        {
+                            string displayLabel = !string.IsNullOrWhiteSpace(tr.TaxName)
+                                ? $"{tr.TaxName} ({tr.Percentage}%)"
+                                : $"Tax Rate #{tr.TaxRateID} ({tr.Percentage}%)";
+                            <option value="@tr.TaxRateID">@displayLabel</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small fw-bold">Status <span class="text-danger">*</span></label>
+                <select class="form-select" @bind="Status" disabled="@IsSubmitting">
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                </select>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(ValidationMessage))
+        {
+            <div class="alert alert-warning py-2 small mb-3">
+                @ValidationMessage
+            </div>
+        }
+
+        <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-outline-secondary fw-bold px-4" @onclick="HandleCancel" disabled="@IsSubmitting">
+                Cancel
+            </button>
+            <button type="button" class="btn @(EditingProduct == null ? "btn-success fw-bold" : "btn-primary fw-bold") px-4 shadow-sm" @onclick="HandleSubmit" disabled="@IsSubmitting">
+                @if (IsSubmitting)
+                {
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    <span>@(EditingProduct == null ? "Creating Product..." : "Saving Changes...")</span>
+                }
+                else
+                {
+                    <span>@(EditingProduct == null ? "Create Product" : "Save Changes")</span>
+                }
+            </button>
+        </div>
+    </div>
+</div>

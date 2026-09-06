@@ -1,0 +1,2089 @@
+@page "/vendor-dashboard"
+@rendermode InteractiveServer
+@inject ApiService Api
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+<PageTitle>Vendor Manager Dashboard - Smart Vendor Management System</PageTitle>
+
+@if (!Auth.IsAuthenticated)
+{
+    <div class="vd-auth-warning-wrap">
+        <div class="vd-auth-warning-card">
+            <h4 class="fw-bold mb-2 text-dark">Authentication Required</h4>
+            <p class="text-muted mb-3">Please log in as a Vendor Manager to view this portal.</p>
+            <button class="btn vd-btn-primary" @onclick='() => Nav.NavigateTo("/login")'>Go to Login</button>
+        </div>
+    </div>
+}
+else if (!Auth.IsVendorManager && !Auth.IsAdmin)
+{
+    <div class="vd-auth-warning-wrap">
+        <div class="vd-auth-warning-card">
+            <h4 class="fw-bold mb-2 text-danger">Access Denied</h4>
+            <p class="text-muted mb-3">You do not have Vendor Manager privileges to access this portal.</p>
+            <button class="btn btn-outline-secondary" @onclick='() => Nav.NavigateTo("/")'>Return to Home</button>
+        </div>
+    </div>
+}
+else if (!Auth.VendorID.HasValue || Auth.VendorID.Value <= 0)
+{
+    <div class="vd-auth-warning-wrap">
+        <div class="vd-auth-warning-card">
+            <h4 class="fw-bold mb-2 text-warning">Account Configuration Required</h4>
+            <p class="text-muted mb-3">Your vendor manager account is not currently linked to a specific Vendor ID in the database.</p>
+            <p class="small text-muted mb-3">Please contact an administrator to map your user profile to a registered vendor.</p>
+            <button class="btn btn-outline-secondary" @onclick='() => Nav.NavigateTo("/login")'>Return to Login</button>
+        </div>
+    </div>
+}
+else
+{
+    <div class="vd-layout">
+
+        <!-- ===================================================================
+             1. FIXED FULL-HEIGHT DARK GREEN SIDEBAR (#174F45)
+             =================================================================== -->
+        <aside class="vd-sidebar">
+            <div class="vd-sidebar-top">
+                <!-- SIDEBAR BRAND -->
+                <div class="vd-sidebar-brand">
+                    <div class="vd-brand-icon-box">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+                            <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+                            <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+                            <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+                        </svg>
+                    </div>
+                    <span class="vd-brand-text">VENDOR WORKSPACE</span>
+                </div>
+
+                <!-- NAVIGATION ITEMS -->
+                <nav class="vd-nav-list">
+                    <button type="button" 
+                            class="vd-nav-item @(ActiveSidebarNav == "Dashboard" ? "active" : "")"
+                            @onclick='() => SetSidebarNav("Dashboard")'>
+                        <svg class="vd-nav-icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                        </svg>
+                        <span>Dashboard</span>
+                    </button>
+
+                    <button type="button" 
+                            class="vd-nav-item @(ActiveSidebarNav == "MyQuotations" || ActiveSidebarNav == "QuotationDetails" ? "active" : "")"
+                            @onclick='() => SetSidebarNav("MyQuotations")'>
+                        <svg class="vd-nav-icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        <span>My Quotations</span>
+                    </button>
+
+                    <button type="button" 
+                            class="vd-nav-item @(ActiveSidebarNav == "MyContracts" ? "active" : "")"
+                            @onclick='() => SetSidebarNav("MyContracts")'>
+                        <svg class="vd-nav-icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                            <line x1="12" y1="11" x2="12" y2="17"></line>
+                            <line x1="9" y1="14" x2="15" y2="14"></line>
+                        </svg>
+                        <span>My Contracts</span>
+                    </button>
+
+                    <button type="button" 
+                            class="vd-nav-item @(ActiveSidebarNav == "PurchaseOrders" ? "active" : "")"
+                            @onclick='() => SetSidebarNav("PurchaseOrders")'>
+                        <svg class="vd-nav-icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="1" y="3" width="15" height="13"></rect>
+                            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                            <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                            <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                        </svg>
+                        <span>Purchase Orders</span>
+                        @if (PendingPoCount > 0)
+                        {
+                            <span class="badge bg-danger ms-auto vd-nav-badge">@PendingPoCount</span>
+                        }
+                    </button>
+
+                    <button type="button" 
+                            class="vd-nav-item @(ActiveSidebarNav == "Invoices" ? "active" : "")"
+                            @onclick='() => SetSidebarNav("Invoices")'>
+                        <svg class="vd-nav-icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        <span>Invoices</span>
+                        @if (EligiblePurchaseOrders.Count > 0)
+                        {
+                            <span class="badge bg-success ms-auto vd-nav-badge">@EligiblePurchaseOrders.Count</span>
+                        }
+                    </button>
+
+                    <button type="button" 
+                            class="vd-nav-item @(ActiveSidebarNav == "Performance" ? "active" : "")"
+                            @onclick='() => SetSidebarNav("Performance")'>
+                        <svg class="vd-nav-icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                        <span>Performance &amp; Reviews</span>
+                        @if (MyReviews.Count > 0)
+                        {
+                            <span class="badge bg-success ms-auto vd-nav-badge">@MyReviews.Count</span>
+                        }
+                    </button>
+
+                    <button type="button" 
+                            class="vd-nav-item @(ActiveSidebarNav == "MyProfile" ? "active" : "")"
+                            @onclick='() => SetSidebarNav("MyProfile")'>
+                        <svg class="vd-nav-icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        <span>My Profile</span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- SIDEBAR FOOTER (USER & LOGOUT) -->
+            <div class="vd-sidebar-bottom">
+                <div class="vd-user-profile-row">
+                    <div class="vd-avatar-circle">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"></path>
+                            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                            <path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"></path>
+                        </svg>
+                    </div>
+                    <div class="vd-user-info-text">
+                        <div class="vd-user-name">@VendorName</div>
+                        <div class="vd-user-role">Vendor Manager</div>
+                    </div>
+                </div>
+
+                <button type="button" class="vd-logout-btn" @onclick="HandleLogout">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- ===================================================================
+             2. MAIN CONTENT AREA
+             =================================================================== -->
+        <main class="vd-main-canvas">
+
+            <!-- TOP HEADER -->
+            <header class="vd-top-header">
+                <div class="vd-header-left">
+                    <button type="button" class="vd-menu-btn" aria-label="Toggle menu">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <div>
+                        @if (ActiveSidebarNav == "MyQuotations")
+                        {
+                            <h1 class="vd-welcome-title">My Quotations</h1>
+                            <p class="vd-welcome-subtitle">View and manage quotations submitted by this vendor.</p>
+                        }
+                        else if (ActiveSidebarNav == "QuotationDetails" && SelectedQuotation != null)
+                        {
+                            <h1 class="vd-welcome-title">Quotation Details</h1>
+                            <p class="vd-welcome-subtitle">Comprehensive overview of quotation QT-@SelectedQuotation.QuotationID and procurement specifications</p>
+                        }
+                        else if (ActiveSidebarNav == "MyContracts")
+                        {
+                            <h1 class="vd-welcome-title">My Contracts</h1>
+                            <p class="vd-welcome-subtitle">View and manage procurement contracts associated with @VendorName.</p>
+                        }
+                        else if (ActiveSidebarNav == "Invoices")
+                        {
+                            <h1 class="vd-welcome-title">Invoices</h1>
+                            <p class="vd-welcome-subtitle">Generate and track invoices for delivered purchase orders.</p>
+                        }
+                        else if (ActiveSidebarNav == "Performance")
+                        {
+                            <h1 class="vd-welcome-title">Performance &amp; Reviews</h1>
+                            <p class="vd-welcome-subtitle">Customer ratings, feedback reviews, and operational fulfillment performance</p>
+                        }
+                        else if (ActiveSidebarNav == "MyProfile")
+                        {
+                            <h1 class="vd-welcome-title">My Profile</h1>
+                            <p class="vd-welcome-subtitle">Manage your account information and authentication credentials.</p>
+                        }
+                        else
+                        {
+                            <h1 class="vd-welcome-title">@GetGreeting(), @Auth.UserName</h1>
+                            <p class="vd-welcome-subtitle">
+                                Welcome back, <span class="vd-accent-text">@VendorName</span> | Managing procurement opportunities &amp; quotations
+                            </p>
+                        }
+                    </div>
+                </div>
+
+                <div class="vd-header-right">
+                    <!-- NOTIFICATIONS POPUP -->
+                    <div class="vd-notif-container">
+                        <button type="button" class="vd-header-pill vd-notif-pill" @onclick="ToggleNotifications">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
+                                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path>
+                            </svg>
+                            <span>Notifications</span>
+                            @if (UnreadNotificationCount > 0)
+                            {
+                                <span class="vd-notif-badge">@UnreadNotificationCount</span>
+                            }
+                            else if (Notifications.Count > 0)
+                            {
+                                <span class="vd-notif-badge">@Notifications.Count</span>
+                            }
+                            else if (Opportunities != null && Opportunities.Count > 0)
+                            {
+                                <span class="vd-notif-badge">@Opportunities.Count</span>
+                            }
+                        </button>
+
+                        @if (ShowNotificationDropdown)
+                        {
+                            <div class="vd-notif-dropdown">
+                                <div class="vd-notif-dropdown-head">
+                                    <h6 class="mb-0 fw-bold">Vendor Notifications</h6>
+                                    @if (UnreadNotificationCount > 0)
+                                    {
+                                        <span class="badge bg-success">@UnreadNotificationCount new</span>
+                                    }
+                                </div>
+                                @if ((Notifications == null || Notifications.Count == 0) && (Opportunities == null || Opportunities.Count == 0))
+                                {
+                                    <div class="p-3 text-center text-muted small">No notifications found.</div>
+                                }
+                                else
+                                {
+                                    <div class="vd-notif-dropdown-body">
+                                        @if (Notifications != null)
+                                        {
+                                            @foreach (var notif in Notifications.Take(6))
+                                            {
+                                                <div class="vd-notif-item @(!notif.IsRead ? "unread" : "")" style="cursor: pointer;" @onclick='() => HandleVendorNotificationClick(notif)'>
+                                                    <div class="vd-notif-content">
+                                                        <span class="vd-notif-title text-dark">@notif.Title</span>
+                                                        <p class="vd-notif-msg mb-0">@notif.Message</p>
+                                                        <span class="vd-notif-time">@notif.CreatedDate.ToString("dd MMM, hh:mm tt")</span>
+                                                    </div>
+                                                    @if (!notif.IsRead)
+                                                    {
+                                                        <button type="button" class="vd-notif-mark" @onclick:stopPropagation="true" @onclick='() => MarkAsRead(notif.NotificationID)' title="Mark as read">
+                                                            &bull;
+                                                        </button>
+                                                    }
+                                                </div>
+                                            }
+                                        }
+                                        @if (Opportunities != null)
+                                        {
+                                            @foreach (var opp in Opportunities.Take(4))
+                                            {
+                                                <div class="vd-notif-item" style="cursor: pointer;" @onclick='() => ViewOpportunity(opp.RequestID)'>
+                                                    <div class="vd-notif-content">
+                                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                                            <strong class="text-success small">PR-@opp.RequestID</strong>
+                                                            <span class="vd-status-pill @(opp.OpportunityStatus == "Accepted" ? "status-approved" : opp.OpportunityStatus == "Rejected" ? "status-rejected" : "status-pending")" style="font-size: 0.65rem; padding: 2px 6px;">
+                                                                @(opp.OpportunityStatus == "Pending" ? "Awaiting Decision" : opp.OpportunityStatus)
+                                                            </span>
+                                                        </div>
+                                                        <p class="vd-notif-msg mb-0">@opp.ProductName (@opp.RequestedQuantity.ToString("N2") @opp.Unit) from @opp.OutletName</p>
+                                                    </div>
+                                                </div>
+                                            }
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <!-- VENDOR CONTEXT PILL -->
+                    <div class="vd-header-pill vd-vendor-pill">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#174F45" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"></path>
+                            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                            <path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"></path>
+                        </svg>
+                        <span class="vd-vendor-pill-text">@VendorName</span>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+
+                    <!-- TOP HEADER LOGOUT BUTTON -->
+                    <button type="button" class="vd-header-pill vd-logout-header-pill" @onclick="HandleLogout" title="Logout">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        <span>Logout</span>
+                    </button>
+                </div>
+            </header>
+
+            @if (IsLoading)
+            {
+                <div class="vd-loading-state">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 text-muted fw-semibold">Loading vendor workspace...</p>
+                </div>
+            }
+            else
+            {
+                <div class="vd-dashboard-body">
+
+                    @if (ActiveSidebarNav == "QuotationDetails" && SelectedQuotation != null)
+                    {
+                        <!-- =======================================================
+                             DEDICATED QUOTATION DETAILS VIEW (MATCHING MOCKUP)
+                             ======================================================= -->
+                        <div class="mb-3">
+                            <button type="button" class="btn vd-back-btn" @onclick="CloseQuotationDetails">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                                    <polyline points="12 19 5 12 12 5"></polyline>
+                                </svg>
+                                <span>Back to My Quotations</span>
+                            </button>
+                        </div>
+
+                        <!-- 1. TOP SUMMARY CARD -->
+                        <div class="vd-card p-4 mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom flex-wrap gap-2">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="vd-metric-icon-lg bg-light-green text-green">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                                            <polyline points="14 2 14 8 20 8"></polyline>
+                                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="fw-bold mb-1 text-dark fs-4">Quotation QT-@SelectedQuotation.QuotationID</h3>
+                                        <span class="text-muted small">Submitted for Purchase Request PR-@SelectedQuotation.RequestID</span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    @if (string.Equals(SelectedQuotation.Status, "Accepted", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <span class="vd-status-pill status-approved fs-6 px-3 py-1.5">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
+                                            <span>Accepted</span>
+                                        </span>
+                                    }
+                                    else if (string.Equals(SelectedQuotation.Status, "Rejected", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <span class="vd-status-pill status-rejected fs-6 px-3 py-1.5">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                                            </svg>
+                                            <span>Rejected</span>
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="vd-status-pill status-pending fs-6 px-3 py-1.5">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="12" cy="12" r="10"></circle>
+                                                <polyline points="12 6 12 12 16 14"></polyline>
+                                            </svg>
+                                            <span>Submitted (Under Review)</span>
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <span class="text-muted small fw-bold text-uppercase d-block mb-1" style="font-size: 0.72rem; letter-spacing: 0.04em;">ASSOCIATED REQUEST</span>
+                                    <div class="fw-bold text-dark fs-6" style="color: #174F45 !important;">PR-@SelectedQuotation.RequestID</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <span class="text-muted small fw-bold text-uppercase d-block mb-1" style="font-size: 0.72rem; letter-spacing: 0.04em;">VALID UNTIL</span>
+                                    <div class="fw-bold text-dark fs-6 d-flex align-items-center gap-1.5">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                                        </svg>
+                                        <span>@SelectedQuotation.ValidUntil.ToString("dd MMM yyyy")</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <span class="text-muted small fw-bold text-uppercase d-block mb-1" style="font-size: 0.72rem; letter-spacing: 0.04em;">TOTAL QUOTED AMOUNT</span>
+                                    <div class="fw-bold fs-4" style="color: #047857;">Rs. @GetQuotationTotal(SelectedQuotation).ToString("N2")</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. TWO-COLUMN DETAILS GRID -->
+                        <div class="row g-4 mb-4">
+                            <!-- LEFT: REQUEST & OUTLET INFORMATION -->
+                            <div class="col-lg-6">
+                                <div class="vd-card h-100 p-4">
+                                    <div class="d-flex align-items-center gap-2.5 mb-3 pb-2">
+                                        <div class="vd-section-icon-box bg-light-green text-green">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                                <polyline points="14 2 14 8 20 8"></polyline>
+                                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                            </svg>
+                                        </div>
+                                        <h5 class="fw-bold text-dark mb-0 fs-6">Request &amp; Outlet Information</h5>
+                                    </div>
+
+                                    <div class="d-flex flex-column gap-3">
+                                        <div class="d-flex justify-content-between align-items-center py-2.5 border-bottom">
+                                            <span class="text-muted small">Target Outlet</span>
+                                            <strong class="text-dark">@GetOutletName(SelectedQuotation)</strong>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center py-2.5 border-bottom">
+                                            <span class="text-muted small">Organization</span>
+                                            <strong class="text-dark">@GetOrgName(SelectedQuotation)</strong>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center py-2.5">
+                                            <span class="text-muted small">Request Date</span>
+                                            <span class="text-dark">@(SelectedQuotationPR?.RequestDate.ToString("dd MMM yyyy") ?? "N/A")</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- RIGHT: VENDOR & CREATOR INFORMATION -->
+                            <div class="col-lg-6">
+                                <div class="vd-card h-100 p-4">
+                                    <div class="d-flex align-items-center gap-2.5 mb-3 pb-2">
+                                        <div class="vd-section-icon-box bg-light-green text-green">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                                                <circle cx="12" cy="7" r="4"></circle>
+                                            </svg>
+                                        </div>
+                                        <h5 class="fw-bold text-dark mb-0 fs-6">Vendor Account Information</h5>
+                                    </div>
+
+                                    <div class="d-flex flex-column gap-3">
+                                        <div class="d-flex justify-content-between align-items-center py-2.5 border-bottom">
+                                            <span class="text-muted small">Vendor Name</span>
+                                            <strong class="text-dark">@VendorName</strong>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center py-2.5 border-bottom">
+                                            <span class="text-muted small">Prepared By</span>
+                                            <strong class="text-dark">@Auth.UserName</strong>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center py-2.5">
+                                            <span class="text-muted small">Contact Email</span>
+                                            <span class="text-dark">@(Auth.CurrentUser?.Email ?? Auth.Email)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. QUOTED ITEMS BREAKDOWN -->
+                        <div class="vd-card p-4">
+                            <div class="d-flex align-items-center gap-2.5 mb-3 pb-2">
+                                <div class="vd-section-icon-box bg-light-green text-green">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                                    </svg>
+                                </div>
+                                <h5 class="fw-bold text-dark mb-0 fs-6">Quotation Items Breakdown</h5>
+                            </div>
+
+                            @if (SelectedQuotation.Items == null || SelectedQuotation.Items.Count == 0)
+                            {
+                                <div class="text-center py-4 text-muted small">No items listed in this quotation.</div>
+                            }
+                            else
+                            {
+                                <div class="table-responsive">
+                                    <table class="vd-table">
+                                        <thead>
+                                            <tr>
+                                                <th>PRODUCT</th>
+                                                <th class="text-center">QUANTITY</th>
+                                                <th class="text-end">UNIT PRICE</th>
+                                                <th class="text-end">DISCOUNT</th>
+                                                <th class="text-center">TAX RATE</th>
+                                                <th class="text-end">TAX AMOUNT</th>
+                                                <th class="text-end">TOTAL AMOUNT</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var item in SelectedQuotation.Items)
+                                            {
+                                                var pName = GetProductName(item.ProductID, SelectedQuotation.RequestID, SelectedQuotation.QuotationID);
+                                                var lineTotal = item.TotalAmount > 0 ? item.TotalAmount : (item.Quantity * item.UnitPrice);
+                                                var opp = Opportunities?.FirstOrDefault(o => o.RequestID == SelectedQuotation.RequestID);
+                                                var unit = opp?.Unit ?? "Units";
+
+                                                <tr>
+                                                    <td><strong class="text-dark">@pName</strong></td>
+                                                    <td class="text-center">
+                                                        <div class="fw-bold text-dark">@item.Quantity.ToString("N2")</div>
+                                                        <div class="text-muted small" style="font-size: 0.72rem;">@unit</div>
+                                                    </td>
+                                                    <td class="text-end">Rs. @item.UnitPrice.ToString("N2")</td>
+                                                    <td class="text-end">Rs. @item.DiscountAmount.ToString("N2")</td>
+                                                    <td class="text-center">@item.TaxRate.ToString("0.##")%</td>
+                                                    <td class="text-end">Rs. @item.TaxAmount.ToString("N2")</td>
+                                                    <td class="text-end fw-bold" style="color: #047857;">Rs. @lineTotal.ToString("N2")</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else if (ActiveSidebarNav == "MyQuotations")
+                    {
+                        <!-- =======================================================
+                             MY QUOTATIONS PAGE (SIMPLE - NO KPI DASHBOARD CARDS)
+                             ======================================================= -->
+                        
+                        <!-- STATUS FILTER TABS -->
+                        <div class="vd-status-tabs-row mb-4">
+                            <button type="button" class="vd-status-tab @(QuotationStatusFilter == "All" ? "active" : "")" @onclick='() => SetQuotationFilter("All")'>
+                                All Quotations (@AllQuotations.Count)
+                            </button>
+                            <button type="button" class="vd-status-tab @(QuotationStatusFilter == "Pending" ? "active" : "")" @onclick='() => SetQuotationFilter("Pending")'>
+                                Under Review (@PendingQuotations.Count)
+                            </button>
+                            <button type="button" class="vd-status-tab @(QuotationStatusFilter == "Accepted" ? "active" : "")" @onclick='() => SetQuotationFilter("Accepted")'>
+                                Accepted (@AcceptedQuotations.Count)
+                            </button>
+                            <button type="button" class="vd-status-tab @(QuotationStatusFilter == "Rejected" ? "active" : "")" @onclick='() => SetQuotationFilter("Rejected")'>
+                                Rejected (@RejectedQuotations.Count)
+                            </button>
+                        </div>
+
+                        <!-- QUOTATIONS CARD & TABLE -->
+                        <div class="vd-card p-4">
+                            <!-- TOOLBAR -->
+                            <div class="vd-card-toolbar mb-3">
+                                <h3 class="vd-card-title mb-0">Quotations List</h3>
+
+                                <div class="vd-search-filter-wrap">
+                                    <div class="vd-search-box" style="width: 360px;">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="11" cy="11" r="8"></circle>
+                                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                        </svg>
+                                        <input type="text" 
+                                               class="vd-search-input" 
+                                               placeholder="Search by quotation ref, PR ref, product or outlet..." 
+                                               @bind="SearchQuery" 
+                                               @bind:event="oninput" />
+                                    </div>
+                                    <button type="button" class="vd-filter-btn" title="Filter list">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                                        </svg>
+                                        <span>Filter</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            @if (!FilteredQuotationsList.Any())
+                            {
+                                <div class="vd-empty-state">
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="mb-2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    </svg>
+                                    <h5 class="fw-bold text-dark mb-1">No Quotations Found</h5>
+                                    <p class="text-muted small mb-0">No quotations match your selected status and search query.</p>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="table-responsive">
+                                    <table class="vd-table">
+                                        <thead>
+                                            <tr>
+                                                <th>OUTLET</th>
+                                                <th>PRODUCT</th>
+                                                <th>QUANTITY</th>
+                                                <th>TOTAL AMOUNT</th>
+                                                <th>STATUS</th>
+                                                <th>VALID UNTIL</th>
+                                                <th class="text-end">ACTION</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var q in FilteredQuotationsList)
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <div class="fw-bold text-dark">@GetOutletName(q)</div>
+                                                        <div class="vd-sub-text">@GetOrgName(q)</div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="fw-bold text-dark">@GetProductName(q)</div>
+                                                    </td>
+                                                    <td>
+                                                        <span class="text-dark">@GetQuantityDisplay(q)</span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="fw-bold text-success">Rs. @GetQuotationTotal(q).ToString("N2")</span>
+                                                    </td>
+                                                    <td>
+                                                        @if (string.Equals(q.Status, "Accepted", StringComparison.OrdinalIgnoreCase))
+                                                        {
+                                                            <span class="vd-status-pill status-approved">
+                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                                </svg>
+                                                                <span>Accepted</span>
+                                                            </span>
+                                                        }
+                                                        else if (string.Equals(q.Status, "Rejected", StringComparison.OrdinalIgnoreCase))
+                                                        {
+                                                            <span class="vd-status-pill status-rejected">
+                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                                </svg>
+                                                                <span>Rejected</span>
+                                                            </span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="vd-status-pill status-pending">
+                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                                    <circle cx="12" cy="12" r="10"></circle>
+                                                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                                                </svg>
+                                                                <span>Under Review</span>
+                                                            </span>
+                                                        }
+                                                    </td>
+                                                    <td class="text-muted">@q.ValidUntil.ToString("dd MMM yyyy")</td>
+                                                    <td class="text-end">
+                                                        <button type="button" class="btn vd-btn-dark-green vd-btn-sm" @onclick='() => OpenQuotationDetails(q.QuotationID)'>
+                                                            <span>View Details</span>
+                                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                                                <polyline points="12 5 19 12 12 19"></polyline>
+                                                            </svg>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else if (ActiveSidebarNav == "ContractDetails" && SelectedContract != null)
+                    {
+                        <!-- =======================================================
+                             DEDICATED CONTRACT DETAILS VIEW
+                             ======================================================= -->
+                        <div class="mb-3">
+                            <button type="button" class="btn vd-back-btn" @onclick="CloseContractDetails">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                                    <polyline points="12 19 5 12 12 5"></polyline>
+                                </svg>
+                                <span>Back to My Contracts</span>
+                            </button>
+                        </div>
+
+                        <!-- 1. TOP SUMMARY CARD -->
+                        <div class="vd-card p-4 mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom flex-wrap gap-2">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="vd-metric-icon-lg bg-light-blue text-blue">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0284C7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                            <polyline points="14 2 14 8 20 8"></polyline>
+                                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="fw-bold mb-1 text-dark fs-4">Contract #@SelectedContract.ContractID</h3>
+                                        <span class="text-muted small">Procurement Agreement for @GetContractProductName(SelectedContract)</span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <span class="vd-status-pill status-approved fs-6 px-3 py-1.5">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                        </svg>
+                                        <span>@(string.IsNullOrWhiteSpace(SelectedContract.Status) ? "Active" : SelectedContract.Status)</span>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <span class="text-muted small fw-bold text-uppercase d-block mb-1" style="font-size: 0.72rem; letter-spacing: 0.04em;">OUTLET</span>
+                                    <div class="fw-bold text-dark fs-6">@GetContractOutletName(SelectedContract)</div>
+                                    <div class="vd-sub-text">@GetContractOrgName(SelectedContract)</div>
+                                </div>
+                                <div class="col-md-3">
+                                    <span class="text-muted small fw-bold text-uppercase d-block mb-1" style="font-size: 0.72rem; letter-spacing: 0.04em;">CONTRACT PERIOD</span>
+                                    <div class="fw-bold text-dark fs-6">
+                                        @SelectedContract.StartDate.ToString("dd MMM yyyy") &ndash; @SelectedContract.EndDate.ToString("dd MMM yyyy")
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <span class="text-muted small fw-bold text-uppercase d-block mb-1" style="font-size: 0.72rem; letter-spacing: 0.04em;">ALLOCATED QUANTITY</span>
+                                    <div class="fw-bold text-dark fs-6">@SelectedContract.TotalQuantity.ToString("N2") @GetContractUnit(SelectedContract)</div>
+                                </div>
+                                <div class="col-md-3">
+                                    <span class="text-muted small fw-bold text-uppercase d-block mb-1" style="font-size: 0.72rem; letter-spacing: 0.04em;">TOTAL VALUE</span>
+                                    <div class="fw-bold fs-5" style="color: #047857;">Rs. @SelectedContract.TotalAmount.ToString("N2")</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. TWO-COLUMN DETAILS GRID -->
+                        <div class="row g-4 mb-4">
+                            <!-- LEFT: PRODUCT & FULFILLMENT -->
+                            <div class="col-lg-6">
+                                <div class="vd-card h-100 p-4">
+                                    <div class="d-flex align-items-center gap-2.5 mb-3 pb-2">
+                                        <div class="vd-section-icon-box bg-light-green text-green">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                            </svg>
+                                        </div>
+                                        <h5 class="fw-bold text-dark mb-0 fs-6">Product &amp; Supply Details</h5>
+                                    </div>
+
+                                    <div class="d-flex flex-column gap-3">
+                                        <div class="d-flex justify-content-between align-items-center py-2.5 border-bottom">
+                                            <span class="text-muted small">Procured Product</span>
+                                            <strong class="text-dark">@GetContractProductName(SelectedContract)</strong>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center py-2.5 border-bottom">
+                                            <span class="text-muted small">Agreed Unit Price</span>
+                                            <strong class="text-dark">Rs. @SelectedContract.UnitPrice.ToString("N2") / @GetContractUnit(SelectedContract)</strong>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center py-2.5 border-bottom">
+                                            <span class="text-muted small">Fulfilled / Used Quantity</span>
+                                            <span class="text-dark">@SelectedContract.UsedQuantity.ToString("N2") @GetContractUnit(SelectedContract) (@GetUsedPercent(SelectedContract)%)</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center py-2.5">
+                                            <span class="text-muted small">Remaining Allocation</span>
+                                            <strong style="color: #047857;">@((SelectedContract.TotalQuantity - SelectedContract.UsedQuantity).ToString("N2")) @GetContractUnit(SelectedContract) (@GetRemainingPercent(SelectedContract)%)</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- RIGHT: CONTRACTING ENTITIES -->
+                            <div class="col-lg-6">
+                                <div class="vd-card h-100 p-4">
+                                    <div class="d-flex align-items-center gap-2.5 mb-3 pb-2">
+                                        <div class="vd-section-icon-box bg-light-green text-green">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                                                <circle cx="12" cy="7" r="4"></circle>
+                                            </svg>
+                                        </div>
+                                        <h5 class="fw-bold text-dark mb-0 fs-6">Contracting Parties</h5>
+                                    </div>
+
+                                    <div class="d-flex flex-column gap-3">
+                                        <div class="d-flex justify-content-between align-items-center py-2.5 border-bottom">
+                                            <span class="text-muted small">Contracted Vendor</span>
+                                            <strong class="text-dark">@VendorName</strong>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center py-2.5 border-bottom">
+                                            <span class="text-muted small">Target Outlet</span>
+                                            <strong class="text-dark">@GetContractOutletName(SelectedContract)</strong>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center py-2.5 border-bottom">
+                                            <span class="text-muted small">Parent Organization</span>
+                                            <span class="text-dark">@GetContractOrgName(SelectedContract)</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center py-2.5">
+                                            <span class="text-muted small">Payment Terms</span>
+                                            <span class="text-dark">@(string.IsNullOrWhiteSpace(SelectedContract.PaymentMethod) ? "Standard Invoicing" : SelectedContract.PaymentMethod)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else if (ActiveSidebarNav == "MyContracts")
+                    {
+                        <!-- =======================================================
+                             MY CONTRACTS VIEW (CLEAN ENTERPRISE TABLE)
+                             ======================================================= -->
+                        
+                        <!-- STATUS TABS ROW -->
+                        <div class="vd-status-tabs-row mb-4">
+                            <button type="button" class="vd-status-tab @(ContractStatusFilter == "Active" ? "active" : "")" @onclick='() => SetContractFilter("Active")'>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                </svg>
+                                <span>Active Contracts (@ActiveContractCount)</span>
+                            </button>
+                            <button type="button" class="vd-status-tab @(ContractStatusFilter == "Expired" ? "active" : "")" @onclick='() => SetContractFilter("Expired")'>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                                <span>Expired Contracts (@ExpiredContractCount)</span>
+                            </button>
+                            <button type="button" class="vd-status-tab @(ContractStatusFilter == "All" ? "active" : "")" @onclick='() => SetContractFilter("All")'>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                                </svg>
+                                <span>All Contracts (@ActiveContracts.Count)</span>
+                            </button>
+                        </div>
+
+                        <!-- CONTRACTS CARD & TABLE -->
+                        <div class="vd-card p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 flex-wrap gap-2">
+                                <div class="d-flex align-items-center gap-2.5">
+                                    <div class="vd-section-icon-box bg-light-green text-green">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                            <polyline points="14 2 14 8 20 8"></polyline>
+                                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h4 class="fw-bold text-dark mb-0 fs-6">
+                                            @(ContractStatusFilter == "Active" ? "Active Contracts" : ContractStatusFilter == "Expired" ? "Expired Contracts" : "All Contracts")
+                                        </h4>
+                                        <span class="text-muted small">Contracts that are currently active and valid.</span>
+                                    </div>
+                                </div>
+
+                                <div class="vd-search-filter-wrap">
+                                    <div class="vd-search-box" style="width: 320px;">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="11" cy="11" r="8"></circle>
+                                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                        </svg>
+                                        <input type="text" 
+                                               class="vd-search-input" 
+                                               placeholder="Search by product or outlet..." 
+                                               @bind="SearchQuery" 
+                                               @bind:event="oninput" />
+                                    </div>
+                                    <button type="button" class="vd-filter-btn" title="Filter list">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                                        </svg>
+                                        <span>Filter</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            @if (!FilteredContractsList.Any())
+                            {
+                                <div class="vd-empty-state">
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="mb-2">
+                                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                                        <line x1="12" y1="11" x2="12" y2="17"></line>
+                                        <line x1="9" y1="14" x2="15" y2="14"></line>
+                                    </svg>
+                                    <h5 class="fw-bold text-dark mb-1">No Contracts Found</h5>
+                                    <p class="text-muted small mb-0">No contracts match your selected status and filter criteria.</p>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="table-responsive">
+                                    <table class="vd-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Outlet</th>
+                                                <th>Product</th>
+                                                <th>Allocated Quantity</th>
+                                                <th>Used Quantity</th>
+                                                <th>Remaining</th>
+                                                <th>Status</th>
+                                                <th class="text-end">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var c in FilteredContractsList)
+                                            {
+                                                var rem = c.TotalQuantity - c.UsedQuantity;
+                                                var usedPct = GetUsedPercent(c);
+                                                var remPct = GetRemainingPercent(c);
+                                                var unit = GetContractUnit(c);
+
+                                                <tr>
+                                                    <td>
+                                                        <div class="fw-bold text-dark">@GetContractOutletName(c)</div>
+                                                        <div class="vd-sub-text">@GetContractOrgName(c)</div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="fw-bold text-dark">@GetContractProductName(c)</div>
+                                                    </td>
+                                                    <td>
+                                                        <span class="text-dark fw-bold">@c.TotalQuantity.ToString("N2") @unit</span>
+                                                    </td>
+                                                    <td>
+                                                        <div class="text-dark fw-semibold">@c.UsedQuantity.ToString("N2") @unit</div>
+                                                        <div class="vd-mini-progress">
+                                                            <div class="vd-progress-fill-blue" style="width: @(usedPct)%;"></div>
+                                                        </div>
+                                                        <span class="vd-pct-label">@usedPct%</span>
+                                                    </td>
+                                                    <td>
+                                                        <div class="fw-bold" style="color: #047857;">@rem.ToString("N2") @unit</div>
+                                                        <div class="vd-mini-progress">
+                                                            <div class="vd-progress-fill-green" style="width: @(remPct)%;"></div>
+                                                        </div>
+                                                        <span class="vd-pct-label text-success">@remPct%</span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="vd-status-pill status-approved">
+                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                                            </svg>
+                                                            <span>@(string.IsNullOrWhiteSpace(c.Status) ? "Active" : c.Status)</span>
+                                                        </span>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <button type="button" class="btn vd-btn-dark-green vd-btn-sm" @onclick='() => OpenContractDetails(c.ContractID)'>
+                                                            <span>View Details</span>
+                                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                                                <polyline points="12 5 19 12 12 19"></polyline>
+                                                            </svg>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else if (ActiveSidebarNav == "PurchaseOrders")
+                    {
+                        <!-- =======================================================
+                             VENDOR PURCHASE ORDERS MANAGEMENT VIEW
+                             ======================================================= -->
+                        <div class="vd-card p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom flex-wrap gap-2">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="vd-metric-icon bg-light-green text-green">
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="1" y="3" width="15" height="13"></rect>
+                                            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                                            <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                            <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="fw-bold mb-0 text-dark">Purchase Orders</h3>
+                                        <p class="text-muted small mb-0">Review incoming orders, confirm fulfillment, and dispatch deliveries</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            @if (MyPurchaseOrders == null || MyPurchaseOrders.Count == 0)
+                            {
+                                <div class="p-5 text-center text-muted">
+                                    <div class="mb-3">
+                                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="1" y="3" width="15" height="13"></rect>
+                                            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                                            <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                            <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                                        </svg>
+                                    </div>
+                                    <h6 class="fw-bold mb-1 text-dark">No Purchase Orders</h6>
+                                    <p class="mb-0 small">You do not have any incoming or active purchase orders at this time.</p>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th class="small fw-bold text-muted text-uppercase">PO Number</th>
+                                                <th class="small fw-bold text-muted text-uppercase">Outlet</th>
+                                                <th class="small fw-bold text-muted text-uppercase">Product &amp; Quantity</th>
+                                                <th class="small fw-bold text-muted text-uppercase">Order Date</th>
+                                                <th class="small fw-bold text-muted text-uppercase">Status</th>
+                                                <th class="small fw-bold text-muted text-uppercase text-end">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var po in MyPurchaseOrders)
+                                            {
+                                                var firstItem = po.Items?.FirstOrDefault();
+                                                string prodName = firstItem != null && ProductDictionary.TryGetValue(firstItem.ProductID, out var pn) ? pn : "General Product";
+                                                string qtyStr = firstItem != null ? $"{firstItem.Quantity:N2} units" : "N/A";
+                                                string outletName = OutletDictionary.TryGetValue(po.OutletID, out var on) ? on : $"Outlet #{po.OutletID}";
+
+                                                <tr>
+                                                    <td>
+                                                        <span class="badge bg-light text-dark border px-2.5 py-1.5 fw-bold">PO-#@po.PurchaseOrderID</span>
+                                                    </td>
+                                                    <td>
+                                                        <div class="fw-semibold text-dark">@outletName</div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="fw-bold text-dark">@prodName</div>
+                                                        <div class="text-muted small">@qtyStr</div>
+                                                    </td>
+                                                    <td class="text-muted small">@po.OrderDate.ToString("dd MMM yyyy")</td>
+                                                    <td>
+                                                        @if (po.Status == "Pending")
+                                                        {
+                                                            <span class="vd-status-pill status-pending">Pending Confirmation</span>
+                                                        }
+                                                        else if (po.Status == "Accepted")
+                                                        {
+                                                            <span class="vd-status-pill status-approved">Accepted (Ready to Dispatch)</span>
+                                                        }
+                                                        else if (po.Status == "Dispatched")
+                                                        {
+                                                            <span class="vd-status-pill status-dispatched">In Transit / Dispatched</span>
+                                                            @if (po.DispatchDateTime.HasValue)
+                                                            {
+                                                                <div class="text-muted small mt-1" style="font-size: 0.75rem;">Dispatched: @po.DispatchDateTime.Value.ToString("dd MMM yyyy, hh:mm tt")</div>
+                                                            }
+                                                        }
+                                                        else if (po.Status == "Delivered")
+                                                        {
+                                                            <span class="vd-status-pill status-approved">
+                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                                </svg>
+                                                                <span>Delivered</span>
+                                                            </span>
+                                                        }
+                                                        else if (po.Status == "Rejected")
+                                                        {
+                                                            <span class="vd-status-pill status-rejected">Declined</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="vd-status-pill">@po.Status</span>
+                                                        }
+                                                    </td>
+                                                    <td class="text-end">
+                                                        @if (po.Status == "Pending")
+                                                        {
+                                                            <div class="btn-group btn-group-sm">
+                                                                <button type="button" class="btn btn-outline-danger btn-sm px-2.5" @onclick='() => RespondToPo(po.PurchaseOrderID, "Rejected")'>
+                                                                    Decline
+                                                                </button>
+                                                                <button type="button" class="btn vd-btn-dark-green btn-sm px-3" @onclick='() => RespondToPo(po.PurchaseOrderID, "Accepted")'>
+                                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                                                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                                                    </svg>
+                                                                    <span>Accept Order</span>
+                                                                </button>
+                                                            </div>
+                                                        }
+                                                        else if (po.Status == "Accepted")
+                                                        {
+                                                            <button type="button" class="btn btn-primary btn-sm px-3 fw-bold" @onclick='() => DispatchPo(po.PurchaseOrderID)'>
+                                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                                                                    <rect x="1" y="3" width="15" height="13"></rect>
+                                                                    <polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon>
+                                                                    <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                                                    <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                                                                </svg>
+                                                                <span>Dispatch Order</span>
+                                                            </button>
+                                                        }
+                                                        else if (po.Status == "Dispatched")
+                                                        {
+                                                            <span class="text-primary small fw-semibold d-inline-flex align-items-center gap-1">
+                                                                <span>Dispatched</span>
+                                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                    <rect x="1" y="3" width="15" height="13"></rect>
+                                                                    <polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon>
+                                                                    <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                                                    <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                                                                </svg>
+                                                            </span>
+                                                        }
+                                                        else if (po.Status == "Delivered")
+                                                        {
+                                                            <span class="text-success small fw-semibold d-inline-flex align-items-center gap-1">
+                                                                <span>Completed</span>
+                                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                                </svg>
+                                                            </span>
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else if (ActiveSidebarNav == "Invoices")
+                    {
+                        <!-- =======================================================
+                             INVOICES VIEW (VENDOR WORKSPACE)
+                             ======================================================= -->
+                        <div class="vd-card">
+                            <div class="vd-card-header pb-0">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <h3 class="vd-card-title mb-1">Invoice Management</h3>
+                                        <p class="text-muted small mb-0">Generate invoices for delivered purchase orders and track payment status</p>
+                                    </div>
+                                </div>
+
+                                <!-- Sub-tabs -->
+                                <div class="vd-tabs-nav">
+                                    <button type="button" 
+                                            class="vd-tab-btn @(InvoiceSubTab == "Ready" ? "active" : "")"
+                                            @onclick='() => InvoiceSubTab = "Ready"'>
+                                        <span>Ready to Invoice</span>
+                                        <span class="vd-tab-count">@EligiblePurchaseOrders.Count</span>
+                                    </button>
+                                    <button type="button" 
+                                            class="vd-tab-btn @(InvoiceSubTab == "History" ? "active" : "")"
+                                            @onclick='() => InvoiceSubTab = "History"'>
+                                        <span>Invoice History</span>
+                                        <span class="vd-tab-count">@MyInvoices.Count</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="vd-card-body p-0">
+                                @if (InvoiceSubTab == "Ready")
+                                {
+                                    @if (EligiblePurchaseOrders.Count == 0)
+                                    {
+                                        <div class="vd-empty-state p-5 text-center">
+                                            <div class="vd-empty-icon mb-3">
+                                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#9AA5B1" stroke-width="1.5">
+                                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                                </svg>
+                                            </div>
+                                            <h5 class="fw-bold text-dark">No Orders Ready to Invoice</h5>
+                                            <p class="text-muted small mb-0">Delivered orders with confirmed delivery will appear here automatically for invoicing.</p>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="table-responsive">
+                                            <table class="vd-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>PURCHASE ORDER</th>
+                                                        <th>OUTLET</th>
+                                                        <th>DELIVERED ON</th>
+                                                        <th>PO ITEMS</th>
+                                                        <th>TOTAL AMOUNT</th>
+                                                        <th>STATUS</th>
+                                                        <th class="text-end">ACTION</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var po in EligiblePurchaseOrders)
+                                                    {
+                                                        var outletName = OutletDictionary.GetValueOrDefault(po.OutletID, $"Outlet #{po.OutletID}");
+                                                        <tr>
+                                                            <td>
+                                                                <span class="fw-bold text-dark">PO-@po.PurchaseOrderID</span>
+                                                            </td>
+                                                            <td>
+                                                                <span class="text-dark">@outletName</span>
+                                                            </td>
+                                                            <td>
+                                                                <span class="text-muted">@(po.ActualDeliveryDate.HasValue ? po.ActualDeliveryDate.Value.ToString("dd MMM yyyy, hh:mm tt") : "Confirmed")</span>
+                                                            </td>
+                                                            <td>
+                                                                <span class="badge bg-light text-dark border">@(po.Items?.Count ?? 0) item(s)</span>
+                                                            </td>
+                                                            <td>
+                                                                <span class="fw-bold text-dark">Rs. @po.TotalAmount.ToString("N2")</span>
+                                                            </td>
+                                                            <td>
+                                                                <span class="vd-badge vd-badge-delivered">Delivered</span>
+                                                            </td>
+                                                            <td class="text-end">
+                                                                <button type="button" class="btn btn-sm vd-btn-primary" @onclick="() => OpenCreateInvoiceModal(po)">
+                                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                                                                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                                                    </svg>
+                                                                    Create Invoice
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    @if (MyInvoices.Count == 0)
+                                    {
+                                        <div class="vd-empty-state p-5 text-center">
+                                            <div class="vd-empty-icon mb-3">
+                                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#9AA5B1" stroke-width="1.5">
+                                                    <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                                                    <line x1="2" y1="10" x2="22" y2="10"></line>
+                                                </svg>
+                                            </div>
+                                            <h5 class="fw-bold text-dark">No Invoices Submitted Yet</h5>
+                                            <p class="text-muted small mb-0">Generate an invoice from the "Ready to Invoice" tab once a purchase order is delivered.</p>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="table-responsive">
+                                            <table class="vd-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>INVOICE REF</th>
+                                                        <th>PO REF</th>
+                                                        <th>OUTLET</th>
+                                                        <th>INVOICE DATE</th>
+                                                        <th>SUBTOTAL</th>
+                                                        <th>TAX</th>
+                                                        <th>GRAND TOTAL</th>
+                                                        <th>STATUS</th>
+                                                        <th class="text-end">ACTIONS</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var inv in MyInvoices.OrderByDescending(i => i.InvoiceID))
+                                                    {
+                                                        var outletName = !string.IsNullOrWhiteSpace(inv.OutletName) ? inv.OutletName : OutletDictionary.GetValueOrDefault(inv.OutletID, $"Outlet #{inv.OutletID}");
+                                                        <tr>
+                                                            <td>
+                                                                <span class="fw-bold text-dark">INV-@inv.InvoiceID</span>
+                                                            </td>
+                                                            <td>
+                                                                <span class="text-muted">PO-@inv.PurchaseOrderID</span>
+                                                            </td>
+                                                            <td>
+                                                                <span class="text-dark">@outletName</span>
+                                                            </td>
+                                                            <td>
+                                                                <span class="text-muted">@inv.InvoiceDate.ToString("dd MMM yyyy")</span>
+                                                            </td>
+                                                            <td>
+                                                                <span class="text-dark">Rs. @inv.Subtotal.ToString("N2")</span>
+                                                            </td>
+                                                            <td>
+                                                                <span class="text-muted">Rs. @inv.TaxAmount.ToString("N2")</span>
+                                                            </td>
+                                                            <td>
+                                                                <span class="fw-bold text-dark">Rs. @inv.TotalAmount.ToString("N2")</span>
+                                                            </td>
+                                                            <td>
+                                                                @if (string.Equals(inv.Status, "Approved", StringComparison.OrdinalIgnoreCase))
+                                                                {
+                                                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Approved</span>
+                                                                }
+                                                                else if (string.Equals(inv.Status, "Rejected", StringComparison.OrdinalIgnoreCase))
+                                                                {
+                                                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">Rejected</span>
+                                                                }
+                                                                else if (string.Equals(inv.Status, "Paid", StringComparison.OrdinalIgnoreCase))
+                                                                {
+                                                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1">Paid</span>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1">Pending Review</span>
+                                                                }
+                                                            </td>
+                                                            <td class="text-end">
+                                                                <div class="d-inline-flex gap-2">
+                                                                    <button type="button" class="btn btn-sm btn-outline-secondary" title="View PDF" @onclick="() => HandleViewInvoicePdf(inv)">
+                                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                                                            <circle cx="12" cy="12" r="3"></circle>
+                                                                        </svg>
+                                                                        PDF
+                                                                    </button>
+                                                                    <button type="button" class="btn btn-sm btn-outline-dark" title="Download PDF" @onclick="() => HandleDownloadInvoicePdf(inv)">
+                                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                                            <polyline points="7 10 12 15 17 10"></polyline>
+                                                                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                                                                        </svg>
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    }
+                    else if (ActiveSidebarNav == "MyProfile")
+                    {
+                        <!-- =======================================================
+                             PROFILE VIEW
+                             ======================================================= -->
+                        <div class="vd-card p-4">
+                            <div class="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
+                                <div class="vd-metric-icon bg-light-green text-green">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="12" cy="7" r="4"></circle>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="fw-bold mb-0 text-dark">Vendor Manager Profile</h3>
+                                    <p class="text-muted small mb-0">Authenticated profile details and account role</p>
+                                </div>
+                            </div>
+
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <label class="text-muted small fw-bold text-uppercase d-block mb-1">MANAGER NAME</label>
+                                    <div class="fw-bold text-dark fs-6">@Auth.UserName</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="text-muted small fw-bold text-uppercase d-block mb-1">EMAIL</label>
+                                    <div class="text-dark fs-6">@(Auth.CurrentUser?.Email ?? Auth.Email)</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="text-muted small fw-bold text-uppercase d-block mb-1">ROLE</label>
+                                    <div class="fw-bold text-success fs-6">Vendor Manager</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="text-muted small fw-bold text-uppercase d-block mb-1">ASSIGNED VENDOR</label>
+                                    <div class="fw-bold text-dark fs-6">@VendorName</div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 pt-3 border-top d-flex justify-content-end">
+                                <button type="button" class="btn btn-outline-danger fw-bold px-4 py-2" @onclick="HandleLogout">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                        <polyline points="16 17 21 12 16 7"></polyline>
+                                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                                    </svg>
+                                    <span>Logout</span>
+                                </button>
+                            </div>
+                        </div>
+                    }
+                    else if (ActiveSidebarNav == "Performance")
+                    {
+                        <!-- =======================================================
+                             PERFORMANCE & REVIEWS VIEW
+                             ======================================================= -->
+                        <div class="vd-card p-4 mb-4">
+                            <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom flex-wrap gap-3">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="vd-metric-icon-lg bg-light-green text-green">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="fw-bold mb-0 text-dark">Customer Ratings &amp; Reviews</h3>
+                                        <p class="text-muted small mb-0">Verified performance reviews from delivered purchase orders for @VendorName</p>
+                                    </div>
+                                </div>
+
+                                <button type="button" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2 fw-semibold px-3 py-2 rounded-3" @onclick='() => SetSidebarNav("Dashboard")'>
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                                        <polyline points="12 19 5 12 12 5"></polyline>
+                                    </svg>
+                                    <span>Back to Dashboard</span>
+                                </button>
+                            </div>
+
+                            <!-- PERFORMANCE METRICS ROW -->
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-3 col-sm-6">
+                                    <div class="p-3 bg-light rounded-3 border text-center">
+                                        <span class="text-muted small fw-semibold d-block">OVERALL AVERAGE</span>
+                                        <div class="fs-2 fw-bold text-success mt-1">
+                                            @(MyPerformance != null && MyPerformance.HasReviewHistory && MyPerformance.AverageRating.HasValue ? $"{MyPerformance.AverageRating.Value:0.0}" : "N/A")
+                                            <span class="fs-6 text-muted font-normal">/ 5</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-sm-6">
+                                    <div class="p-3 bg-light rounded-3 border text-center">
+                                        <span class="text-muted small fw-semibold d-block">PRODUCT QUALITY</span>
+                                        <div class="fs-2 fw-bold text-dark mt-1">
+                                            @(MyPerformance != null && MyPerformance.HasReviewHistory && MyPerformance.AverageQualityRating.HasValue ? $"{MyPerformance.AverageQualityRating.Value:0.0}" : "N/A")
+                                            <span class="fs-6 text-muted font-normal">/ 5</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-sm-6">
+                                    <div class="p-3 bg-light rounded-3 border text-center">
+                                        <span class="text-muted small fw-semibold d-block">DELIVERY PUNCTUALITY</span>
+                                        <div class="fs-2 fw-bold text-dark mt-1">
+                                            @(MyPerformance != null && MyPerformance.HasReviewHistory && MyPerformance.AverageDeliveryRating.HasValue ? $"{MyPerformance.AverageDeliveryRating.Value:0.0}" : "N/A")
+                                            <span class="fs-6 text-muted font-normal">/ 5</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-sm-6">
+                                    <div class="p-3 bg-light rounded-3 border text-center">
+                                        <span class="text-muted small fw-semibold d-block">TOTAL REVIEWS</span>
+                                        <div class="fs-2 fw-bold text-primary mt-1">
+                                            @MyReviews.Count
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- REVIEWS LIST -->
+                            <h5 class="fw-bold text-dark mb-3">Customer Feedback History</h5>
+                            @if (MyReviews == null || MyReviews.Count == 0)
+                            {
+                                <div class="p-4 text-center border rounded-3 bg-light text-muted">
+                                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="mb-2 text-secondary">
+                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                    </svg>
+                                    <p class="mb-0 fw-semibold">No reviews received yet.</p>
+                                    <small>Reviews submitted by organization outlets upon order delivery will appear here.</small>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="d-flex flex-column gap-3">
+                                    @foreach (var rev in MyReviews)
+                                    {
+                                        <div class="p-3 border rounded-3 bg-white shadow-sm hover-shadow" style="cursor: pointer;" @onclick="() => OpenReviewDetails(rev)">
+                                            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+                                                <div>
+                                                    <span class="badge bg-success bg-opacity-10 text-success fw-bold px-2 py-1 me-2">PO-@rev.PurchaseOrderID</span>
+                                                    <strong class="text-dark">@rev.OutletName</strong>
+                                                    <span class="text-muted small ms-2">&bull; @rev.ProductName</span>
+                                                </div>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span class="badge bg-dark text-white px-2 py-1">Score: @rev.Rating.ToString("0.0") / 5</span>
+                                                    <span class="text-muted small">@rev.FeedbackDate.ToString("dd MMM yyyy")</span>
+                                                </div>
+                                            </div>
+
+                                            <div class="d-flex gap-3 my-2 small text-muted">
+                                                <span>Product Quality: <strong class="text-dark">@rev.ProductQualityRating.ToString("0.0")/5</strong></span>
+                                                <span>Delivery: <strong class="text-dark">@rev.DeliveryRating.ToString("0.0")/5</strong></span>
+                                                @if (!string.IsNullOrWhiteSpace(rev.RatedByUserName))
+                                                {
+                                                    <span>Reviewed by: <strong class="text-dark">@rev.RatedByUserName</strong></span>
+                                                }
+                                            </div>
+
+                                            @if (!string.IsNullOrWhiteSpace(rev.Review))
+                                            {
+                                                <p class="mb-0 text-secondary small bg-light p-2.5 rounded-2 mt-2" style="font-style: italic;">
+                                                    "@rev.Review"
+                                                </p>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- =======================================================
+                             DASHBOARD TAB (OPPORTUNITIES & METRICS)
+                             ======================================================= -->
+
+                        <!-- TOP HIGHLIGHT BANNER FOR LATEST OPPORTUNITY -->
+                        @if (TopOpportunity != null && ActiveTab == "new")
+                        {
+                            <div class="vd-opportunity-banner mb-4">
+                                <div class="vd-opportunity-banner-left">
+                                    <div class="vd-banner-icon-box">
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0284C7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="10"></circle>
+                                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h5 class="vd-banner-title">New Procurement Opportunity Available!</h5>
+                                        <p class="vd-banner-desc">
+                                            <strong>@TopOpportunity.OutletName</strong> (@TopOpportunity.OrganizationName) has requested <strong>@TopOpportunity.RequestedQuantity.ToString("N2") @TopOpportunity.Unit</strong> of <strong>@TopOpportunity.ProductName</strong> (PR-@TopOpportunity.RequestID).
+                                        </p>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn vd-btn-dark-green" @onclick='() => ViewOpportunity(TopOpportunity.RequestID)'>
+                                    <span>View Request</span>
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        <polyline points="12 5 19 12 12 19"></polyline>
+                                    </svg>
+                                </button>
+                            </div>
+                        }
+
+                        <!-- 4 SUMMARY METRIC CARDS -->
+                        <div class="vd-metric-grid mb-4">
+                            <!-- NEW REQUESTS -->
+                            <div class="vd-metric-card" @onclick='() => SetTab("new")'>
+                                <div class="vd-metric-header">
+                                    <div class="vd-metric-icon bg-light-green text-green">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                                            <polyline points="14 2 14 8 20 8"></polyline>
+                                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                                        </svg>
+                                    </div>
+                                    <span class="vd-metric-label">NEW REQUESTS</span>
+                                </div>
+                                <div class="vd-metric-body">
+                                    <span class="vd-metric-value">@(Opportunities?.Count ?? 0)</span>
+                                    <div class="vd-metric-link">
+                                        <span>Action required</span>
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="9 18 15 12 9 6"></polyline>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- PENDING QUOTATIONS -->
+                            <div class="vd-metric-card" @onclick='() => SetTab("pending")'>
+                                <div class="vd-metric-header">
+                                    <div class="vd-metric-icon bg-light-amber text-amber">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M5 22h14"></path>
+                                            <path d="M5 2h14"></path>
+                                            <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"></path>
+                                            <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"></path>
+                                        </svg>
+                                    </div>
+                                    <span class="vd-metric-label">PENDING QUOTATIONS</span>
+                                </div>
+                                <div class="vd-metric-body">
+                                    <span class="vd-metric-value">@PendingQuotations.Count</span>
+                                    <div class="vd-metric-link text-amber">
+                                        <span>Under review</span>
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="9 18 15 12 9 6"></polyline>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ACCEPTED QUOTATIONS -->
+                            <div class="vd-metric-card" @onclick='() => SetTab("accepted")'>
+                                <div class="vd-metric-header">
+                                    <div class="vd-metric-icon bg-light-green text-green">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                        </svg>
+                                    </div>
+                                    <span class="vd-metric-label">ACCEPTED QUOTATIONS</span>
+                                </div>
+                                <div class="vd-metric-body">
+                                    <span class="vd-metric-value">@AcceptedQuotations.Count</span>
+                                    <div class="vd-metric-link text-green">
+                                        <span>Approved deals</span>
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="9 18 15 12 9 6"></polyline>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ACTIVE CONTRACTS -->
+                            <div class="vd-metric-card" @onclick='() => SetTab("contracts")'>
+                                <div class="vd-metric-header">
+                                    <div class="vd-metric-icon bg-light-blue text-blue">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                            <polyline points="14 2 14 8 20 8"></polyline>
+                                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                                        </svg>
+                                    </div>
+                                    <span class="vd-metric-label">ACTIVE CONTRACTS</span>
+                                </div>
+                                <div class="vd-metric-body">
+                                    <span class="vd-metric-value">@ActiveContracts.Count</span>
+                                    <div class="vd-metric-link text-blue">
+                                        <span>View contracts</span>
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="9 18 15 12 9 6"></polyline>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- CUSTOMER RATING -->
+                            <div class="vd-metric-card" @onclick='() => SetSidebarNav("Performance")'>
+                                <div class="vd-metric-header">
+                                    <div class="vd-metric-icon bg-light-green text-green">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                        </svg>
+                                    </div>
+                                    <span class="vd-metric-label">CUSTOMER RATING</span>
+                                </div>
+                                <div class="vd-metric-body">
+                                    @if (MyPerformance != null && MyPerformance.HasReviewHistory && MyPerformance.AverageRating.HasValue)
+                                    {
+                                        <span class="vd-metric-value">@($"{MyPerformance.AverageRating.Value:0.0}")<span class="fs-6 text-muted font-normal"> / 5</span></span>
+                                        <div class="vd-metric-link text-green">
+                                            <span>@MyReviews.Count review(s)</span>
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <polyline points="9 18 15 12 9 6"></polyline>
+                                            </svg>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="vd-metric-value fs-5 text-muted">No Reviews Yet</span>
+                                        <div class="vd-metric-link text-muted">
+                                            <span>View details</span>
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <polyline points="9 18 15 12 9 6"></polyline>
+                                            </svg>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 5 STATUS NAVIGATION TABS -->
+                        <div class="vd-status-tabs-row mb-4">
+                            <button type="button" class="vd-status-tab @(ActiveTab == "new" ? "active" : "")" @onclick='() => SetTab("new")'>
+                                New Requests (@(Opportunities?.Count ?? 0))
+                            </button>
+                            <button type="button" class="vd-status-tab @(ActiveTab == "pending" ? "active" : "")" @onclick='() => SetTab("pending")'>
+                                Under Review (@PendingQuotations.Count)
+                            </button>
+                            <button type="button" class="vd-status-tab @(ActiveTab == "accepted" ? "active" : "")" @onclick='() => SetTab("accepted")'>
+                                Accepted (@AcceptedQuotations.Count)
+                            </button>
+                            <button type="button" class="vd-status-tab @(ActiveTab == "rejected" ? "active" : "")" @onclick='() => SetTab("rejected")'>
+                                Rejected (@RejectedQuotations.Count)
+                            </button>
+                            <button type="button" class="vd-status-tab @(ActiveTab == "contracts" ? "active" : "")" @onclick='() => SetTab("contracts")'>
+                                Contracts (@ActiveContracts.Count)
+                            </button>
+                        </div>
+
+                        <!-- MAIN CARD: OPPORTUNITIES -->
+                        <div class="vd-card p-4">
+                            
+                            <!-- CARD TOOLBAR -->
+                            <div class="vd-card-toolbar mb-3">
+                                <h3 class="vd-card-title mb-0">Available Procurement Opportunities</h3>
+
+                                <div class="vd-search-filter-wrap">
+                                    <div class="vd-search-box">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="11" cy="11" r="8"></circle>
+                                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                        </svg>
+                                        <input type="text" 
+                                               class="vd-search-input" 
+                                               placeholder="Search by PR ref, product or outlet..." 
+                                               @bind="SearchQuery" 
+                                               @bind:event="oninput" />
+                                    </div>
+                                    <button type="button" class="vd-filter-btn" title="Filter list">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                                        </svg>
+                                        <span>Filter</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            @if (Opportunities == null || !FilteredOpportunities.Any())
+                            {
+                                <div class="vd-empty-state">
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="mb-2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    </svg>
+                                    <h5 class="fw-bold text-dark mb-1">No New Procurement Opportunities</h5>
+                                    <p class="text-muted small mb-0">There are currently no new requests requiring your action matching your filter.</p>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="table-responsive">
+                                    <table class="vd-table">
+                                        <thead>
+                                            <tr>
+                                                <th>PR. REF</th>
+                                                <th>DATE</th>
+                                                <th>OUTLET</th>
+                                                <th>PRODUCT</th>
+                                                <th>QUANTITY</th>
+                                                <th>BASE UNIT PRICE</th>
+                                                <th>DECISION STATUS</th>
+                                                <th class="text-end">ACTION</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var opp in FilteredOpportunities)
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <a href="javascript:void(0)" class="vd-pr-ref-link" @onclick='() => ViewOpportunity(opp.RequestID)'>
+                                                            PR-@opp.RequestID
+                                                        </a>
+                                                    </td>
+                                                    <td class="text-muted">@opp.RequestDate.ToString("dd MMM yyyy")</td>
+                                                    <td>
+                                                        <div class="fw-bold text-dark">@opp.OutletName</div>
+                                                        <div class="vd-sub-text">@opp.OrganizationName</div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="fw-bold text-dark">@opp.ProductName</div>
+                                                    </td>
+                                                    <td>
+                                                        <span class="text-dark">@opp.RequestedQuantity.ToString("N2") @opp.Unit</span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="text-dark fw-bold">Rs. @opp.UnitPrice.ToString("N2")</span>
+                                                    </td>
+                                                    <td>
+                                                        @if (opp.OpportunityStatus == "Accepted")
+                                                        {
+                                                            <span class="vd-status-pill status-approved">
+                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                                </svg>
+                                                                <span>Accepted</span>
+                                                            </span>
+                                                        }
+                                                        else if (opp.OpportunityStatus == "Rejected")
+                                                        {
+                                                            <span class="vd-status-pill status-rejected">
+                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                                </svg>
+                                                                <span>Rejected</span>
+                                                            </span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="vd-status-pill status-pending">
+                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                                    <circle cx="12" cy="12" r="10"></circle>
+                                                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                                                </svg>
+                                                                <span>Awaiting Decision</span>
+                                                            </span>
+                                                        }
+                                                    </td>
+                                                    <td class="text-end">
+                                                        @if (opp.OpportunityStatus == "Accepted")
+                                                        {
+                                                            <button type="button" class="btn vd-btn-dark-green vd-btn-sm" @onclick='() => ViewOpportunity(opp.RequestID)'>
+                                                                <span>Prepare Quotation</span>
+                                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                                                </svg>
+                                                            </button>
+                                                        }
+                                                        else if (opp.OpportunityStatus == "Rejected")
+                                                        {
+                                                            <button type="button" class="btn vd-btn-outline-subtle vd-btn-sm" @onclick='() => ViewOpportunity(opp.RequestID)'>
+                                                                <span>View Details</span>
+                                                            </button>
+                                                        }
+                                                        else
+                                                        {
+                                                            <button type="button" class="btn vd-btn-dark-green vd-btn-sm" @onclick='() => ViewOpportunity(opp.RequestID)'>
+                                                                <span>View Request</span>
+                                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                                                </svg>
+                                                            </button>
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                </div>
+            }
+
+            <!-- =======================================================================
+                 CREATE INVOICE MODAL (3-WAY MATCH & NET BILLED RECONCILIATION)
+                 ======================================================================= -->
+            @if (ShowCreateInvoiceModal && SelectedPoForInvoice != null)
+            {
+                <div class="vd-modal-backdrop">
+                    <div class="vd-modal-dialog vd-modal-lg">
+                        <div class="vd-modal-header">
+                            <div>
+                                <h4 class="vd-modal-title">Generate Invoice for PO-@SelectedPoForInvoice.PurchaseOrderID</h4>
+                                <p class="vd-modal-subtitle text-muted mb-0">Customer Outlet: @OutletDictionary.GetValueOrDefault(SelectedPoForInvoice.OutletID, $"Outlet #{SelectedPoForInvoice.OutletID}")</p>
+                            </div>
+                            <button type="button" class="vd-modal-close" @onclick="CloseCreateInvoiceModal">&times;</button>
+                        </div>
+
+                        <div class="vd-modal-body">
+                            @if (!string.IsNullOrEmpty(InvoiceSubmitError))
+                            {
+                                <div class="alert alert-danger py-2 mb-3 small">@InvoiceSubmitError</div>
+                            }
+                            @if (!string.IsNullOrEmpty(InvoiceSubmitSuccess))
+                            {
+                                <div class="alert alert-success py-2 mb-3 small">@InvoiceSubmitSuccess</div>
+                            }
+
+                            <div class="p-3 mb-3 rounded" style="background-color: #EBF8F5; border: 1px solid #C4E9E2;">
+                                <div class="d-flex align-items-start gap-2">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#174F45" stroke-width="2" class="mt-1 flex-shrink-0">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                    </svg>
+                                    <div>
+                                        <span class="fw-bold text-dark small">Delivery Quantity Reconciliation Policy</span>
+                                        <p class="text-muted small mb-0">Invoiced quantities are computed strictly as: <strong>Net Billed Quantity = Received Quantity - Spoiled Quantity</strong>. Damaged or spoiled items reported during delivery confirmation are automatically deducted and not charged.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            @if (IsLoadingDeliveryData)
+                            {
+                                <div class="text-center py-4">
+                                    <div class="spinner-border text-success" role="status"></div>
+                                    <p class="text-muted small mt-2">Loading verified delivery records...</p>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="table-responsive mb-3 border rounded">
+                                    <table class="table table-sm mb-0">
+                                        <thead class="table-light small">
+                                            <tr>
+                                                <th>Product</th>
+                                                <th class="text-end">Unit Price</th>
+                                                <th class="text-center">Ordered</th>
+                                                <th class="text-center">Received</th>
+                                                <th class="text-center">Spoiled</th>
+                                                <th class="text-center fw-bold">Net Billed</th>
+                                                <th class="text-end">Tax Rate</th>
+                                                <th class="text-end">Total (Rs.)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @if (SelectedPoForInvoice.Items != null)
+                                            {
+                                                @foreach (var item in SelectedPoForInvoice.Items)
+                                                {
+                                                    var prodName = ProductDictionary.GetValueOrDefault(item.ProductID, $"Product #{item.ProductID}");
+                                                    var received = GetDeliveredQuantity(item);
+                                                    var spoiled = GetSpoiledQuantity(item);
+                                                    var net = GetNetAcceptedQuantity(item);
+                                                    var itemTotal = GetItemNetTotal(item);
+                                                    <tr>
+                                                        <td class="fw-medium text-dark">@prodName</td>
+                                                        <td class="text-end text-muted">Rs. @item.UnitPrice.ToString("N2")</td>
+                                                        <td class="text-center text-muted">@item.Quantity.ToString("G29")</td>
+                                                        <td class="text-center text-dark">@received.ToString("G29")</td>
+                                                        <td class="text-center text-danger">@(spoiled > 0 ? $"-{spoiled.ToString("G29")}" : "0")</td>
+                                                        <td class="text-center fw-bold text-success">@net.ToString("G29")</td>
+                                                        <td class="text-end text-muted">@item.TaxRate%</td>
+                                                        <td class="text-end fw-bold text-dark">Rs. @itemTotal.ToString("N2")</td>
+                                                    </tr>
+                                                }
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="d-flex justify-content-end">
+                                    <div class="p-3 bg-light rounded border" style="min-width: 260px;">
+                                        <div class="d-flex justify-content-between small text-muted mb-1">
+                                            <span>Net Subtotal:</span>
+                                            <span>Rs. @GetInvoiceSubtotal().ToString("N2")</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between small text-muted mb-2">
+                                            <span>Total Tax:</span>
+                                            <span>Rs. @GetInvoiceTaxTotal().ToString("N2")</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between fw-bold text-dark border-top pt-2">
+                                            <span>Grand Total:</span>
+                                            <span class="text-success">Rs. @GetInvoiceGrandTotal().ToString("N2")</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="vd-modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" @onclick="CloseCreateInvoiceModal" disabled="@IsSubmittingInvoice">Cancel</button>
+                            <button type="button" class="btn vd-btn-primary" @onclick="HandleSubmitInvoice" disabled="@(IsSubmittingInvoice || IsLoadingDeliveryData)">
+                                @if (IsSubmittingInvoice)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                                    <span>Generating &amp; Submitting...</span>
+                                }
+                                else
+                                {
+                                    <span>Submit Invoice to Organization</span>
+                                }
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            @if (ShowReviewDetailsModal)
+            {
+                <div class="vd-modal-backdrop" @onclick="CloseReviewDetailsModal">
+                    <div class="vd-modal-dialog vd-modal-md" @onclick:stopPropagation>
+                        <div class="vd-modal-header">
+                            <div>
+                                <h3 class="vd-modal-title">Review Details</h3>
+                                <p class="vd-modal-subtitle">Verified feedback from delivered order</p>
+                            </div>
+                            <button type="button" class="btn-close" @onclick="CloseReviewDetailsModal"></button>
+                        </div>
+
+                        <div class="vd-modal-body p-4">
+                            @if (!string.IsNullOrWhiteSpace(ReviewLoadErrorMessage))
+                            {
+                                <div class="alert alert-danger mb-0">
+                                    <span>@ReviewLoadErrorMessage</span>
+                                </div>
+                            }
+                            else if (SelectedReviewDetails != null)
+                            {
+                                <div class="d-flex flex-column gap-3">
+                                    <div class="p-3 border rounded bg-light">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="badge bg-secondary">PO-@SelectedReviewDetails.PurchaseOrderID</span>
+                                            <span class="text-muted small">@SelectedReviewDetails.FeedbackDate.ToString("dd MMM yyyy")</span>
+                                        </div>
+                                        <div class="row g-2">
+                                            <div class="col-sm-6">
+                                                <span class="text-muted small d-block">Vendor:</span>
+                                                <span class="fw-semibold text-dark">@SelectedReviewDetails.VendorName</span>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <span class="text-muted small d-block">Outlet:</span>
+                                                <span class="fw-semibold text-dark">@SelectedReviewDetails.OutletName</span>
+                                            </div>
+                                            <div class="col-sm-12">
+                                                <span class="text-muted small d-block">Product:</span>
+                                                <span class="fw-semibold text-dark">@SelectedReviewDetails.ProductName</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex gap-2">
+                                        <div class="flex-fill p-2 border rounded text-center bg-light">
+                                            <div class="text-muted small">Overall Rating</div>
+                                            <div class="fw-bold text-success fs-5">@SelectedReviewDetails.Rating.ToString("0.0") / 5</div>
+                                        </div>
+                                        <div class="flex-fill p-2 border rounded text-center bg-light">
+                                            <div class="text-muted small">Product Quality</div>
+                                            <div class="fw-bold text-dark fs-5">@SelectedReviewDetails.ProductQualityRating.ToString("0.0") / 5</div>
+                                        </div>
+                                        <div class="flex-fill p-2 border rounded text-center bg-light">
+                                            <div class="text-muted small">Delivery Rating</div>
+                                            <div class="fw-bold text-dark fs-5">@SelectedReviewDetails.DeliveryRating.ToString("0.0") / 5</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="p-3 border rounded">
+                                        <span class="text-muted small d-block mb-1">Review Comments:</span>
+                                        <p class="mb-0 text-dark">@SelectedReviewDetails.Review</p>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="vd-modal-footer">
+                            <button type="button" class="btn btn-secondary" @onclick="CloseReviewDetailsModal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            }
+
+        </main>
+
+    </div>
+}
+
+

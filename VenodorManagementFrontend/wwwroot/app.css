@@ -1,0 +1,739 @@
+/* ==========================================================================
+   SMART VENDOR MANAGEMENT SYSTEM — APPLICATION-WIDE UI DESIGN SYSTEM
+   Theme: Warm Neutral Canvas, Soft Sage Primary Accent, Subtle Blush Secondary
+   ========================================================================== */
+
+/* ==========================================================================
+   1. DESIGN TOKENS
+   ========================================================================== */
+:root {
+    /* Primary — Sage Green */
+    --app-primary: #5F806B;
+    --app-primary-hover: #4F705C;
+    --app-primary-light: #EAF2ED;
+    --app-primary-soft: #F4F8F5;
+
+    /* Secondary — Soft Blush */
+    --app-secondary: #C9828B;
+    --app-secondary-hover: #B96F78;
+    --app-secondary-light: #F8ECEE;
+
+    /* Backgrounds & Surfaces */
+    --app-bg: #F7F9F7;
+    --app-bg-secondary: #F1F5F2;
+    --app-surface: #FFFFFF;
+
+    /* Typography & Neutrals */
+    --app-text: #26312B;
+    --app-text-secondary: #66736B;
+    --app-text-muted: #8A948E;
+
+    /* Borders */
+    --app-border: #E1E8E3;
+    --app-border-hover: #CBD8CF;
+
+    /* Status Colors */
+    --app-success: #4F8062;
+    --app-success-bg: #EAF4ED;
+    --app-warning: #B48745;
+    --app-warning-bg: #FBF4E7;
+    --app-danger: #B85C63;
+    --app-danger-bg: #FBECEE;
+    --app-info: #5B7890;
+    --app-info-bg: #EDF3F7;
+
+    /* Border Radii — Professional Square / Rectangular Enterprise System */
+    --app-radius-sm: 2px;
+    --app-radius: 4px;
+    --app-radius-lg: 4px;
+    --app-radius-xl: 6px;
+
+    /* Elevations & Shadows */
+    --app-shadow-sm: 0 1px 3px rgba(38, 49, 43, 0.04), 0 1px 2px rgba(38, 49, 43, 0.02);
+    --app-shadow: 0 4px 14px rgba(38, 49, 43, 0.05), 0 1px 3px rgba(38, 49, 43, 0.02);
+    --app-shadow-lg: 0 10px 28px rgba(38, 49, 43, 0.07), 0 2px 8px rgba(38, 49, 43, 0.03);
+}
+
+/* ==========================================================================
+   2. TYPOGRAPHY & BASE STYLES
+   ========================================================================== */
+html {
+    overflow-x: hidden;
+    background-color: var(--app-bg);
+}
+
+body {
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--app-bg) !important;
+    color: var(--app-text);
+    font-size: 0.95rem;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    position: relative;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* ==========================================================================
+   GLOBAL DECORATIVE BACKGROUND CORNER ORBS (VISIBLE ACROSS ALL PAGES)
+   ========================================================================== */
+body::before,
+body::after {
+    content: "";
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Top-Right Soft Sage Decorative Orb */
+body::before {
+    top: -140px;
+    right: -140px;
+    width: 560px;
+    height: 560px;
+    background: radial-gradient(circle at center, rgba(95, 128, 107, 0.16) 0%, rgba(95, 128, 107, 0.08) 50%, rgba(95, 128, 107, 0) 72%);
+}
+
+/* Bottom-Left Subtle Blush Decorative Orb */
+body::after {
+    bottom: -150px;
+    left: -150px;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle at center, rgba(201, 130, 139, 0.15) 0%, rgba(201, 130, 139, 0.07) 50%, rgba(201, 130, 139, 0) 72%);
+}
+
+@media (max-width: 768px) {
+    body::before {
+        width: 360px;
+        height: 360px;
+        top: -90px;
+        right: -90px;
+        background: radial-gradient(circle at center, rgba(95, 128, 107, 0.14) 0%, rgba(95, 128, 107, 0.06) 50%, rgba(95, 128, 107, 0) 72%);
+    }
+    body::after {
+        width: 380px;
+        height: 380px;
+        bottom: -90px;
+        left: -90px;
+        background: radial-gradient(circle at center, rgba(201, 130, 139, 0.13) 0%, rgba(201, 130, 139, 0.05) 50%, rgba(201, 130, 139, 0) 72%);
+    }
+}
+
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+    color: var(--app-text);
+    font-weight: 700;
+    letter-spacing: -0.015em;
+}
+
+
+
+p, span, div, label, input, button, select, textarea {
+    color: inherit;
+}
+
+.text-muted {
+    color: var(--app-text-secondary) !important;
+}
+
+.text-dark {
+    color: var(--app-text) !important;
+}
+
+.text-secondary {
+    color: var(--app-text-secondary) !important;
+}
+
+.text-primary {
+    color: var(--app-primary) !important;
+}
+
+.text-success {
+    color: var(--app-success) !important;
+}
+
+.text-warning {
+    color: var(--app-warning) !important;
+}
+
+.text-danger {
+    color: var(--app-danger) !important;
+}
+
+.text-info {
+    color: var(--app-info) !important;
+}
+
+/* Links */
+a, .btn-link {
+    color: var(--app-primary);
+    text-decoration: none;
+    transition: color 0.15s ease-in-out;
+}
+
+a:hover, .btn-link:hover {
+    color: var(--app-primary-hover);
+    text-decoration: underline;
+}
+
+/* ==========================================================================
+   3. LAYOUT & PAGE WRAPPERS
+   ========================================================================== */
+.main-content, .bg-light {
+    background-color: transparent !important;
+    position: relative;
+    z-index: 1;
+}
+
+.content {
+    padding-top: 1.5rem;
+    padding-bottom: 2.5rem;
+    position: relative;
+    z-index: 1;
+    background-color: transparent !important;
+}
+
+.container, .container-fluid {
+    position: relative;
+    z-index: 1;
+}
+
+.app-page {
+    background-color: transparent !important;
+    min-height: 100vh;
+    padding-top: 1.5rem;
+    padding-bottom: 2.5rem;
+    position: relative;
+    z-index: 1;
+}
+
+/* Ensure inline legacy page container backgrounds do not block background shapes */
+[style*="background-color: #f8fafc"],
+[style*="background-color:#f8fafc"] {
+    background-color: transparent !important;
+}
+
+
+
+.app-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.75rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--app-border);
+}
+
+/* ==========================================================================
+   4. CARDS & SURFACES
+   ========================================================================== */
+.card, .app-card {
+    background-color: var(--app-surface) !important;
+    border: 1px solid var(--app-border) !important;
+    border-radius: var(--app-radius-lg) !important;
+    box-shadow: var(--app-shadow-sm);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.card:hover, .app-card:hover {
+    border-color: var(--app-border-hover) !important;
+}
+
+.card.shadow, .card.shadow-sm, .shadow-sm {
+    box-shadow: var(--app-shadow) !important;
+}
+
+.card.shadow-lg, .shadow-lg {
+    box-shadow: var(--app-shadow-lg) !important;
+}
+
+.card-header {
+    background-color: transparent !important;
+    border-bottom: 1px solid var(--app-border) !important;
+    padding: 1.1rem 1.35rem;
+}
+
+.card-header.bg-primary,
+.card-header.bg-success,
+.card-header.bg-info,
+.card-header.bg-dark {
+    background-color: var(--app-primary) !important;
+    color: #FFFFFF !important;
+    border-bottom: none !important;
+    border-top-left-radius: calc(var(--app-radius-lg) - 1px) !important;
+    border-top-right-radius: calc(var(--app-radius-lg) - 1px) !important;
+}
+
+.card-body {
+    padding: 1.35rem;
+}
+
+.card-footer {
+    background-color: var(--app-bg-secondary) !important;
+    border-top: 1px solid var(--app-border) !important;
+    border-bottom-left-radius: calc(var(--app-radius-lg) - 1px) !important;
+    border-bottom-right-radius: calc(var(--app-radius-lg) - 1px) !important;
+}
+
+/* Accent Card Borders */
+.border-primary { border-color: #D2E4DA !important; }
+.border-success { border-color: #C9E5D2 !important; }
+.border-info { border-color: #CFE2ED !important; }
+.border-warning { border-color: #F5DFB8 !important; }
+.border-danger { border-color: #F8ECEE !important; }
+.border-light-subtle { border-color: var(--app-border) !important; }
+
+/* Dashboard Interactive Cards */
+.clickable-card, .card[style*="cursor: pointer"], .app-stat-card {
+    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.18s ease;
+}
+
+.clickable-card:hover, .card[style*="cursor: pointer"]:hover, .app-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--app-shadow-lg) !important;
+    border-color: var(--app-primary) !important;
+}
+
+/* ==========================================================================
+   5. BUTTONS & ACTIONS
+   ========================================================================== */
+.btn {
+    border-radius: var(--app-radius);
+    font-weight: 600;
+    font-size: 0.88rem;
+    padding: 0.55rem 1.25rem;
+    letter-spacing: 0.01em;
+    transition: all 0.18s ease-in-out;
+    box-shadow: var(--app-shadow-sm);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+}
+
+/* Primary Button (Sage Green) */
+.btn-primary, .app-btn-primary {
+    background-color: var(--app-primary) !important;
+    border-color: var(--app-primary) !important;
+    color: #FFFFFF !important;
+}
+
+.btn-primary:hover, .btn-primary:focus, .app-btn-primary:hover {
+    background-color: var(--app-primary-hover) !important;
+    border-color: var(--app-primary-hover) !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 4px 14px rgba(95, 128, 107, 0.28) !important;
+}
+
+/* Secondary Button */
+.btn-secondary, .app-btn-secondary {
+    background-color: var(--app-text-secondary) !important;
+    border-color: var(--app-text-secondary) !important;
+    color: #FFFFFF !important;
+}
+
+.btn-secondary:hover, .app-btn-secondary:hover {
+    background-color: #546159 !important;
+    border-color: #546159 !important;
+}
+
+/* Success Button */
+.btn-success {
+    background-color: var(--app-success) !important;
+    border-color: var(--app-success) !important;
+    color: #FFFFFF !important;
+}
+
+.btn-success:hover {
+    background-color: #3f6b50 !important;
+    border-color: #3f6b50 !important;
+}
+
+/* Info Button */
+.btn-info {
+    background-color: var(--app-info) !important;
+    border-color: var(--app-info) !important;
+    color: #FFFFFF !important;
+}
+
+.btn-info:hover {
+    background-color: #496378 !important;
+    border-color: #496378 !important;
+}
+
+/* Warning Button */
+.btn-warning {
+    background-color: var(--app-warning) !important;
+    border-color: var(--app-warning) !important;
+    color: #FFFFFF !important;
+}
+
+.btn-warning:hover {
+    background-color: #9c7336 !important;
+    border-color: #9c7336 !important;
+    color: #FFFFFF !important;
+}
+
+/* Danger Button */
+.btn-danger, .app-btn-danger {
+    background-color: var(--app-danger) !important;
+    border-color: var(--app-danger) !important;
+    color: #FFFFFF !important;
+}
+
+.btn-danger:hover, .app-btn-danger:hover {
+    background-color: #9e4a50 !important;
+    border-color: #9e4a50 !important;
+}
+
+/* Dark Button */
+.btn-dark {
+    background-color: var(--app-text) !important;
+    border-color: var(--app-text) !important;
+    color: #FFFFFF !important;
+}
+
+.btn-dark:hover {
+    background-color: #171f1b !important;
+    border-color: #171f1b !important;
+}
+
+/* Outline Buttons */
+.btn-outline-primary {
+    background-color: transparent !important;
+    border-color: var(--app-primary) !important;
+    color: var(--app-primary) !important;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--app-primary-light) !important;
+    color: var(--app-primary-hover) !important;
+    border-color: var(--app-primary) !important;
+}
+
+.btn-outline-secondary {
+    background-color: transparent !important;
+    border-color: var(--app-border) !important;
+    color: var(--app-text-secondary) !important;
+}
+
+.btn-outline-secondary:hover {
+    background-color: var(--app-bg-secondary) !important;
+    color: var(--app-text) !important;
+    border-color: var(--app-border-hover) !important;
+}
+
+.btn-outline-danger {
+    background-color: transparent !important;
+    border-color: var(--app-secondary-light) !important;
+    color: var(--app-danger) !important;
+}
+
+.btn-outline-danger:hover {
+    background-color: var(--app-danger-bg) !important;
+    color: #993b42 !important;
+    border-color: var(--app-danger) !important;
+}
+
+.btn-outline-success {
+    background-color: transparent !important;
+    border-color: #C9E5D2 !important;
+    color: var(--app-success) !important;
+}
+
+.btn-outline-success:hover {
+    background-color: var(--app-success-bg) !important;
+    color: #3b634b !important;
+}
+
+/* Button Sizes */
+.btn-sm {
+    padding: 0.38rem 0.85rem;
+    font-size: 0.8rem;
+    border-radius: var(--app-radius-sm);
+}
+
+.btn-lg {
+    padding: 0.75rem 1.75rem;
+    font-size: 1rem;
+    border-radius: var(--app-radius);
+}
+
+/* ==========================================================================
+   6. FORMS & INPUTS
+   ========================================================================== */
+.form-control, .form-select, .app-form-control {
+    background-color: #FFFFFF;
+    border: 1px solid var(--app-border);
+    border-radius: var(--app-radius);
+    color: var(--app-text);
+    padding: 0.6rem 0.95rem;
+    font-size: 0.92rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus, .form-select:focus, .app-form-control:focus {
+    border-color: var(--app-primary);
+    box-shadow: 0 0 0 0.2rem rgba(95, 128, 107, 0.16);
+    outline: 0;
+}
+
+.form-label {
+    color: var(--app-text);
+    font-weight: 600;
+    font-size: 0.88rem;
+    margin-bottom: 0.35rem;
+}
+
+.form-check-input {
+    border-color: var(--app-border);
+}
+
+.form-check-input:checked {
+    background-color: var(--app-primary);
+    border-color: var(--app-primary);
+}
+
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.2rem rgba(95, 128, 107, 0.16);
+}
+
+/* ==========================================================================
+   7. TABLES
+   ========================================================================== */
+.table, .app-table {
+    color: var(--app-text);
+    border-color: var(--app-border);
+    margin-bottom: 0;
+}
+
+.table th {
+    background-color: var(--app-bg-secondary);
+    color: var(--app-text);
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid var(--app-border);
+    padding: 0.9rem 1.1rem;
+}
+
+.table thead.table-light th,
+.table thead.table-dark th {
+    background-color: var(--app-bg-secondary) !important;
+    color: var(--app-text) !important;
+    border-bottom: 1px solid var(--app-border) !important;
+}
+
+.table td {
+    padding: 0.9rem 1.1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #EEF3EF;
+}
+
+.table-hover tbody tr:hover {
+    background-color: var(--app-primary-soft);
+}
+
+.table-responsive {
+    border-radius: var(--app-radius-lg);
+    border: 1px solid var(--app-border);
+    background-color: #FFFFFF;
+    box-shadow: var(--app-shadow-sm);
+}
+
+/* ==========================================================================
+   8. SOFT BADGES
+   ========================================================================== */
+.badge, .app-badge {
+    font-weight: 600;
+    font-size: 0.76rem;
+    padding: 0.4em 0.8em;
+    border-radius: var(--app-radius-sm) !important;
+    letter-spacing: 0.02em;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+/* Primary Badge */
+.badge.bg-primary {
+    background-color: var(--app-primary-light) !important;
+    color: var(--app-primary) !important;
+    border: 1px solid #D2E4DA;
+}
+
+/* Success Badge (Active) */
+.badge.bg-success {
+    background-color: var(--app-success-bg) !important;
+    color: var(--app-success) !important;
+    border: 1px solid #C9E5D2;
+}
+
+/* Warning Badge (Pending) */
+.badge.bg-warning, .badge.bg-warning.text-dark {
+    background-color: var(--app-warning-bg) !important;
+    color: var(--app-warning) !important;
+    border: 1px solid #F5DFB8;
+}
+
+/* Danger Badge (Rejected / Declined) */
+.badge.bg-danger {
+    background-color: var(--app-danger-bg) !important;
+    color: var(--app-danger) !important;
+    border: 1px solid #F5CCD0;
+}
+
+/* Secondary Badge (Subtle Blush / Neutral) */
+.badge.bg-secondary {
+    background-color: var(--app-bg-secondary) !important;
+    color: var(--app-text-secondary) !important;
+    border: 1px solid var(--app-border);
+}
+
+/* Info Badge */
+.badge.bg-info {
+    background-color: var(--app-info-bg) !important;
+    color: var(--app-info) !important;
+    border: 1px solid #CFE2ED;
+}
+
+/* Dark Badge */
+.badge.bg-dark {
+    background-color: #26312B !important;
+    color: #FFFFFF !important;
+}
+
+/* Modals & Dialogs */
+.modal-content, .app-modal {
+    border-radius: var(--app-radius) !important;
+    border: 1px solid var(--app-border) !important;
+    box-shadow: var(--app-shadow-lg) !important;
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--app-border) !important;
+}
+
+.modal-footer {
+    border-top: 1px solid var(--app-border) !important;
+}
+
+/* ==========================================================================
+   9. ALERTS
+   ========================================================================== */
+.alert {
+    border-radius: var(--app-radius) !important;
+    border: 1px solid transparent;
+    padding: 0.95rem 1.35rem;
+    font-size: 0.92rem;
+    box-shadow: var(--app-shadow-sm);
+}
+
+.alert-success {
+    background-color: var(--app-success-bg) !important;
+    border-color: #C9E5D2 !important;
+    color: #2E5E40 !important;
+}
+
+.alert-warning {
+    background-color: var(--app-warning-bg) !important;
+    border-color: #F5DFB8 !important;
+    color: #7D5921 !important;
+}
+
+.alert-danger {
+    background-color: var(--app-danger-bg) !important;
+    border-color: #F5CCD0 !important;
+    color: #8A353C !important;
+}
+
+.alert-info {
+    background-color: var(--app-info-bg) !important;
+    border-color: #CFE2ED !important;
+    color: #32556E !important;
+}
+
+.alert-light {
+    background-color: #FFFFFF !important;
+    border-color: var(--app-border) !important;
+    color: var(--app-text) !important;
+}
+
+/* ==========================================================================
+   10. NAVIGATION, SIDEBAR & INTERACTIVE ELEMENTS
+   ========================================================================== */
+.top-row {
+    background-color: #FFFFFF !important;
+    border-bottom: 1px solid var(--app-border) !important;
+    box-shadow: var(--app-shadow-sm);
+}
+
+.sidebar {
+    background-color: #FFFFFF !important;
+    border-right: 1px solid var(--app-border) !important;
+    color: var(--app-text) !important;
+}
+
+.sidebar .nav-link {
+    color: var(--app-text-secondary) !important;
+    border-radius: var(--app-radius);
+    padding: 0.65rem 1rem;
+    font-weight: 500;
+    transition: all 0.15s ease-in-out;
+}
+
+.sidebar .nav-link:hover {
+    background-color: var(--app-bg-secondary) !important;
+    color: var(--app-text) !important;
+}
+
+.sidebar .nav-link.active,
+.sidebar button[style*="background-color: rgb(37, 99, 235)"],
+.sidebar button[style*="background-color: #2563eb"] {
+    background-color: var(--app-primary-light) !important;
+    color: var(--app-primary) !important;
+    font-weight: 600 !important;
+}
+
+.hover-bg:hover {
+    background-color: var(--app-bg-secondary) !important;
+}
+
+.hover-primary:hover {
+    color: var(--app-primary) !important;
+}
+
+
+/* Focus Rings */
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+    box-shadow: 0 0 0 0.2rem rgba(95, 128, 107, 0.18) !important;
+}
+
+/* ==========================================================================
+   11. BLAZOR ERROR UI
+   ========================================================================== */
+#blazor-error-ui {
+    background: #FFF8E8;
+    color: #734812;
+    border-top: 1px solid #EED6AA;
+    bottom: 0;
+    box-shadow: 0 -2px 12px rgba(38, 49, 43, 0.08);
+    display: none;
+    left: 0;
+    padding: 0.75rem 1.35rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.65rem;
+}
+

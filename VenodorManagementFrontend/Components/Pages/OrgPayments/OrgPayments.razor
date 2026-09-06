@@ -1,0 +1,598 @@
+@page "/organization/payments"
+@page "/org/payments"
+@page "/organization/payments/{InvoiceId:int}"
+@namespace VenodorManagementFrontend.Components.Pages.OrgPayments
+
+<PageTitle>Payments - @OrganizationName</PageTitle>
+
+@if (!Auth.IsAuthenticated)
+{
+    <div class="org-po-warning-wrap">
+        <div class="org-po-warning-card">
+            <h4 class="fw-bold mb-2 text-dark">Authentication Required</h4>
+            <p class="text-muted mb-3">Please log in to access Payments.</p>
+            <button class="btn btn-primary" @onclick='() => Nav.NavigateTo(Auth.IsPurchaseManager ? "/purchase-manager/login" : "/login")'>Go to Login</button>
+        </div>
+    </div>
+}
+else if (!Auth.IsOrgManager && !Auth.IsAdmin && !Auth.IsPurchaseManager)
+{
+    <div class="org-po-warning-wrap">
+        <div class="org-po-warning-card">
+            <h4 class="fw-bold mb-2 text-danger">Access Denied</h4>
+            <p class="text-muted mb-3">You do not have privileges to manage payments.</p>
+            <button class="btn btn-outline-secondary" @onclick='() => Nav.NavigateTo("/")'>Return to Home</button>
+        </div>
+    </div>
+}
+else if (Auth.IsPurchaseManager && (!Auth.OutletID.HasValue || Auth.OutletID.Value <= 0))
+{
+    <div class="org-po-warning-wrap">
+        <div class="org-po-warning-card">
+            <h4 class="fw-bold mb-2 text-warning">No Outlet Assigned</h4>
+            <p class="text-muted mb-3">No outlet is assigned to this Purchase Manager.</p>
+            <button class="btn btn-outline-secondary" @onclick='() => Nav.NavigateTo("/purchase-manager")'>Return to Dashboard</button>
+        </div>
+    </div>
+}
+else
+{
+    <div class="org-app-layout @(IsSidebarCollapsed ? "sidebar-collapsed" : "")">
+        
+        <!-- =======================================================================
+             LEFT SIDEBAR NAVIGATION (ENTERPRISE DARK GREEN)
+             ======================================================================= -->
+        <aside class="org-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-branding" @onclick='() => Nav.NavigateTo(Auth.IsPurchaseManager ? "/purchase-manager" : "/org-dashboard")'>
+                    <div class="brand-emblem">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="brand-text">
+                        <span class="brand-name">Smart Vendor</span>
+                        <span class="brand-sub">Management</span>
+                    </div>
+                </div>
+                <button class="sidebar-collapse-btn" @onclick="ToggleSidebar" title="Toggle Sidebar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        @if (IsSidebarCollapsed)
+                        {
+                            <polyline points="13 17 18 12 13 7"></polyline>
+                            <polyline points="6 17 11 12 6 7"></polyline>
+                        }
+                        else
+                        {
+                            <polyline points="11 17 6 12 11 7"></polyline>
+                            <polyline points="18 17 13 12 18 7"></polyline>
+                        }
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Portal Badge -->
+            <div class="sidebar-portal-badge">
+                <span class="portal-dot"></span>
+                <span class="portal-label">@(Auth.IsPurchaseManager ? "Purchase Manager Portal" : "Organization Portal")</span>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="sidebar-nav">
+                <button class="nav-item-btn" @onclick='() => Nav.NavigateTo(Auth.IsPurchaseManager ? "/purchase-manager" : "/org-dashboard")'>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    <span class="nav-text">Dashboard</span>
+                </button>
+
+                <button class="nav-item-btn" @onclick='() => Nav.NavigateTo("/organization/outlets")'>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    <span class="nav-text">Outlets</span>
+                </button>
+
+                <button class="nav-item-btn" @onclick='() => Nav.NavigateTo("/organization/purchase-requests")'>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="12" y1="18" x2="12" y2="12"></line>
+                        <line x1="9" y1="15" x2="15" y2="15"></line>
+                    </svg>
+                    <span class="nav-text">Purchase Requests</span>
+                </button>
+
+                <button class="nav-item-btn" @onclick='() => Nav.NavigateTo("/organization/quotations-review")'>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                    </svg>
+                    <span class="nav-text">Quotations</span>
+                </button>
+
+                <button class="nav-item-btn" @onclick='() => Nav.NavigateTo("/organization/contracts")'>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                        <path d="M9 14l2 2 4-4"></path>
+                    </svg>
+                    <span class="nav-text">Contracts</span>
+                </button>
+
+                <button class="nav-item-btn" @onclick='() => Nav.NavigateTo("/organization/purchase-orders")'>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    </svg>
+                    <span class="nav-text">Purchase Orders</span>
+                </button>
+
+                <button class="nav-item-btn" @onclick='() => Nav.NavigateTo("/organization/invoices")'>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                    <span class="nav-text">Invoices</span>
+                </button>
+
+                <!-- Active Payments Link -->
+                <button class="nav-item-btn active">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                        <line x1="1" y1="10" x2="23" y2="10"></line>
+                    </svg>
+                    <span class="nav-text">Payments</span>
+                    @if (AwaitingPaymentCount > 0)
+                    {
+                        <span class="nav-counter-badge">@AwaitingPaymentCount</span>
+                    }
+                </button>
+            </nav>
+
+            <!-- User Footer -->
+            <div class="sidebar-user-footer">
+                <div class="user-avatar-circle">
+                    @(Auth.CurrentUser?.Name?.FirstOrDefault() ?? 'O')
+                </div>
+                <div class="user-info-text">
+                    <div class="user-full-name">@(Auth.CurrentUser?.Name ?? Auth.UserName)</div>
+                    <div class="user-role-label">@(Auth.IsPurchaseManager ? (!string.IsNullOrEmpty(OutletDisplayName) ? OutletDisplayName : "Purchase Manager") : OrganizationName)</div>
+                </div>
+                <button class="btn-logout" @onclick="Auth.Logout" title="Logout">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                </button>
+            </div>
+        </aside>
+
+        <!-- =======================================================================
+             MAIN CONTENT AREA
+             ======================================================================= -->
+        <main class="org-main-viewport">
+            
+            <!-- Page Header -->
+            <header class="org-page-header">
+                <div class="header-left">
+                    <h1 class="page-title">Payments & Settlements</h1>
+                    <p class="page-subtitle">Record payments for approved invoices and inspect complete settlement audit history.</p>
+                </div>
+                <div class="header-right">
+                    <button class="btn btn-outline-secondary d-flex align-items-center gap-2" @onclick="LoadDataAsync" disabled="@IsLoading">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <polyline points="1 20 1 14 7 14"></polyline>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                        </svg>
+                        <span>Refresh</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Success notification banner -->
+            @if (!string.IsNullOrWhiteSpace(PaymentSuccessMessage))
+            {
+                <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2 mb-4" role="alert">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    <div>@PaymentSuccessMessage</div>
+                    <button type="button" class="btn-close" @onclick="() => PaymentSuccessMessage = null"></button>
+                </div>
+            }
+
+            <!-- KPI Metric Cards -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-icon-wrap icon-teal">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                            <line x1="1" y1="10" x2="23" y2="10"></line>
+                        </svg>
+                    </div>
+                    <div class="kpi-data">
+                        <span class="kpi-label">Completed Settlements</span>
+                        <span class="kpi-value">@TotalPaymentsCount</span>
+                        <span class="kpi-hint">Processed payments in database</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon-wrap icon-green">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="1" x2="12" y2="23"></line>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                    </div>
+                    <div class="kpi-data">
+                        <span class="kpi-label">Total Amount Paid</span>
+                        <span class="kpi-value">Rs. @TotalPaidAmount.ToString("N2")</span>
+                        <span class="kpi-hint">Disbursed to vendors</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card @(AwaitingPaymentCount > 0 ? "kpi-card-highlight" : "")">
+                    <div class="kpi-icon-wrap @(AwaitingPaymentCount > 0 ? "icon-amber" : "icon-gray")">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                    </div>
+                    <div class="kpi-data">
+                        <span class="kpi-label">Invoices Awaiting Payment</span>
+                        <span class="kpi-value">@AwaitingPaymentCount</span>
+                        <span class="kpi-hint">Approved invoices ready for settlement</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workspace Section: Tabs + Filter Toolbar -->
+            <div class="content-panel">
+                <div class="panel-tabs-header">
+                    <div class="panel-tabs">
+                        <button class="tab-btn @(ActiveTab == "history" ? "active" : "")" @onclick='() => SetActiveTab("history")'>
+                            Payment History
+                            <span class="tab-badge">@TotalPaymentsCount</span>
+                        </button>
+                        <button class="tab-btn @(ActiveTab == "pending" ? "active" : "")" @onclick='() => SetActiveTab("pending")'>
+                            Invoices Awaiting Payment
+                            @if (AwaitingPaymentCount > 0)
+                            {
+                                <span class="tab-badge tab-badge-amber">@AwaitingPaymentCount</span>
+                            }
+                        </button>
+                    </div>
+
+                    <!-- Search and filters -->
+                    <div class="panel-actions">
+                        <div class="search-box">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <input type="text" placeholder="Search references, vendor, outlet..." @bind="SearchTerm" @bind:event="oninput" />
+                        </div>
+
+                        @if (ActiveTab == "history")
+                        {
+                            <select class="form-select method-select" @bind="MethodFilter">
+                                <option value="All">All Methods</option>
+                                <option value="Bank Transfer">Bank Transfer</option>
+                                <option value="UPI">UPI</option>
+                                <option value="Cheque">Cheque</option>
+                                <option value="Cash">Cash</option>
+                            </select>
+                        }
+                    </div>
+                </div>
+
+                @if (IsLoading)
+                {
+                    <div class="loading-state">
+                        <div class="spinner-border text-success" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="text-muted mt-2">Loading payment records...</p>
+                    </div>
+                }
+                else if (ActiveTab == "history")
+                {
+                    <!-- =======================================================
+                         TAB 1: PAYMENT HISTORY TABLE
+                         ======================================================= -->
+                    var filtered = FilteredPayments.ToList();
+                    @if (filtered.Count == 0)
+                    {
+                        <div class="empty-state">
+                            <div class="empty-state-icon">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                    <line x1="1" y1="10" x2="23" y2="10"></line>
+                                </svg>
+                            </div>
+                            <h5 class="fw-bold text-dark mt-3">No Payment Records Found</h5>
+                            <p class="text-muted">
+                                @(string.IsNullOrWhiteSpace(SearchTerm) && MethodFilter == "All"
+                                    ? "No payments have been recorded yet. Settle approved invoices from the 'Invoices Awaiting Payment' tab."
+                                    : "No payments match your current search and filter criteria.")
+                            </p>
+                            @if (AwaitingPaymentCount > 0)
+                            {
+                                <button class="btn btn-primary mt-2" @onclick='() => SetActiveTab("pending")'>
+                                    View Invoices Awaiting Payment (@AwaitingPaymentCount)
+                                </button>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="org-table">
+                                <thead>
+                                    <tr>
+                                        <th>Payment Ref</th>
+                                        <th>Invoice Ref</th>
+                                        <th>PO Ref</th>
+                                        <th>Vendor</th>
+                                        <th>Outlet</th>
+                                        <th>Amount</th>
+                                        <th>Payment Date</th>
+                                        <th>Method</th>
+                                        <th>Transaction Ref</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var p in filtered)
+                                    {
+                                        <tr>
+                                            <td class="fw-semibold text-dark">PAY-@p.PaymentID</td>
+                                            <td>
+                                                <span class="ref-link" @onclick='() => Nav.NavigateTo($"/organization/invoices/{p.InvoiceID}")'>
+                                                    INV-@p.InvoiceID
+                                                </span>
+                                            </td>
+                                            <td>PO-@p.PurchaseOrderID</td>
+                                            <td class="vendor-name-cell">@p.VendorName</td>
+                                            <td>@p.OutletName</td>
+                                            <td class="fw-bold text-dark">Rs. @p.Amount.ToString("N2")</td>
+                                            <td>@p.PaymentDate.ToString("dd MMM yyyy")</td>
+                                            <td>
+                                                <span class="badge-payment-method">@p.PaymentMethod</span>
+                                            </td>
+                                            <td class="text-muted">
+                                                @(string.IsNullOrWhiteSpace(p.TransactionReference) ? "—" : p.TransactionReference)
+                                            </td>
+                                            <td>
+                                                <span class="status-pill pill-paid">Paid</span>
+                                            </td>
+                                            <td>
+                                                <button class="btn-action-view" @onclick="() => DownloadInvoicePdf(p.InvoiceID)" title="Download Invoice PDF">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                        <polyline points="7 10 12 15 17 10"></polyline>
+                                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                                    </svg>
+                                                    <span>PDF</span>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <!-- =======================================================
+                         TAB 2: INVOICES AWAITING PAYMENT TABLE
+                         ======================================================= -->
+                    var pendingInvoices = InvoicesAwaitingPayment.ToList();
+                    @if (pendingInvoices.Count == 0)
+                    {
+                        <div class="empty-state">
+                            <div class="empty-state-icon">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                </svg>
+                            </div>
+                            <h5 class="fw-bold text-dark mt-3">All Invoices Settled</h5>
+                            <p class="text-muted">
+                                There are no approved invoices awaiting settlement right now.
+                            </p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="org-table">
+                                <thead>
+                                    <tr>
+                                        <th>Invoice Ref</th>
+                                        <th>PO Ref</th>
+                                        <th>Vendor</th>
+                                        <th>Outlet</th>
+                                        <th>Invoice Date</th>
+                                        <th>Amount Due</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var inv in pendingInvoices)
+                                    {
+                                        <tr>
+                                            <td class="fw-semibold text-dark">INV-@inv.InvoiceID</td>
+                                            <td>PO-@inv.PurchaseOrderID</td>
+                                            <td class="vendor-name-cell">@inv.VendorName</td>
+                                            <td>@inv.OutletName</td>
+                                            <td>@inv.InvoiceDate.ToString("dd MMM yyyy")</td>
+                                            <td class="fw-bold text-success">Rs. @inv.TotalAmount.ToString("N2")</td>
+                                            <td>
+                                                <span class="status-pill pill-approved">Approved</span>
+                                            </td>
+                                            <td>
+                                                @if (Auth.IsAdmin || Auth.IsPurchaseManager)
+                                                {
+                                                    <button class="btn btn-sm btn-record-payment" @onclick="() => OpenMakePaymentModal(inv)">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                                            <line x1="1" y1="10" x2="23" y2="10"></line>
+                                                        </svg>
+                                                        <span>Record Payment</span>
+                                                    </button>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted small">Monitoring Only</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                }
+            </div>
+        </main>
+    </div>
+
+    <!-- =======================================================================
+         MAKE PAYMENT MODAL (AUTO-DERIVED SERVER-SIDE AMOUNT — READ ONLY)
+         ======================================================================= -->
+    @if (ShowMakePaymentModal && SelectedInvoiceForPayment != null)
+    {
+        <div class="modal-backdrop-custom">
+            <div class="modal-dialog-custom">
+                <div class="modal-content-custom">
+                    
+                    <div class="modal-header-custom">
+                        <div>
+                            <h5 class="modal-title-custom">Record Payment</h5>
+                            <span class="modal-subtitle-custom">Settlement for Invoice INV-@SelectedInvoiceForPayment.InvoiceID</span>
+                        </div>
+                        <button class="btn-close-modal" @onclick="CloseMakePaymentModal" disabled="@IsSubmittingPayment">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="modal-body-custom">
+                        
+                        @if (!string.IsNullOrWhiteSpace(PaymentErrorMessage))
+                        {
+                            <div class="alert alert-danger d-flex align-items-center gap-2 mb-3 py-2 px-3" role="alert">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                </svg>
+                                <div class="small">@PaymentErrorMessage</div>
+                            </div>
+                        }
+
+                        <!-- Invoice Summary Details -->
+                        <div class="payment-meta-card">
+                            <div class="meta-row">
+                                <span class="meta-label">Purchase Order:</span>
+                                <span class="meta-val">PO-@SelectedInvoiceForPayment.PurchaseOrderID</span>
+                            </div>
+                            <div class="meta-row">
+                                <span class="meta-label">Vendor:</span>
+                                <span class="meta-val">@SelectedInvoiceForPayment.VendorName</span>
+                            </div>
+                            <div class="meta-row">
+                                <span class="meta-label">Outlet:</span>
+                                <span class="meta-val">@SelectedInvoiceForPayment.OutletName</span>
+                            </div>
+                            <div class="meta-row">
+                                <span class="meta-label">Invoice Date:</span>
+                                <span class="meta-val">@SelectedInvoiceForPayment.InvoiceDate.ToString("dd MMM yyyy")</span>
+                            </div>
+                        </div>
+
+                        <!-- ===================================================
+                             AUTO-DERIVED SERVER-SIDE AMOUNT DUE (STRICTLY READ-ONLY)
+                             =================================================== -->
+                        <div class="amount-due-card">
+                            <div class="amount-due-top">
+                                <span class="amount-due-label">Amount Due</span>
+                                <span class="badge-auto-derived">Server Source of Truth</span>
+                            </div>
+                            <div class="amount-due-figure">
+                                Rs. @SelectedInvoiceForPayment.TotalAmount.ToString("N2")
+                            </div>
+                            <div class="amount-due-note">
+                                Automatically locked to approved Invoice.TotalAmount. Client modification is strictly prevented.
+                            </div>
+                        </div>
+
+                        <!-- Form Inputs: Payment Method, Date, Reference -->
+                        <div class="form-group-custom mb-3">
+                            <label class="form-label-custom">Payment Method <span class="text-danger">*</span></label>
+                            <select class="form-select" @bind="SelectedPaymentMethod" disabled="@IsSubmittingPayment">
+                                <option value="Bank Transfer">Bank Transfer</option>
+                                <option value="UPI">UPI</option>
+                                <option value="Cheque">Cheque</option>
+                                <option value="Cash">Cash</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group-custom mb-3">
+                            <label class="form-label-custom">Payment Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" @bind="PaymentDate" max="@DateTime.Today.ToString("yyyy-MM-dd")" disabled="@IsSubmittingPayment" />
+                        </div>
+
+                        <div class="form-group-custom mb-3">
+                            <label class="form-label-custom">Transaction / Reference Number (Optional)</label>
+                            <input type="text" class="form-control" placeholder="e.g. UTR / Cheque No. / NEFT Reference" @bind="TransactionReference" disabled="@IsSubmittingPayment" maxlength="100" />
+                        </div>
+                    </div>
+
+                    <div class="modal-footer-custom">
+                        <button class="btn btn-outline-secondary" @onclick="CloseMakePaymentModal" disabled="@IsSubmittingPayment">
+                            Cancel
+                        </button>
+                        <button class="btn btn-success d-flex align-items-center gap-2" @onclick="SubmitPaymentAsync" disabled="@IsSubmittingPayment">
+                            @if (IsSubmittingPayment)
+                            {
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <span>Recording Payment...</span>
+                            }
+                            else
+                            {
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                </svg>
+                                <span>Confirm Payment (Rs. @SelectedInvoiceForPayment.TotalAmount.ToString("N2"))</span>
+                            }
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    }
+}
+

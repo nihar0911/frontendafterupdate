@@ -1,0 +1,572 @@
+@page "/admin/products"
+@rendermode InteractiveServer
+@inject ApiService Api
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+<PageTitle>Products - Smart Vendor Management System</PageTitle>
+
+@if (!Auth.IsAuthenticated)
+{
+    <div class="container py-5">
+        <div class="alert alert-warning text-center py-4 my-5 shadow-sm rounded-3">
+            <h4 class="fw-bold mb-2">Authentication Required</h4>
+            <p class="text-muted mb-3">Please log in as an Admin user to view this page.</p>
+            <button class="btn btn-primary fw-bold px-4" @onclick='() => Nav.NavigateTo("/login")'>Go to Login</button>
+        </div>
+    </div>
+}
+else if (!Auth.IsAdmin)
+{
+    <div class="container py-5">
+        <div class="alert alert-danger text-center py-4 my-5 shadow-sm rounded-3">
+            <h4 class="fw-bold mb-2">Access Denied</h4>
+            <p class="text-muted mb-3">You do not have administrative privileges to manage products.</p>
+            <button class="btn btn-outline-secondary fw-bold px-4" @onclick='() => Nav.NavigateTo("/")'>Return to Home</button>
+        </div>
+    </div>
+}
+else
+{
+    <div class="admin-app-layout @(IsSidebarCollapsed ? "sidebar-collapsed" : "")">
+
+        <!-- =======================================================================
+             LEFT SIDEBAR NAVIGATION
+             ======================================================================= -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-branding" @onclick='() => Nav.NavigateTo("/admin")'>
+                    <div class="brand-emblem">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                        </svg>
+                    </div>
+                    <div class="brand-text">
+                        <span class="brand-name">Smart Vendor</span>
+                        <span class="brand-sub">Management</span>
+                    </div>
+                </div>
+                <button class="sidebar-collapse-btn" @onclick="ToggleSidebar" title="Toggle Sidebar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        @if (IsSidebarCollapsed)
+                        {
+                            <polyline points="13 17 18 12 13 7"></polyline>
+                            <polyline points="6 17 11 12 6 7"></polyline>
+                        }
+                        else
+                        {
+                            <polyline points="11 17 6 12 11 7"></polyline>
+                            <polyline points="18 17 13 12 18 7"></polyline>
+                        }
+                    </svg>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/admin")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="7" height="7"></rect>
+                                    <rect x="14" y="3" width="7" height="7"></rect>
+                                    <rect x="14" y="14" width="7" height="7"></rect>
+                                    <rect x="3" y="14" width="7" height="7"></rect>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Dashboard</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/admin/organizations")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                                    <path d="M9 22v-4h6v4"></path>
+                                    <path d="M8 6h.01"></path>
+                                    <path d="M16 6h.01"></path>
+                                    <path d="M8 10h.01"></path>
+                                    <path d="M16 10h.01"></path>
+                                    <path d="M8 14h.01"></path>
+                                    <path d="M16 14h.01"></path>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Organizations</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/admin/users")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="9" cy="7" r="4"></circle>
+                                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Users</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/admin/vendors")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Vendors</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/admin/outlets")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Outlets</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link active" @onclick='() => Nav.NavigateTo("/admin/products")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Products</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/admin/vendorproducts")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Vendor Products</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/admin/taxrates")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="9" y1="15" x2="15" y2="15"></line>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Tax Rates</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/admin/contracts")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    <polyline points="10 9 9 9 8 9"></polyline>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Contracts</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/admin/profile")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Settings</span>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="collapse-toggle-link" @onclick="ToggleSidebar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                    <span class="collapse-label">Collapse</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- =======================================================================
+             MAIN BODY AREA
+             ======================================================================= -->
+        <div class="admin-main-wrapper">
+
+            <!-- TOP HEADER BAR -->
+            <header class="admin-top-header">
+                <div class="header-left">
+                    <button class="menu-toggle-btn" @onclick="ToggleSidebar" title="Toggle Sidebar">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="header-right">
+                    <!-- User Profile Dropdown Capsule -->
+                    <div class="profile-capsule-wrapper">
+                        <div class="profile-capsule" @onclick="ToggleProfileDropdown">
+                            <div class="profile-avatar">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </div>
+                            <div class="profile-meta">
+                                <span class="profile-name">@(string.IsNullOrEmpty(Auth.UserName) ? "System Admin" : Auth.UserName)</span>
+                                <span class="profile-role">Administrator</span>
+                            </div>
+                            <svg class="dropdown-arrow @(IsProfileDropdownOpen ? "open" : "")" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+
+                        @if (IsProfileDropdownOpen)
+                        {
+                            <div class="profile-dropdown-menu">
+                                <div class="dropdown-header">
+                                    <strong>@Auth.CurrentUser?.Email</strong>
+                                </div>
+                                <button class="dropdown-item" @onclick='() => Nav.NavigateTo("/admin/profile")'>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                                    View Profile &amp; Settings
+                                </button>
+                                <div class="dropdown-divider"></div>
+                                <button class="dropdown-item text-danger" @onclick="HandleLogout">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                                    Sign Out
+                                </button>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </header>
+
+            <!-- MAIN CONTENT CANVAS -->
+            <main class="admin-main-content">
+                <div class="content-container">
+
+                    <!-- PAGE TITLE & HEADER ACTIONS -->
+                    <div class="page-title-row">
+                        <div class="page-title-left">
+                            <h1 class="page-heading">Products</h1>
+                            <div class="breadcrumbs-bar">
+                                <span class="breadcrumb-item breadcrumb-link" @onclick='() => Nav.NavigateTo("/admin")'>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                                    Dashboard
+                                </span>
+                                <span class="breadcrumb-separator">&rsaquo;</span>
+                                <span class="breadcrumb-item active">Products</span>
+                            </div>
+                            <p class="page-subheading">Products registered in the system.</p>
+                        </div>
+
+                        <div class="page-title-right">
+                            <button type="button" class="btn-add-primary" @onclick="OpenAddModal" disabled="@IsSubmitting">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                Add Product
+                            </button>
+                            <button type="button" class="btn-filter-icon" title="Filter list">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- SUCCESS BANNER -->
+                    @if (!string.IsNullOrEmpty(SuccessMessage))
+                    {
+                        <div class="svm-alert svm-alert-success">
+                            <div class="d-flex align-items-center gap-2">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <span>@SuccessMessage</span>
+                            </div>
+                            <button type="button" class="alert-close-btn" @onclick="() => SuccessMessage = null">&times;</button>
+                        </div>
+                    }
+
+                    <!-- ERROR BANNER -->
+                    @if (!string.IsNullOrEmpty(ErrorMessage))
+                    {
+                        <div class="svm-alert svm-alert-danger">
+                            <div class="d-flex align-items-center gap-2">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                                <span>@ErrorMessage</span>
+                            </div>
+                            <button type="button" class="alert-close-btn" @onclick="() => ErrorMessage = null">&times;</button>
+                        </div>
+                    }
+
+                    <!-- SUMMARY BANNER CARD -->
+                    <div class="product-summary-banner">
+                        <div class="summary-icon-circle">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                            </svg>
+                        </div>
+                        <div class="summary-info">
+                            <span class="summary-title">Total Products</span>
+                            <h2 class="summary-count">@Products.Count</h2>
+                            <span class="summary-sub">Registered products in the system</span>
+                        </div>
+                    </div>
+
+                    <!-- ADD / EDIT PRODUCT FORM WRAPPER -->
+                    @if (IsAddModalOpen || EditingProduct != null)
+                    {
+                        <div class="product-form-wrapper">
+                            <ProductForm EditingProduct="EditingProduct"
+                                         TaxRates="TaxRates"
+                                         IsSubmitting="IsSubmitting"
+                                         OnCreate="HandleCreateProduct"
+                                         OnUpdate="HandleUpdateProduct"
+                                         OnCancel="CloseForm" />
+                        </div>
+                    }
+
+                    <!-- PRODUCTS DATA TABLE -->
+                    @if (IsLoading)
+                    {
+                        <div class="table-loading-card">
+                            <div class="spinner-border text-success mb-3" role="status" style="width: 2.5rem; height: 2.5rem;">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <h5 class="fw-semibold text-muted">Loading products...</h5>
+                        </div>
+                    }
+                    else if (HasError)
+                    {
+                        <div class="table-error-card">
+                            <h5 class="fw-bold text-danger mb-2">Unable to load products</h5>
+                            <p class="text-muted small mb-3">An error occurred while connecting to the server. Please try again.</p>
+                            <button class="btn-primary-action px-4" @onclick="LoadData">Try Again</button>
+                        </div>
+                    }
+                    else if (Products == null || Products.Count == 0)
+                    {
+                        <div class="table-empty-card">
+                            <h5 class="fw-bold mb-1">No Products Found</h5>
+                            <p class="text-muted mb-0">There are currently no products registered in the system.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-card">
+                            <div class="table-responsive">
+                                <table class="product-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="th-name">PRODUCT NAME</th>
+                                            <th class="th-cat">CATEGORY</th>
+                                            <th class="th-unit">UNIT</th>
+                                            <th class="th-tax">TAX RATE</th>
+                                            <th class="th-status">STATUS</th>
+                                            <th class="th-actions">ACTIONS</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var product in Products)
+                                        {
+                                            var currentProduct = product;
+                                            bool isActive = string.Equals(currentProduct.Status, "Active", StringComparison.OrdinalIgnoreCase);
+                                            string taxDisplay = GetTaxRateDisplay(currentProduct.TaxRateID);
+
+                                            <tr class="product-row @(SelectedProductDetails?.ProductID == currentProduct.ProductID ? "row-selected" : "")">
+                                                <td class="td-name">
+                                                    <span class="product-name-link" @onclick="() => OpenDetailsDrawer(currentProduct)" title="Click to view details">
+                                                        @currentProduct.ProductName
+                                                    </span>
+                                                </td>
+                                                <td class="td-cat">@(string.IsNullOrWhiteSpace(currentProduct.Category) ? "—" : currentProduct.Category)</td>
+                                                <td class="td-unit">@currentProduct.Unit</td>
+                                                <td class="td-tax">
+                                                    <span class="tax-badge">
+                                                        @taxDisplay
+                                                    </span>
+                                                </td>
+                                                <td class="td-status">
+                                                    <span class="status-indicator">
+                                                        <span class="status-dot"></span>
+                                                        @(string.IsNullOrWhiteSpace(currentProduct.Status) ? "Active" : currentProduct.Status)
+                                                    </span>
+                                                </td>
+                                                <td class="td-actions">
+                                                    <div class="action-btn-group">
+                                                        <button type="button" class="btn-edit-action" @onclick="() => OpenEditModal(currentProduct)" title="Edit product" disabled="@IsSubmitting">
+                                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                                            Edit
+                                                        </button>
+                                                        <button type="button" class="btn-more-action" @onclick="() => OpenDetailsDrawer(currentProduct)" title="View product details">
+                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- TABLE FOOTER -->
+                            <div class="table-pagination-footer">
+                                <span class="pagination-info">
+                                    Showing 1 to @Products.Count of @Products.Count products
+                                </span>
+                                <div class="pagination-controls">
+                                    <button class="page-btn page-arrow" disabled title="Previous page">&lsaquo;</button>
+                                    <button class="page-btn page-number active">1</button>
+                                    <button class="page-btn page-arrow" disabled title="Next page">&rsaquo;</button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- FOOTER -->
+                    <footer class="admin-footer">
+                        <p class="footer-text">
+                            &copy; @DateTime.Now.Year Smart Vendor Management System &bull; Secured Enterprise Access
+                        </p>
+                    </footer>
+
+                </div>
+            </main>
+
+        </div>
+
+        <!-- =======================================================================
+             RIGHT-SIDE PRODUCT DETAILS DRAWER / PANEL
+             ======================================================================= -->
+        @if (SelectedProductDetails != null)
+        {
+            var selProduct = SelectedProductDetails;
+            var selTax = GetTaxRate(selProduct.TaxRateID);
+
+            <div class="drawer-overlay" @onclick="CloseDetailsDrawer"></div>
+            <div class="details-drawer">
+                <div class="drawer-header">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="drawer-icon-circle">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#134E48" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                        </div>
+                        <div>
+                            <h4 class="drawer-product-title">@selProduct.ProductName</h4>
+                            <div class="d-flex align-items-center gap-2 mt-1">
+                                <span class="status-indicator">
+                                    <span class="status-dot"></span>
+                                    @(string.IsNullOrWhiteSpace(selProduct.Status) ? "Active" : selProduct.Status)
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="drawer-close-btn" @onclick="CloseDetailsDrawer" title="Close Details">&times;</button>
+                </div>
+
+                <div class="drawer-body">
+                    <!-- SECTION 1: PRODUCT INFORMATION -->
+                    <div class="drawer-section">
+                        <div class="drawer-section-header">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4B5563" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                            <h6 class="drawer-section-title">Product Information</h6>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Product Name</span>
+                            <span class="detail-value fw-bold text-dark">@selProduct.ProductName</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Status</span>
+                            <span class="status-active-pill">● @(string.IsNullOrWhiteSpace(selProduct.Status) ? "Active" : selProduct.Status)</span>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 2: CATEGORY & UNIT -->
+                    <div class="drawer-section">
+                        <div class="drawer-section-header">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4B5563" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+                            <h6 class="drawer-section-title">Category &amp; Unit</h6>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Category</span>
+                            <span class="detail-value fw-bold text-dark">@(string.IsNullOrWhiteSpace(selProduct.Category) ? "Uncategorized" : selProduct.Category)</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Unit</span>
+                            <span class="detail-value fw-semibold">@selProduct.Unit</span>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 3: TAX INFORMATION -->
+                    <div class="drawer-section">
+                        <div class="drawer-section-header">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4B5563" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+                            <h6 class="drawer-section-title">Tax Information</h6>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Tax Rate</span>
+                            <span class="detail-value fw-semibold">@(selTax != null && !string.IsNullOrWhiteSpace(selTax.TaxName) ? selTax.TaxName : "GST Standard")</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Tax Rate (Value)</span>
+                            <span class="detail-value">@(selTax != null ? $"{selTax.Percentage:F2}%" : "0.00%")</span>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 4: SYSTEM INFORMATION -->
+                    <div class="drawer-section">
+                        <div class="drawer-section-header">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4B5563" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                            <h6 class="drawer-section-title">System Information</h6>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Catalog Status</span>
+                            <span class="status-active-badge">Active</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Classification</span>
+                            <span class="detail-value">Verified Enterprise Product</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="drawer-footer">
+                    <button type="button" class="btn-drawer-edit" @onclick="() => OpenEditModal(selProduct)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        Edit Product
+                    </button>
+                    <button type="button" class="btn-drawer-close" @onclick="CloseDetailsDrawer">
+                        Close
+                    </button>
+                </div>
+            </div>
+        }
+
+    </div>
+}

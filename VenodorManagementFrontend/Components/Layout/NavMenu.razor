@@ -1,0 +1,28 @@
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+<div class="top-row ps-3 pe-3 navbar navbar-dark bg-dark border-bottom border-secondary">
+    <div class="container-fluid p-0">
+        <div>
+            <div class="text-white fw-bold text-uppercase fs-6 tracking-wide mb-0">VENDOR MANAGEMENT</div>
+            <div class="text-secondary fw-semibold small" style="font-size: 0.7rem; letter-spacing: 0.05em;">PROCUREMENT SYSTEM</div>
+        </div>
+    </div>
+</div>
+
+<div class="nav-scrollable">
+    <nav class="nav flex-column p-2 gap-1">
+        <div class="nav-item">
+            <button class="nav-link w-100 text-start btn text-white text-decoration-none py-2 px-3 rounded hover-bg" @onclick='() => Nav.NavigateTo("login")'>
+                Authentication / Login
+            </button>
+        </div>
+    </nav>
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        Auth.OnAuthStateChanged += StateHasChanged;
+    }
+}
