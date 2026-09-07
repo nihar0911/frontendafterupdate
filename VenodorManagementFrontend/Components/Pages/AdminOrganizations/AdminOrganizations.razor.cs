@@ -149,7 +149,7 @@ public partial class AdminOrganizations : ComponentBase
             var result = await Api.CreateOrganizationAsync(command);
             if (result.Success && result.Data != null)
             {
-                SuccessMessage = "✓ Organization created successfully";
+                SuccessMessage = "Organization created successfully";
                 IsAddModalOpen = false;
                 await LoadOrganizations();
             }
@@ -229,7 +229,7 @@ public partial class AdminOrganizations : ComponentBase
             var result = await Api.UpdateOrganizationAsync(EditingOrg.OrganizationID, command);
             if (result.Success && result.Data != null)
             {
-                SuccessMessage = "✓ Organization updated successfully";
+                SuccessMessage = "Organization updated successfully";
                 EditingOrg = null;
                 await LoadOrganizations();
             }

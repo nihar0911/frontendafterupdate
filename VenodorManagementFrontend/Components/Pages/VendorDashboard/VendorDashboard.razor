@@ -1132,7 +1132,7 @@ else
                                                         }
                                                         else if (po.Status == "Accepted")
                                                         {
-                                                            <button type="button" class="btn btn-primary btn-sm px-3 fw-bold" @onclick='() => DispatchPo(po.PurchaseOrderID)'>
+                                                            <button type="button" class="btn btn-primary btn-sm px-3 fw-bold" @onclick='() => OpenDispatchModal(po)'>
                                                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
                                                                     <rect x="1" y="3" width="15" height="13"></rect>
                                                                     <polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon>
@@ -2076,6 +2076,305 @@ else
 
                         <div class="vd-modal-footer">
                             <button type="button" class="btn btn-secondary" @onclick="CloseReviewDetailsModal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- =======================================================================
+                 DISPATCH ORDER MODAL WITH AI SPOILAGE & DISPATCH ADVISOR
+                 ======================================================================= -->
+            @if (ShowDispatchModal && SelectedPoForDispatch != null)
+            {
+                <div class="vd-modal-backdrop" @onclick="CloseDispatchModal">
+                    <div class="vd-modal-dialog vd-modal-lg" @onclick:stopPropagation>
+                        <div class="vd-modal-header">
+                            <div>
+                                <h4 class="vd-modal-title">Dispatch Order #PO-@SelectedPoForDispatch.PurchaseOrderID</h4>
+                                <p class="vd-modal-subtitle text-muted mb-0">
+                                    <span>Outlet: <strong>@OutletDictionary.GetValueOrDefault(SelectedPoForDispatch.OutletID, $"Outlet #{SelectedPoForDispatch.OutletID}")</strong></span>
+                                    <span class="mx-2">•</span>
+                                    <span>Order Date: <strong>@SelectedPoForDispatch.OrderDate.ToIst("dd MMM yyyy")</strong></span>
+                                </p>
+                            </div>
+                            <button type="button" class="vd-modal-close" @onclick="CloseDispatchModal" disabled="@IsDispatchingPo">&times;</button>
+                        </div>
+
+                        <div class="vd-modal-body">
+                            <!-- 1. Purchase Order Items Summary -->
+                            <div class="mb-4">
+                                <h6 class="fw-bold text-dark mb-2">Order Items to Dispatch</h6>
+                                <div class="table-responsive border rounded bg-white">
+                                    <table class="table table-sm align-middle mb-0">
+                                        <thead class="table-light small">
+                                            <tr>
+                                                <th>Product</th>
+                                                <th class="text-center">Quantity</th>
+                                                <th class="text-end">Unit Price</th>
+                                                <th class="text-end">Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @if (SelectedPoForDispatch.Items != null && SelectedPoForDispatch.Items.Count > 0)
+                                            {
+                                                @foreach (var item in SelectedPoForDispatch.Items)
+                                                {
+                                                    var prodName = ProductDictionary.GetValueOrDefault(item.ProductID, $"Product #{item.ProductID}");
+                                                    <tr>
+                                                        <td class="fw-medium text-dark">@prodName</td>
+                                                        <td class="text-center text-dark">@item.Quantity.ToString("N2") units</td>
+                                                        <td class="text-end text-muted">Rs. @item.UnitPrice.ToString("N2")</td>
+                                                        <td class="text-end fw-semibold text-dark">Rs. @item.TotalAmount.ToString("N2")</td>
+                                                    </tr>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <tr>
+                                                    <td colspan="4" class="text-muted text-center py-2">No item lines found.</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- 2. AI Spoilage & Dispatch Advisor Card -->
+                            <div class="vd-advisor-card">
+                                <div class="vd-advisor-header">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="vd-advisor-icon">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#174F45" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold text-dark mb-0">AI Spoilage &amp; Dispatch Advisor</h6>
+                                            <p class="text-muted small mb-0">Factual predictive risk assessment &amp; dispatch recommendations based on verified historical delivery performance</p>
+                                        </div>
+                                    </div>
+                                    <span class="vd-advisor-badge">Decision Support</span>
+                                </div>
+
+                                @if (IsLoadingSpoilageAdvice)
+                                {
+                                    <div class="text-center py-4">
+                                        <div class="spinner-border text-success spinner-border-sm" role="status"></div>
+                                        <p class="text-muted small mt-2 mb-0">Analyzing historical delivery &amp; spoilage metrics...</p>
+                                    </div>
+                                }
+                                else if (!string.IsNullOrEmpty(SpoilageAdviceError) && SpoilageAdvisorData == null)
+                                {
+                                    <div class="alert alert-light border py-2.5 px-3 my-2 small text-muted d-flex align-items-center gap-2">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0">
+                                            <circle cx="12" cy="12" r="10"></circle>
+                                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                        </svg>
+                                        <span>AI advice is currently unavailable. You may proceed with dispatch as normal.</span>
+                                    </div>
+                                }
+                                else if (SpoilageAdvisorData != null)
+                                {
+                                    @if (SpoilageAdvisorData.IsSingleProduct)
+                                    {
+                                        var pAdvice = SpoilageAdvisorData.Products.FirstOrDefault();
+                                        if (pAdvice != null)
+                                        {
+                                            <div class="vd-advisor-content mt-3">
+                                                <!-- Product & Risk Level Banner -->
+                                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 pb-2 border-bottom">
+                                                    <div>
+                                                        <h6 class="fw-bold text-dark mb-0">@pAdvice.ProductName</h6>
+                                                        <span class="text-muted small">Batch Size: @pAdvice.CurrentQuantity.ToString("N2") units</span>
+                                                    </div>
+                                                    <div>
+                                                        @if (string.Equals(pAdvice.RiskLevel, "HIGH", StringComparison.OrdinalIgnoreCase))
+                                                        {
+                                                            <span class="vd-risk-badge risk-high">
+                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                                                                HIGH RISK
+                                                            </span>
+                                                        }
+                                                        else if (string.Equals(pAdvice.RiskLevel, "MEDIUM", StringComparison.OrdinalIgnoreCase))
+                                                        {
+                                                            <span class="vd-risk-badge risk-medium">
+                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                                                                MEDIUM RISK
+                                                            </span>
+                                                        }
+                                                        else if (string.Equals(pAdvice.RiskLevel, "LOW", StringComparison.OrdinalIgnoreCase))
+                                                        {
+                                                            <span class="vd-risk-badge risk-low">
+                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                                                                LOW RISK
+                                                            </span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="vd-risk-badge risk-insufficient">
+                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                                                                INSUFFICIENT DATA
+                                                            </span>
+                                                        }
+                                                    </div>
+                                                </div>
+
+                                                <!-- Factual Metrics Grid -->
+                                                <div class="row g-2 mb-3">
+                                                    <div class="col-6 col-md-3">
+                                                        <div class="vd-metric-tile">
+                                                            <span class="vd-metric-label">Historical Spoilage</span>
+                                                            <span class="vd-metric-val">@(pAdvice.WeightedSpoilagePercentage.HasValue ? $"{pAdvice.WeightedSpoilagePercentage.Value:0.0}%" : "N/A")</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6 col-md-3">
+                                                        <div class="vd-metric-tile">
+                                                            <span class="vd-metric-label">Recent Spoilage</span>
+                                                            <span class="vd-metric-val">@(pAdvice.RecentSpoilagePercentage.HasValue ? $"{pAdvice.RecentSpoilagePercentage.Value:0.0}%" : "N/A")</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6 col-md-3">
+                                                        <div class="vd-metric-tile">
+                                                            <span class="vd-metric-label">Deliveries Analyzed</span>
+                                                            <span class="vd-metric-val">@pAdvice.DeliveryCount confirmed</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6 col-md-3">
+                                                        <div class="vd-metric-tile">
+                                                            <span class="vd-metric-label">Recent Trend</span>
+                                                            <span class="vd-metric-val">@pAdvice.Trend</span>
+                                                        </div>
+                                                    </div>
+                                                    @if (pAdvice.EstimatedSpoiledQuantity.HasValue && pAdvice.EstimatedSpoiledQuantity.Value > 0)
+                                                    {
+                                                        <div class="col-12">
+                                                            <div class="vd-metric-tile d-flex justify-content-between align-items-center py-2 px-3">
+                                                                <span class="vd-metric-label mb-0">Projected Historical Spoilage on this Batch:</span>
+                                                                <span class="fw-bold text-danger small">~@pAdvice.EstimatedSpoiledQuantity.Value.ToString("0.##") units</span>
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                </div>
+
+                                                <!-- AI Narrative (Why & Action) -->
+                                                <div class="vd-narrative-container">
+                                                    @if (!string.IsNullOrWhiteSpace(pAdvice.Why))
+                                                    {
+                                                        <div class="vd-narrative-item mb-2">
+                                                            <strong class="d-block text-dark small mb-0.5">Analysis / Why:</strong>
+                                                            <p class="mb-0 text-muted small">@pAdvice.Why</p>
+                                                        </div>
+                                                    }
+                                                    @if (!string.IsNullOrWhiteSpace(pAdvice.RecommendedAction))
+                                                    {
+                                                        <div class="vd-narrative-item action-item">
+                                                            <strong class="d-block text-success-emphasis small mb-0.5">Recommended Action:</strong>
+                                                            <p class="mb-0 text-dark small fw-medium">@pAdvice.RecommendedAction</p>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <!-- Multi-Product Case -->
+                                        <div class="vd-advisor-content mt-3">
+                                            @if (!string.IsNullOrWhiteSpace(SpoilageAdvisorData.OverallSummary))
+                                            {
+                                                <div class="alert alert-light border py-2 px-3 mb-3 small">
+                                                    <strong class="d-block text-dark mb-1">Batch Summary &amp; Priority Guidance:</strong>
+                                                    <p class="mb-0 text-muted">@SpoilageAdvisorData.OverallSummary</p>
+                                                </div>
+                                            }
+
+                                            <div class="d-flex flex-column gap-3">
+                                                @foreach (var prod in SpoilageAdvisorData.Products)
+                                                {
+                                                    <div class="vd-multi-product-card p-3 border rounded bg-white">
+                                                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2 pb-2 border-bottom">
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                @if (prod.PriorityRank.HasValue)
+                                                                {
+                                                                    <span class="vd-priority-tag">Priority @prod.PriorityRank.Value</span>
+                                                                }
+                                                                <strong class="text-dark">@prod.ProductName</strong>
+                                                                <span class="text-muted small">(@prod.CurrentQuantity.ToString("N2") units)</span>
+                                                            </div>
+                                                            <div>
+                                                                @if (string.Equals(prod.RiskLevel, "HIGH", StringComparison.OrdinalIgnoreCase))
+                                                                {
+                                                                    <span class="vd-risk-badge risk-high">HIGH RISK</span>
+                                                                }
+                                                                else if (string.Equals(prod.RiskLevel, "MEDIUM", StringComparison.OrdinalIgnoreCase))
+                                                                {
+                                                                    <span class="vd-risk-badge risk-medium">MEDIUM RISK</span>
+                                                                }
+                                                                else if (string.Equals(prod.RiskLevel, "LOW", StringComparison.OrdinalIgnoreCase))
+                                                                {
+                                                                    <span class="vd-risk-badge risk-low">LOW RISK</span>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <span class="vd-risk-badge risk-insufficient">INSUFFICIENT DATA</span>
+                                                                }
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Metrics summary line -->
+                                                        <div class="row g-2 mb-2 small text-muted">
+                                                            <div class="col-6 col-md-3">
+                                                                <span>Historical Spoilage:</span> <strong class="text-dark">@(prod.WeightedSpoilagePercentage.HasValue ? $"{prod.WeightedSpoilagePercentage.Value:0.0}%" : "N/A")</strong>
+                                                            </div>
+                                                            <div class="col-6 col-md-3">
+                                                                <span>Recent Spoilage:</span> <strong class="text-dark">@(prod.RecentSpoilagePercentage.HasValue ? $"{prod.RecentSpoilagePercentage.Value:0.0}%" : "N/A")</strong>
+                                                            </div>
+                                                            <div class="col-6 col-md-3">
+                                                                <span>Deliveries:</span> <strong class="text-dark">@prod.DeliveryCount</strong>
+                                                            </div>
+                                                            <div class="col-6 col-md-3">
+                                                                <span>Trend:</span> <strong class="text-dark">@prod.Trend</strong>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Narrative -->
+                                                        @if (!string.IsNullOrWhiteSpace(prod.Why))
+                                                        {
+                                                            <p class="mb-1 text-muted small"><strong>Why:</strong> @prod.Why</p>
+                                                        }
+                                                        @if (!string.IsNullOrWhiteSpace(prod.RecommendedAction))
+                                                        {
+                                                            <p class="mb-0 text-dark small fw-medium"><strong>Recommended Action:</strong> @prod.RecommendedAction</p>
+                                                        }
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+
+                        <div class="vd-modal-footer">
+                            <button type="button" class="btn btn-outline-secondary px-3" @onclick="CloseDispatchModal" disabled="@IsDispatchingPo">Cancel</button>
+                            <button type="button" class="btn btn-primary px-4 fw-bold" @onclick="() => DispatchPo(SelectedPoForDispatch.PurchaseOrderID)" disabled="@IsDispatchingPo">
+                                @if (IsDispatchingPo)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                                    <span>Dispatching...</span>
+                                }
+                                else
+                                {
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                                        <rect x="1" y="3" width="15" height="13"></rect>
+                                        <polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon>
+                                        <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                        <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                                    </svg>
+                                    <span>Confirm &amp; Dispatch Order</span>
+                                }
+                            </button>
                         </div>
                     </div>
                 </div>

@@ -3,7 +3,7 @@
 <div class="card @(EditingProduct == null ? "border-success" : "border-primary") shadow mb-4 bg-white">
     <div class="card-header @(EditingProduct == null ? "bg-success text-white" : "bg-primary text-white") py-3">
         <h5 class="fw-bold mb-0">
-            @(EditingProduct == null ? "+ Add New Product" : $"Edit Product #{EditingProduct.ProductID}")
+            @(EditingProduct == null ? "Add New Product" : $"Edit Product #{EditingProduct.ProductID}")
         </h5>
     </div>
     <div class="card-body p-4">

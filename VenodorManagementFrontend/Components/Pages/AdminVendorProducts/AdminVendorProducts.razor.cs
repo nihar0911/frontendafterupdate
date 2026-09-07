@@ -206,7 +206,7 @@ public partial class AdminVendorProducts : ComponentBase
                 var result = await Api.CreateVendorProductAsync(command);
                 if (result.Success && result.Data != null)
                 {
-                    SuccessMessage = $"✓ Mapping created -- {GetVendorName(FormVendorID)} → {GetProductName(FormProductID)}";
+                    SuccessMessage = $"Mapping created -- {GetVendorName(FormVendorID)} to {GetProductName(FormProductID)}";
                     CloseForm();
                     await LoadData();
                 }
@@ -232,7 +232,7 @@ public partial class AdminVendorProducts : ComponentBase
                 var result = await Api.UpdateVendorProductAsync(EditingMapping.VendorProductID, command);
                 if (result.Success)
                 {
-                    SuccessMessage = $"✓ Mapping updated -- {GetVendorName(FormVendorID)} → {GetProductName(FormProductID)}";
+                    SuccessMessage = $"Mapping updated -- {GetVendorName(FormVendorID)} to {GetProductName(FormProductID)}";
                     CloseForm();
                     await LoadData();
                 }
@@ -281,7 +281,7 @@ public partial class AdminVendorProducts : ComponentBase
             var result = await Api.DeleteVendorProductAsync(DeletingMapping.VendorProductID);
             if (result.Success)
             {
-                SuccessMessage = $"✓ Mapping deleted -- {vendorName} → {productName}";
+                SuccessMessage = $"Mapping deleted -- {vendorName} to {productName}";
                 DeletingMapping = null;
                 await LoadData();
             }

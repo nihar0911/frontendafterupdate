@@ -42,31 +42,31 @@
                     @if (Auth.IsAdmin)
                     {
                         <button class="btn svm-btn-primary w-100 mb-2" @onclick='() => Nav.NavigateTo("/admin")'>
-                            Go to Admin Dashboard &rarr;
+                            Go to Admin Dashboard
                         </button>
                     }
                     else if (Auth.IsOrgManager)
                     {
                         <button class="btn svm-btn-primary w-100 mb-2" @onclick='() => Nav.NavigateTo("/org-dashboard")'>
-                            Go to Organization Dashboard &rarr;
+                            Go to Organization Dashboard
                         </button>
                     }
                     else if (Auth.IsVendorManager)
                     {
                         <button class="btn svm-btn-primary w-100 mb-2" @onclick='() => Nav.NavigateTo("/vendor-dashboard")'>
-                            Go to Vendor Dashboard &rarr;
+                            Go to Vendor Dashboard
                         </button>
                     }
                     else if (Auth.IsOutletManager)
                     {
                         <button class="btn svm-btn-primary w-100 mb-2" @onclick='() => Nav.NavigateTo("/outlet-manager")'>
-                            Go to Outlet Dashboard &rarr;
+                            Go to Outlet Dashboard
                         </button>
                     }
                     else if (Auth.IsPurchaseManager)
                     {
                         <button class="btn svm-btn-primary w-100 mb-2" @onclick='() => Nav.NavigateTo("/purchase-manager")'>
-                            Go to Purchase Manager Dashboard &rarr;
+                            Go to Purchase Manager Dashboard
                         </button>
                     }
 
@@ -157,7 +157,7 @@
                         }
                         else
                         {
-                            <span>SIGN IN &rarr;</span>
+                            <span>SIGN IN</span>
                         }
                     </button>
                 </form>

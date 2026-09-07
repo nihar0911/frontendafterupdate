@@ -11,16 +11,19 @@
                 <!-- TOP PORTAL LINK -->
                 <div class="mb-4">
                     <a href="/login" class="text-decoration-none text-muted d-inline-flex align-items-center gap-2 fw-semibold hover-primary" style="font-size: 0.95rem;">
-                        <span style="font-size: 1.15rem;">&larr;</span> Back to Login
+                        Back to Login
                     </a>
                 </div>
 
                 <!-- BRANDING & ROLE HEADER -->
                 <div class="text-center mb-4">
-                    <div class="d-inline-flex align-items-center justify-content-center text-white mb-3 shadow-sm @RoleIconBgClass" 
-                         style="width: 56px; height: 56px; font-size: 1.8rem; background-color: @RoleIconColor; border-radius: 4px;">
-                        @RoleIcon
-                    </div>
+                    @if (!string.IsNullOrWhiteSpace(RoleIcon))
+                    {
+                        <div class="d-inline-flex align-items-center justify-content-center text-white mb-3 shadow-sm @RoleIconBgClass" 
+                             style="width: 56px; height: 56px; font-size: 1.8rem; background-color: @RoleIconColor; border-radius: 4px;">
+                            @RoleIcon
+                        </div>
+                    }
                     <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
                         <h2 class="fw-bold text-dark mb-0 fs-3">@RoleTitle</h2>
                         <span class="badge @RoleBadgeClass py-1.5 px-3" style="font-size: 0.85rem;">@RoleBadge</span>
@@ -50,31 +53,31 @@
                                 @if (Auth.IsAdmin)
                                 {
                                     <button class="btn btn-primary w-100 py-2.5 fw-bold shadow-sm mb-2.5 fs-6" @onclick='() => Nav.NavigateTo("/admin")'>
-                                        Go to Admin Dashboard &rarr;
+                                        Go to Admin Dashboard
                                     </button>
                                 }
                                 else if (Auth.IsOrgManager)
                                 {
                                     <button class="btn btn-primary w-100 py-2.5 fw-bold shadow-sm mb-2.5 fs-6" @onclick='() => Nav.NavigateTo("/org-dashboard")'>
-                                        Go to Organization Dashboard &rarr;
+                                        Go to Organization Dashboard
                                     </button>
                                 }
                                 else if (Auth.IsVendorManager)
                                 {
                                     <button class="btn btn-primary w-100 py-2.5 fw-bold shadow-sm mb-2.5 fs-6" @onclick='() => Nav.NavigateTo("/vendor-dashboard")'>
-                                        Go to Vendor Dashboard &rarr;
+                                        Go to Vendor Dashboard
                                     </button>
                                 }
                                 else if (Auth.IsOutletManager)
                                 {
                                     <button class="btn btn-primary w-100 py-2.5 fw-bold shadow-sm mb-2.5 fs-6" @onclick='() => Nav.NavigateTo("/outlet-manager")'>
-                                        Go to Outlet Dashboard &rarr;
+                                        Go to Outlet Dashboard
                                     </button>
                                 }
                                 else if (Auth.IsPurchaseManager)
                                 {
                                     <button class="btn btn-primary w-100 py-2.5 fw-bold shadow-sm mb-2.5 fs-6" @onclick='() => Nav.NavigateTo("/purchase-manager")'>
-                                        Go to Purchase Manager Dashboard &rarr;
+                                        Go to Purchase Manager Dashboard
                                     </button>
                                 }
 

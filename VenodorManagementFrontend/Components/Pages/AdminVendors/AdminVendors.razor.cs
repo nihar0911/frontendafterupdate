@@ -121,7 +121,7 @@ public partial class AdminVendors : ComponentBase
             var result = await Api.CreateVendorAsync(command);
             if (result.Success && result.Data != null)
             {
-                SuccessMessage = "✓ Vendor created successfully";
+                SuccessMessage = "Vendor created successfully";
                 IsAddModalOpen = false;
                 await LoadVendors();
             }
@@ -156,7 +156,7 @@ public partial class AdminVendors : ComponentBase
             var result = await Api.UpdateVendorAsync(command.VendorID, command);
             if (result.Success)
             {
-                SuccessMessage = "✓ Vendor updated successfully";
+                SuccessMessage = "Vendor updated successfully";
                 EditingVendor = null;
                 await LoadVendors();
             }

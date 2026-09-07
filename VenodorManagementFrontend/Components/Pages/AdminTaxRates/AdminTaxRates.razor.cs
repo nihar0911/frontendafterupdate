@@ -146,7 +146,7 @@ public partial class AdminTaxRates : ComponentBase
             var created = await Api.CreateTaxRateAsync(command);
             if (created != null)
             {
-                SuccessMessage = "✓ Tax rate created successfully";
+                SuccessMessage = "Tax rate created successfully";
                 IsAddModalOpen = false;
                 await LoadTaxRates();
             }
@@ -222,7 +222,7 @@ public partial class AdminTaxRates : ComponentBase
             var updated = await Api.UpdateTaxRateAsync(EditingTaxRate.TaxRateID, command);
             if (updated != null)
             {
-                SuccessMessage = "✓ Tax rate updated successfully";
+                SuccessMessage = "Tax rate updated successfully";
                 EditingTaxRate = null;
                 await LoadTaxRates();
             }

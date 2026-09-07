@@ -904,3 +904,80 @@
     background-color: #E5E7EB;
     color: #6B7280;
 }
+
+/* -----------------------------------------------------------------------------
+   ELIGIBLE QUOTATIONS & BULK PO SUBMISSION STYLES
+   ----------------------------------------------------------------------------- */
+.eligible-quotations-card {
+    background: #FFFFFF;
+    border: 1.5px solid #D2DCD6;
+    border-radius: 8px;
+    padding: 1.35rem 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.eligible-header-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    background: #E8F5E9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.eligible-table-wrap {
+    border: 1px solid #E2E8E5;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.eligible-table th {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 0.75rem 0.85rem;
+    border-bottom: 1px solid #E2E8E5;
+}
+
+.eligible-table td {
+    padding: 0.75rem 0.85rem;
+    font-size: 0.85rem;
+    border-bottom: 1px solid #F0F4F2;
+}
+
+.eligible-table tr:last-child td {
+    border-bottom: none;
+}
+
+.eligible-table .table-active-row {
+    background-color: #F0F7F4 !important;
+}
+
+.eligible-checkbox {
+    width: 1.15rem;
+    height: 1.15rem;
+    cursor: pointer;
+    border-color: #A3B8AD;
+}
+
+.eligible-checkbox:checked {
+    background-color: #174F45;
+    border-color: #174F45;
+}
+
+.eligible-bulk-action-bar {
+    border-color: #D2DCD6 !important;
+    background: #F8FAF9 !important;
+}
+
+.bulk-results-summary {
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+.bulk-results-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+

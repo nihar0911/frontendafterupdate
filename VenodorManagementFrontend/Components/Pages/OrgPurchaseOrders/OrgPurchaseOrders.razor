@@ -292,7 +292,7 @@ else
                                                     @notif.Message
                                                 </p>
                                                 <div class="d-flex justify-content-between align-items-center mt-1">
-                                                    <span class="text-primary fw-semibold" style="font-size: 0.72rem;">View Details &rarr;</span>
+                                                    <span class="text-primary fw-semibold" style="font-size: 0.72rem;">View Details</span>
                                                     @if (!notif.IsRead)
                                                     {
                                                         <button class="btn btn-link btn-sm p-0 text-muted" style="font-size: 0.72rem;" @onclick='() => MarkAsRead(notif.NotificationID)' @onclick:stopPropagation="true">
@@ -590,7 +590,6 @@ else
                                     </button>
                                     <button type="button" class="btn btn-success fw-bold px-4" @onclick="ProceedToReviewDelivery">
                                         <span>Review Delivery</span>
-                                        <span class="ms-1">&rarr;</span>
                                     </button>
                                 </div>
                             </div>
@@ -607,7 +606,7 @@ else
                                         <h5 class="fw-bold text-dark mb-1">Review &amp; Confirm Delivery</h5>
                                         <p class="text-muted small mb-0">Please verify the delivery summary before final submission.</p>
                                     </div>
-                                    <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="BackToEditDelivery" disabled="@IsSubmittingDelivery">&larr; Edit Details</button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="BackToEditDelivery" disabled="@IsSubmittingDelivery">Edit Details</button>
                                 </div>
 
                                 <div class="card border rounded-3 p-3 mb-4 shadow-sm bg-white">
@@ -656,7 +655,7 @@ else
 
                                 <div class="d-flex align-items-center justify-content-between pt-2 border-top">
                                     <button type="button" class="btn btn-outline-secondary px-3" @onclick="BackToEditDelivery" disabled="@IsSubmittingDelivery">
-                                        &larr; Edit Details
+                                        Edit Details
                                     </button>
                                     <button type="button" class="btn btn-success fw-bold px-4 d-flex align-items-center gap-2" @onclick="ConfirmDeliveryAsync" disabled="@IsSubmittingDelivery">
                                         @if (IsSubmittingDelivery)
@@ -1116,6 +1115,196 @@ else
                         </div>
                     </div>
 
+                    <!-- ELIGIBLE QUOTATIONS AWAITING PO SUBMISSION (BULK SUBMISSION SECTION) -->
+                    @if ((Auth.IsPurchaseManager || Auth.IsAdmin) && EligiblePoOptions.Count > 0)
+                    {
+                        <div class="eligible-quotations-card mb-4">
+                            <div class="eligible-header d-flex align-items-center justify-content-between flex-wrap gap-2 pb-3 mb-3 border-bottom">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="eligible-header-icon">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#174F45" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M9 11l3 3L22 4"></path>
+                                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h5 class="fw-bold mb-0 text-dark">Eligible Quotations Awaiting PO Submission</h5>
+                                        <span class="text-muted small">Accepted quotations ready to produce purchase orders for manager approval. Select multiple to submit in one action.</span>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-success bg-opacity-10 text-success fw-bold px-2.5 py-1.5 rounded-2">
+                                        @EligiblePoOptions.Count eligible quotation@(EligiblePoOptions.Count == 1 ? "" : "s")
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- BULK SUBMISSION RESULTS BREAKDOWN -->
+                            @if (ShowBulkResults && BulkResults.Count > 0)
+                            {
+                                <div class="bulk-results-summary mb-3 p-3 rounded-3 @(BulkResults.All(r => r.Success) ? "bg-success bg-opacity-10 border border-success" : (BulkResults.Any(r => r.Success) ? "bg-warning bg-opacity-10 border border-warning" : "bg-danger bg-opacity-10 border border-danger"))">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <strong class="small @(BulkResults.All(r => r.Success) ? "text-success" : (BulkResults.Any(r => r.Success) ? "text-dark" : "text-danger"))">
+                                            @BulkSummaryMessage
+                                        </strong>
+                                        <button type="button" class="btn-close btn-close-sm" @onclick="() => ShowBulkResults = false" aria-label="Close"></button>
+                                    </div>
+                                    <div class="bulk-results-list">
+                                        @foreach (var res in BulkResults)
+                                        {
+                                            <div class="d-flex align-items-center justify-content-between py-1 border-bottom small">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    @if (res.Success)
+                                                    {
+                                                        <span class="badge bg-success">Success</span>
+                                                        <span><strong>@res.ProductName</strong> (@res.VendorName): <span class="badge bg-success">PO-@res.PurchaseOrderID</span> (Awaiting Approval)</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-danger">Failed</span>
+                                                        <span><strong>@res.ProductName</strong> (@res.VendorName) &mdash; <span class="text-danger">@res.ErrorReason</span></span>
+                                                    }
+                                                </div>
+                                                <span class="text-muted">Rs. @res.TotalAmount.ToString("N2")</span>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+
+                            <!-- ELIGIBLE ITEMS TABLE -->
+                            <div class="table-responsive eligible-table-wrap">
+                                <table class="table table-hover align-middle mb-0 eligible-table">
+                                    <thead class="bg-light text-muted small">
+                                        <tr>
+                                            <th style="width: 48px;" class="text-center ps-3">
+                                                <input type="checkbox"
+                                                       class="form-check-input eligible-checkbox"
+                                                       checked="@IsAllEligibleSelected"
+                                                       @onchange="ToggleSelectAll"
+                                                       disabled="@IsSubmittingBulk"
+                                                       title="Select All Eligible Quotations" />
+                                            </th>
+                                            <th>QUOTATION / PRODUCT</th>
+                                            <th>VENDOR</th>
+                                            <th>OUTLET</th>
+                                            <th>QUANTITY &amp; RATE</th>
+                                            <th>ESTIMATED TOTAL</th>
+                                            <th>CONTRACT STATUS</th>
+                                            <th class="text-end pe-3">ACTION</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var opt in EligiblePoOptions)
+                                        {
+                                            bool isChecked = SelectedQuotationIds.Contains(opt.QuotationID);
+                                            <tr class="@(isChecked ? "table-active-row" : "")" style="cursor: pointer;" @onclick="() => ToggleQuotationSelection(opt.QuotationID)">
+                                                <td class="text-center ps-3" @onclick:stopPropagation="true">
+                                                    <input type="checkbox"
+                                                           class="form-check-input eligible-checkbox"
+                                                           checked="@isChecked"
+                                                           @onchange="() => ToggleQuotationSelection(opt.QuotationID)"
+                                                           disabled="@IsSubmittingBulk" />
+                                                </td>
+                                                <td>
+                                                    <div class="fw-bold text-dark">@opt.ProductName</div>
+                                                    <div class="small text-muted">Quotation #@opt.QuotationID &bull; PR-@opt.RequestID</div>
+                                                </td>
+                                                <td>
+                                                    <span class="fw-semibold text-dark">@opt.VendorName</span>
+                                                </td>
+                                                <td>
+                                                    <span class="text-secondary small">@opt.OutletName</span>
+                                                </td>
+                                                <td>
+                                                    <span class="fw-semibold">@opt.Quantity.ToString("0.##") @opt.Unit</span>
+                                                    <div class="small text-muted">@CurrencyHelper.Format(opt.UnitPrice) / @opt.Unit</div>
+                                                </td>
+                                                <td>
+                                                    <strong class="text-dark">@CurrencyHelper.Format(opt.TotalAmount)</strong>
+                                                </td>
+                                                <td>
+                                                    <span class="opt-rec-badge @(opt.IsRecommended ? "badge-recommended" : (opt.RecommendationBadge.Contains("Best Price") ? "badge-best-price" : "badge-alternative"))">
+                                                        @opt.RecommendationBadge
+                                                    </span>
+                                                </td>
+                                                <td class="text-end pe-3" @onclick:stopPropagation="true">
+                                                    <button type="button"
+                                                            class="btn btn-sm btn-outline-success fw-semibold px-2 py-1"
+                                                            @onclick="() => { SelectedQuotationId = opt.QuotationID; ExpectedDeliveryDate = DateTime.Today.AddDays(3); ShowCreatePoModal = true; }"
+                                                            disabled="@IsSubmittingBulk">
+                                                        Submit Single
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- BULK ACTION BAR -->
+                            <div class="eligible-bulk-action-bar d-flex align-items-center justify-content-between flex-wrap gap-3 p-3 mt-3 bg-light rounded-3 border">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="form-check m-0">
+                                        <input type="checkbox"
+                                               class="form-check-input"
+                                               id="selectAllEligibleBottom"
+                                               checked="@IsAllEligibleSelected"
+                                               @onchange="ToggleSelectAll"
+                                               disabled="@IsSubmittingBulk" />
+                                        <label class="form-check-label fw-bold small text-dark" for="selectAllEligibleBottom" style="cursor: pointer;">
+                                            Select All (@EligiblePoOptions.Count)
+                                        </label>
+                                    </div>
+                                    <div class="vr mx-1"></div>
+                                    <div class="small">
+                                        <strong class="text-success">@SelectedQuotationIds.Count</strong> <span class="text-muted">of @EligiblePoOptions.Count selected</span>
+                                        @if (SelectedQuotationIds.Count > 0)
+                                        {
+                                            var selTotal = EligiblePoOptions.Where(o => SelectedQuotationIds.Contains(o.QuotationID)).Sum(o => o.TotalAmount);
+                                            <span class="ms-1 text-dark fw-bold">(@CurrencyHelper.Format(selTotal))</span>
+                                        }
+                                    </div>
+                                    @if (SelectedQuotationIds.Count > 0 && !IsSubmittingBulk)
+                                    {
+                                        <button type="button" class="btn btn-link btn-sm p-0 text-muted text-decoration-none" @onclick="ClearBulkSelection">
+                                            Clear
+                                        </button>
+                                    }
+                                </div>
+
+                                <div class="d-flex align-items-center gap-3 flex-wrap">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <label class="small text-muted fw-bold mb-0 text-nowrap">Expected Delivery:</label>
+                                        <input type="date"
+                                               class="form-control form-control-sm"
+                                               style="width: 140px;"
+                                               @bind="BulkExpectedDeliveryDate"
+                                               disabled="@IsSubmittingBulk" />
+                                    </div>
+
+                                    <button type="button"
+                                            class="btn btn-success fw-bold d-flex align-items-center gap-2 px-3 py-1.5 shadow-sm"
+                                            @onclick="SubmitBulkPurchaseOrdersAsync"
+                                            disabled="@(SelectedQuotationIds.Count == 0 || IsSubmittingBulk)">
+                                        @if (IsSubmittingBulk)
+                                        {
+                                            <span class="spinner-border spinner-border-sm" role="status"></span>
+                                            <span>Submitting (@BulkProgressCurrent / @BulkProgressTotal)...</span>
+                                        }
+                                        else
+                                        {
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
+                                            <span>Submit Selected for Approval (@SelectedQuotationIds.Count)</span>
+                                        }
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
                     <!-- ACTION HEADER & FILTERS -->
                     <div class="po-toolbar-card">
                         <div class="po-toolbar-left">
@@ -1204,7 +1393,7 @@ else
                                 @if ((Auth.IsPurchaseManager || Auth.IsAdmin) && EligiblePoOptions.Count > 0)
                                 {
                                     <button class="btn btn-outline-success mt-2" @onclick="OpenCreateModal">
-                                        + Submit Purchase Order for Approval
+                                        Submit Purchase Order for Approval
                                     </button>
                                 }
                             </div>
@@ -1269,7 +1458,7 @@ else
                                                         <button type="button" class="btn btn-sm btn-outline-danger fw-semibold px-2 py-1 me-1" @onclick="() => HandleRejectPo(p.PurchaseOrderID)" @onclick:stopPropagation="true" disabled="@IsActionProcessing">Reject</button>
                                                     }
                                                     <button type="button" class="btn btn-sm btn-outline-success fw-semibold px-2 py-1" @onclick="() => OpenPoDetails(p.PurchaseOrderID)" @onclick:stopPropagation="true">
-                                                        Details &rarr;
+                                                        Details
                                                     </button>
                                                 </td>
                                             </tr>

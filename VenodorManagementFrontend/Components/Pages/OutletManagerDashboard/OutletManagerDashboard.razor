@@ -152,7 +152,7 @@ else
                 <div class="om-header-left">
                     <h1 class="om-welcome-title">@GetGreeting(), @OutletManagerName</h1>
                     <p class="om-welcome-subtitle">
-                        Outlet: <span class="om-accent-text">@OutletNameDisplay</span> &bull; Organization: @OrganizationNameDisplay
+                        Outlet: <span class="om-accent-text">@OutletNameDisplay</span> | Organization: @OrganizationNameDisplay
                     </p>
                 </div>
 
@@ -438,7 +438,7 @@ else
                                 <div class="om-card-header">
                                     <h3 class="om-card-title">Request Status Overview</h3>
                                     <button type="button" class="om-link-btn" @onclick='() => SetActiveTab("MyRequests")'>
-                                        View All &rarr;
+                                        View All
                                     </button>
                                 </div>
                                 <div class="om-card-body d-flex align-items-center justify-content-between p-4">
@@ -532,7 +532,7 @@ else
                             <div class="om-card-header">
                                 <h3 class="om-card-title">My Purchase Requests</h3>
                                 <button type="button" class="om-link-btn" @onclick='() => SetActiveTab("MyRequests")'>
-                                    View All Requests &rarr;
+                                    View All Requests
                                 </button>
                             </div>
                             <div class="om-card-body p-0">
@@ -581,7 +581,7 @@ else
                                                         <td class="om-col-date">@pr.RequestDate.ToIst("dd MMM yyyy")</td>
                                                         <td class="om-col-action text-end">
                                                             <button type="button" class="om-arrow-btn" @onclick='() => NavigateToRequest(pr.RequestID)' @onclick:stopPropagation="true">
-                                                                &rarr;
+                                                                View
                                                             </button>
                                                         </td>
                                                     </tr>
@@ -722,7 +722,6 @@ else
                                                         <td class="om-col-action text-end">
                                                             <button type="button" class="om-btn-view-details" @onclick='() => NavigateToRequest(pr.RequestID)' @onclick:stopPropagation="true">
                                                                 <span>View Details</span>
-                                                                <span>&rarr;</span>
                                                             </button>
                                                         </td>
                                                     </tr>
@@ -1116,7 +1115,6 @@ else
                                                             {
                                                                 <button type="button" class="om-btn-view-status" @onclick='() => OpenPurchaseOrderDetails(po.PurchaseOrderID)' @onclick:stopPropagation="true">
                                                                     <span>View Status</span>
-                                                                    <span>&rarr;</span>
                                                                 </button>
                                                             }
                                                         </td>
@@ -1521,7 +1519,6 @@ else
                                     </button>
                                     <button type="button" class="btn btn-success fw-bold px-4" @onclick="ProceedToReviewDelivery">
                                         <span>Review Delivery</span>
-                                        <span class="ms-1">&rarr;</span>
                                     </button>
                                 </div>
                             </div>
@@ -1584,7 +1581,7 @@ else
 
                                 <div class="d-flex align-items-center justify-content-between pt-2 border-top">
                                     <button type="button" class="btn btn-outline-secondary px-3" @onclick="BackToEditDelivery" disabled="@IsSubmittingDelivery">
-                                        &larr; Edit Details
+                                        Edit Details
                                     </button>
                                     <button type="button" class="btn btn-success fw-bold px-4 d-flex align-items-center gap-2" @onclick="ConfirmDeliveryAsync" disabled="@IsSubmittingDelivery">
                                         @if (IsSubmittingDelivery)

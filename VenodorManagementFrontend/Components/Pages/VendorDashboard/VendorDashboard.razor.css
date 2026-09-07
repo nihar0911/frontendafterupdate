@@ -1044,3 +1044,134 @@
     background: #F9FAFB;
 }
 
+/* AI Spoilage & Dispatch Advisor Component */
+.vd-advisor-card {
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 6px;
+    padding: 1.25rem;
+}
+
+.vd-advisor-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #E2E8F0;
+}
+
+.vd-advisor-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: #EBF8F5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.vd-advisor-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: #EFF6FF;
+    color: #1D4ED8;
+    border: 1px solid #BFDBFE;
+}
+
+.vd-risk-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    line-height: 1.2;
+}
+
+.vd-risk-badge.risk-high {
+    background: #FEE2E2;
+    color: #991B1B;
+    border: 1px solid #FCA5A5;
+}
+
+.vd-risk-badge.risk-medium {
+    background: #FEF3C7;
+    color: #92400E;
+    border: 1px solid #FCD34D;
+}
+
+.vd-risk-badge.risk-low {
+    background: #D1FAE5;
+    color: #065F46;
+    border: 1px solid #6EE7B7;
+}
+
+.vd-risk-badge.risk-insufficient {
+    background: #F1F5F9;
+    color: #475569;
+    border: 1px solid #CBD5E1;
+}
+
+.vd-priority-tag {
+    background: #174F45;
+    color: #FFFFFF;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.vd-metric-tile {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 4px;
+    padding: 0.6rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.vd-metric-label {
+    font-size: 0.72rem;
+    color: #64748B;
+    font-weight: 500;
+}
+
+.vd-metric-val {
+    font-size: 0.95rem;
+    color: #0F172A;
+    font-weight: 700;
+}
+
+.vd-narrative-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.vd-narrative-item {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 4px;
+    padding: 0.75rem 0.9rem;
+}
+
+.vd-narrative-item.action-item {
+    background: #F0FDF4;
+    border-color: #BBF7D0;
+}
+
+.vd-multi-product-card {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+

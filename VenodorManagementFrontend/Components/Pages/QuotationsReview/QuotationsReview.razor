@@ -439,7 +439,7 @@ else
                                                 else if (isRejected)
                                                 {
                                                     <span class="status-pill status-rejected">
-                                                        <span>&times; Rejected</span>
+                                                        <span>Rejected</span>
                                                     </span>
                                                 }
                                                 else if (isExpired)
@@ -556,7 +556,7 @@ else
                                         <div class="q-card-footer">
                                             <div class="footer-actions">
                                                 <button type="button" class="btn-view-details" @onclick='() => Nav.NavigateTo($"/quotation-review/{currentQuotation.QuotationID}")'>
-                                                    <span>View Details &rarr;</span>
+                                                    <span>View Details</span>
                                                 </button>
 
                                                 @if (isActionable && !isExpired && (Auth.IsPurchaseManager || Auth.IsAdmin))

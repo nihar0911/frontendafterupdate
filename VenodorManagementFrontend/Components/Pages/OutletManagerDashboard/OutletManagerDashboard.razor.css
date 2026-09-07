@@ -803,13 +803,15 @@
 }
 
 .om-arrow-btn {
-    width: 32px;
-    height: 32px;
+    min-width: 44px;
+    height: 30px;
+    padding: 0 10px;
     border-radius: 4px;
     background: transparent;
     border: 1px solid #E5E7EB;
     color: #6B7280;
-    font-size: 1rem;
+    font-size: 0.78rem;
+    font-weight: 600;
     display: inline-flex;
     align-items: center;
     justify-content: center;

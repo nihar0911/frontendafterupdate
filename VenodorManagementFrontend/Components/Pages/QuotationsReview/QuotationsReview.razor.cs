@@ -332,7 +332,7 @@ public partial class QuotationsReview : ComponentBase
             if (updatedQuotation != null)
             {
                 RespondedQuotation = updatedQuotation;
-                SuccessMessage = ConfirmationAction == "Accepted" ? "✓ QUOTATION ACCEPTED" : "✕ QUOTATION REJECTED";
+                SuccessMessage = ConfirmationAction == "Accepted" ? "QUOTATION ACCEPTED" : "QUOTATION REJECTED";
                 SelectedQuotation = null;
                 ConfirmationAction = null;
                 ModalQuotation = null;

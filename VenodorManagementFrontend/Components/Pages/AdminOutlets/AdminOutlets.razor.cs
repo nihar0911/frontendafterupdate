@@ -131,7 +131,7 @@ public partial class AdminOutlets : ComponentBase
             var result = await Api.CreateOutletAsync(command);
             if (result.Success && result.Data != null)
             {
-                SuccessMessage = "✓ Outlet created successfully";
+                SuccessMessage = "Outlet created successfully";
                 IsAddModalOpen = false;
                 await LoadData();
             }
@@ -166,7 +166,7 @@ public partial class AdminOutlets : ComponentBase
             var result = await Api.UpdateOutletAsync(command.OutletID, command);
             if (result.Success)
             {
-                SuccessMessage = "✓ Outlet updated successfully";
+                SuccessMessage = "Outlet updated successfully";
                 EditingOutlet = null;
                 await LoadData();
             }

@@ -67,7 +67,7 @@ public partial class OrgPurchaseOrders : ComponentBase
     private string DeliveryFormError { get; set; } = string.Empty;
     private string DeliverySuccessMessage { get; set; } = string.Empty;
 
-    // Create PO Modal State
+    // Create PO Modal State (Single PO)
     private bool ShowCreatePoModal { get; set; } = false;
     private bool IsProcessingPo { get; set; } = false;
     private string? ModalErrorMessage { get; set; }
@@ -76,6 +76,30 @@ public partial class OrgPurchaseOrders : ComponentBase
     private bool IsActionProcessing { get; set; } = false;
     private int SelectedQuotationId { get; set; } = 0;
     private DateTime ExpectedDeliveryDate { get; set; } = DateTime.Today.AddDays(3);
+
+    // Bulk PO Submission State
+    private HashSet<int> SelectedQuotationIds { get; set; } = new();
+    private bool IsSubmittingBulk { get; set; } = false;
+    private DateTime BulkExpectedDeliveryDate { get; set; } = DateTime.Today.AddDays(3);
+    private int BulkProgressCurrent { get; set; } = 0;
+    private int BulkProgressTotal { get; set; } = 0;
+    private List<BulkSubmissionResultItem> BulkResults { get; set; } = new();
+    private bool ShowBulkResults { get; set; } = false;
+    private string? BulkSummaryMessage { get; set; }
+
+    public class BulkSubmissionResultItem
+    {
+        public int QuotationID { get; set; }
+        public string ProductName { get; set; } = string.Empty;
+        public string VendorName { get; set; } = string.Empty;
+        public string OutletName { get; set; } = string.Empty;
+        public decimal Quantity { get; set; }
+        public string Unit { get; set; } = "Kg";
+        public decimal TotalAmount { get; set; }
+        public bool Success { get; set; }
+        public int? PurchaseOrderID { get; set; }
+        public string? ErrorReason { get; set; }
+    }
 
     public class QuotationPoOption
     {
@@ -98,6 +122,8 @@ public partial class OrgPurchaseOrders : ComponentBase
     }
 
     private List<QuotationPoOption> EligiblePoOptions { get; set; } = new();
+
+    private bool IsAllEligibleSelected => EligiblePoOptions.Count > 0 && EligiblePoOptions.All(opt => SelectedQuotationIds.Contains(opt.QuotationID));
 
     private List<PurchaseOrderDto> FilteredPurchaseOrders
     {
@@ -572,6 +598,155 @@ public partial class OrgPurchaseOrders : ComponentBase
             .OrderByDescending(o => o.IsRecommended)
             .ThenByDescending(o => o.QuotationID)
             .ToList();
+
+        // Prune any selections that are no longer eligible
+        SelectedQuotationIds.RemoveWhere(id => !EligiblePoOptions.Any(o => o.QuotationID == id));
+    }
+
+    private void ToggleQuotationSelection(int quotationId)
+    {
+        if (IsSubmittingBulk) return;
+        if (SelectedQuotationIds.Contains(quotationId))
+        {
+            SelectedQuotationIds.Remove(quotationId);
+        }
+        else
+        {
+            SelectedQuotationIds.Add(quotationId);
+        }
+    }
+
+    private void ToggleSelectAll(ChangeEventArgs e)
+    {
+        if (IsSubmittingBulk) return;
+        bool isChecked = false;
+        if (e.Value is bool b) isChecked = b;
+        else if (bool.TryParse(e.Value?.ToString(), out var parsed)) isChecked = parsed;
+
+        if (isChecked)
+        {
+            foreach (var opt in EligiblePoOptions)
+            {
+                SelectedQuotationIds.Add(opt.QuotationID);
+            }
+        }
+        else
+        {
+            SelectedQuotationIds.Clear();
+        }
+    }
+
+    private void ClearBulkSelection()
+    {
+        if (IsSubmittingBulk) return;
+        SelectedQuotationIds.Clear();
+        ShowBulkResults = false;
+        BulkResults.Clear();
+        BulkSummaryMessage = null;
+    }
+
+    private async Task SubmitBulkPurchaseOrdersAsync()
+    {
+        if (!Auth.IsPurchaseManager && !Auth.IsAdmin) return;
+        if (SelectedQuotationIds.Count == 0 || IsSubmittingBulk) return;
+
+        var itemsToSubmit = EligiblePoOptions.Where(opt => SelectedQuotationIds.Contains(opt.QuotationID)).ToList();
+        if (itemsToSubmit.Count == 0) return;
+
+        IsSubmittingBulk = true;
+        BulkProgressCurrent = 0;
+        BulkProgressTotal = itemsToSubmit.Count;
+        BulkResults.Clear();
+        ShowBulkResults = false;
+        BulkSummaryMessage = null;
+        ActionSuccessMessage = null;
+        ActionErrorMessage = null;
+        StateHasChanged();
+
+        var successfulQuotationIds = new HashSet<int>();
+        int successCount = 0;
+        int failureCount = 0;
+
+        foreach (var item in itemsToSubmit)
+        {
+            BulkProgressCurrent++;
+            StateHasChanged();
+
+            var command = new CreatePurchaseOrderCommand
+            {
+                QuotationID = item.QuotationID,
+                ExpectedDeliveryDate = BulkExpectedDeliveryDate
+            };
+
+            var result = await Api.CreatePurchaseOrderWithResultAsync(command);
+            if (result.Success && result.Data != null && result.Data.PurchaseOrderID > 0)
+            {
+                successCount++;
+                successfulQuotationIds.Add(item.QuotationID);
+                BulkResults.Add(new BulkSubmissionResultItem
+                {
+                    QuotationID = item.QuotationID,
+                    ProductName = item.ProductName,
+                    VendorName = item.VendorName,
+                    OutletName = item.OutletName,
+                    Quantity = item.Quantity,
+                    Unit = item.Unit,
+                    TotalAmount = item.TotalAmount,
+                    Success = true,
+                    PurchaseOrderID = result.Data.PurchaseOrderID
+                });
+            }
+            else
+            {
+                failureCount++;
+                string reason = !string.IsNullOrWhiteSpace(result.ErrorMessage)
+                    ? result.ErrorMessage
+                    : "Quotation is no longer valid or has expired.";
+                BulkResults.Add(new BulkSubmissionResultItem
+                {
+                    QuotationID = item.QuotationID,
+                    ProductName = item.ProductName,
+                    VendorName = item.VendorName,
+                    OutletName = item.OutletName,
+                    Quantity = item.Quantity,
+                    Unit = item.Unit,
+                    TotalAmount = item.TotalAmount,
+                    Success = false,
+                    ErrorReason = reason
+                });
+            }
+        }
+
+        // Refresh data to show newly created POs in table and update eligible list
+        await LoadData();
+
+        // Clear successfully created quotations from the selection set, keep failed ones
+        SelectedQuotationIds.RemoveWhere(id => successfulQuotationIds.Contains(id));
+
+        // Format summary message
+        if (successCount > 0 && failureCount == 0)
+        {
+            BulkSummaryMessage = successCount == 1
+                ? "1 Purchase Order created and submitted for manager approval."
+                : $"{successCount} Purchase Orders created and submitted for manager approval.";
+            ActionSuccessMessage = BulkSummaryMessage;
+        }
+        else if (successCount > 0 && failureCount > 0)
+        {
+            BulkSummaryMessage = $"{successCount} Purchase Order{(successCount == 1 ? "" : "s")} submitted for approval. {failureCount} failed.";
+            ActionErrorMessage = BulkSummaryMessage;
+        }
+        else
+        {
+            BulkSummaryMessage = failureCount == 1
+                ? "1 Purchase Order submission failed."
+                : $"All {failureCount} Purchase Order submissions failed.";
+            ActionErrorMessage = BulkSummaryMessage;
+        }
+
+        ShowBulkResults = true;
+        IsSubmittingBulk = false;
+        StateHasChanged();
     }
 
     private void OpenCreateModal()

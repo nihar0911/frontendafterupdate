@@ -255,7 +255,7 @@ else
                     <!-- TOP ACTION ROW (Back Button & Org Manager Badge) -->
                     <div class="top-action-row">
                         <button type="button" class="btn-back-link" @onclick='() => Nav.NavigateTo("/org-dashboard")'>
-                            &larr; Back to Dashboard
+                            Back to Dashboard
                         </button>
                         <span class="org-manager-badge">
                             Org Manager: @(string.IsNullOrWhiteSpace(Auth.UserName) ? (Auth.CurrentUser?.Name ?? "Organization Manager") : Auth.UserName)
@@ -385,7 +385,7 @@ else
 
                                         <!-- Full-width View Details Action -->
                                         <button type="button" class="btn-card-details" @onclick="() => ViewOutletDetails(o)">
-                                            <span>View Details &rarr;</span>
+                                            <span>View Details</span>
                                         </button>
                                     </div>
                                 }
@@ -546,7 +546,7 @@ else
                     @if (Auth.IsPurchaseManager || Auth.IsAdmin)
                     {
                         <button type="button" class="btn-modal-primary" @onclick='() => { CloseModal(); Nav.NavigateTo("/procurement"); }'>
-                            Create Purchase Request &rarr;
+                            Create Purchase Request
                         </button>
                     }
                 </div>

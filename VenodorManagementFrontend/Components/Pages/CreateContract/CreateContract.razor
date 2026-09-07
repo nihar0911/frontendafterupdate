@@ -478,7 +478,7 @@ else
                                                             else
                                                             {
                                                                 <button type="button" class="btn-remove-vendor" @onclick="() => RemoveVendorAllocation(currentRow.VendorID)" title="Remove vendor allocation">
-                                                                    &times;
+                                                                    Remove
                                                                 </button>
                                                             }
                                                         </td>
@@ -515,7 +515,7 @@ else
                                         <div class="add-vendor-row">
                                             <div class="select-wrapper-custom flex-grow-1">
                                                 <select class="form-select-custom" @bind="SelectedVendorToAddId">
-                                                    <option value="0">+ Add additional eligible vendor...</option>
+                                                    <option value="0">Add additional eligible vendor...</option>
                                                     @foreach (var v in UnallocatedEligibleVendors)
                                                     {
                                                         <option value="@v.VendorID">@v.VendorName</option>
@@ -526,7 +526,7 @@ else
                                                 </svg>
                                             </div>
                                             <button type="button" class="btn-add-vendor-action" @onclick="AddSelectedVendor" disabled="@(SelectedVendorToAddId <= 0)">
-                                                + Add Vendor
+                                                Add Vendor
                                             </button>
                                         </div>
                                     }
@@ -571,7 +571,7 @@ else
                                         }
                                         else
                                         {
-                                            <span>+ CREATE CONTRACT &amp; ALLOCATIONS &rarr;</span>
+                                            <span>CREATE CONTRACT &amp; ALLOCATIONS</span>
                                         }
                                     </button>
 

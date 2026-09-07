@@ -141,7 +141,7 @@ public partial class AdminUsers : ComponentBase
             var result = await Api.CreateUserAsync(command);
             if (result.Success && result.Data != null)
             {
-                SuccessMessage = "✓ User created successfully";
+                SuccessMessage = "User created successfully";
                 IsAddModalOpen = false;
                 EditingUser = null;
                 await LoadData();
@@ -179,7 +179,7 @@ public partial class AdminUsers : ComponentBase
             var result = await Api.UpdateUserAsync(EditingUser.UserID, command);
             if (result.Success)
             {
-                SuccessMessage = "✓ User updated successfully";
+                SuccessMessage = "User updated successfully";
                 EditingUser = null;
                 IsAddModalOpen = false;
                 await LoadData();

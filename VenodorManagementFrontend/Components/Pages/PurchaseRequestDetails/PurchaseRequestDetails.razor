@@ -325,7 +325,7 @@ else
 
                 <div class="mb-3">
                     <button type="button" class="btn-back-link" @onclick='() => Nav.NavigateTo("/procurement")'>
-                        &larr; Back to Purchase Requests
+                        Back to Purchase Requests
                     </button>
                 </div>
 
@@ -342,7 +342,7 @@ else
                         <h5 class="fw-bold text-danger mb-2">Purchase Request Not Found or Access Denied</h5>
                         <p class="text-muted small mb-3">@ErrorMessage</p>
                         <button class="btn-primary-action px-4 py-2" @onclick='() => Nav.NavigateTo("/procurement")'>
-                            &larr; Return to Purchase Requests
+                            Return to Purchase Requests
                         </button>
                     </div>
                 }
@@ -456,7 +456,7 @@ else
 
                                     <div class="d-flex justify-content-end">
                                         <button type="button" class="btn-primary-action" @onclick='() => Nav.NavigateTo($"/quotation-review/{AssociatedQuotation.QuotationID}")'>
-                                            Review Quotation &rarr;
+                                            Review Quotation
                                         </button>
                                     </div>
                                 }

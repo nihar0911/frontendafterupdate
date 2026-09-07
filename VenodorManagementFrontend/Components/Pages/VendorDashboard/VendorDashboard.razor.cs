@@ -53,6 +53,14 @@ public partial class VendorDashboard : ComponentBase
     private string PoStatusFilter { get; set; } = "All";
     private int PendingPoCount => MyPurchaseOrders.Count(p => string.Equals(p.Status, "Pending", StringComparison.OrdinalIgnoreCase));
 
+    // Dispatch Modal & AI Spoilage Advisor state
+    private PurchaseOrderDto? SelectedPoForDispatch { get; set; }
+    private bool ShowDispatchModal { get; set; } = false;
+    private bool IsLoadingSpoilageAdvice { get; set; } = false;
+    private SpoilageAdvisorDto? SpoilageAdvisorData { get; set; }
+    private string? SpoilageAdviceError { get; set; }
+    private bool IsDispatchingPo { get; set; } = false;
+
     [Inject] private IJSRuntime JS { get; set; } = default!;
 
     private List<InvoiceDto> MyInvoices { get; set; } = new();
@@ -976,11 +984,59 @@ public partial class VendorDashboard : ComponentBase
         }
     }
 
+    private async Task OpenDispatchModal(PurchaseOrderDto po)
+    {
+        SelectedPoForDispatch = po;
+        ShowDispatchModal = true;
+        SpoilageAdvisorData = null;
+        SpoilageAdviceError = null;
+        IsLoadingSpoilageAdvice = true;
+        IsDispatchingPo = false;
+        StateHasChanged();
+
+        try
+        {
+            var res = await Api.GetSpoilageAdviceAsync(po.PurchaseOrderID);
+            if (res?.Advisor != null)
+            {
+                SpoilageAdvisorData = res.Advisor;
+            }
+            else
+            {
+                SpoilageAdviceError = "AI advice is currently unavailable. You may proceed with dispatch as normal.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[VendorDashboard] OpenDispatchModal error: {ex.Message}");
+            SpoilageAdviceError = "AI advice is currently unavailable. You may proceed with dispatch as normal.";
+        }
+        finally
+        {
+            IsLoadingSpoilageAdvice = false;
+            StateHasChanged();
+        }
+    }
+
+    private void CloseDispatchModal()
+    {
+        ShowDispatchModal = false;
+        SelectedPoForDispatch = null;
+        SpoilageAdvisorData = null;
+        SpoilageAdviceError = null;
+        IsLoadingSpoilageAdvice = false;
+        IsDispatchingPo = false;
+        StateHasChanged();
+    }
+
     private async Task DispatchPo(int poId)
     {
         if (!Auth.VendorID.HasValue) return;
         try
         {
+            IsDispatchingPo = true;
+            StateHasChanged();
+
             var cmd = new DispatchPurchaseOrderCommand
             {
                 PurchaseOrderID = poId,
@@ -995,12 +1051,18 @@ public partial class VendorDashboard : ComponentBase
                     po.Status = "Dispatched";
                     po.DispatchDateTime = result.DispatchDateTime;
                 }
+                CloseDispatchModal();
                 StateHasChanged();
             }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"[VendorDashboard] DispatchPo error: {ex.Message}");
+        }
+        finally
+        {
+            IsDispatchingPo = false;
+            StateHasChanged();
         }
     }
 

@@ -939,16 +939,65 @@ namespace VenodorManagementFrontend.Services
             return response?.PurchaseOrders ?? new List<PurchaseOrderDto>();
         }
 
-        public async Task<PurchaseOrderDto?> CreatePurchaseOrderAsync(CreatePurchaseOrderCommand command)
+        public async Task<ApiResult<PurchaseOrderDto>> CreatePurchaseOrderWithResultAsync(CreatePurchaseOrderCommand command)
         {
             SetAuthHeader();
-            var response = await _httpClient.PostAsJsonAsync("api/purchaseorder", command);
-            if (response.IsSuccessStatusCode)
+            try
             {
-                var result = await response.Content.ReadFromJsonAsync<CreatePurchaseOrderResponse>();
-                return result?.PurchaseOrder;
+                var response = await _httpClient.PostAsJsonAsync("api/purchaseorder", command);
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<CreatePurchaseOrderResponse>();
+                    return new ApiResult<PurchaseOrderDto>
+                    {
+                        Success = true,
+                        Data = result?.PurchaseOrder
+                    };
+                }
+
+                string errorText = "Unable to create purchase order.";
+                try
+                {
+                    var errObj = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>();
+                    if (errObj != null && errObj.TryGetValue("message", out var msg) && msg != null)
+                    {
+                        errorText = msg.ToString() ?? errorText;
+                    }
+                    else if (errObj != null && errObj.TryGetValue("detail", out var detail) && detail != null)
+                    {
+                        errorText = detail.ToString() ?? errorText;
+                    }
+                    else if (errObj != null && errObj.TryGetValue("title", out var title) && title != null)
+                    {
+                        errorText = title.ToString() ?? errorText;
+                    }
+                }
+                catch
+                {
+                    var raw = await response.Content.ReadAsStringAsync();
+                    if (!string.IsNullOrWhiteSpace(raw)) errorText = raw;
+                }
+
+                return new ApiResult<PurchaseOrderDto>
+                {
+                    Success = false,
+                    ErrorMessage = errorText
+                };
             }
-            return null;
+            catch (Exception ex)
+            {
+                return new ApiResult<PurchaseOrderDto>
+                {
+                    Success = false,
+                    ErrorMessage = ex.Message
+                };
+            }
+        }
+
+        public async Task<PurchaseOrderDto?> CreatePurchaseOrderAsync(CreatePurchaseOrderCommand command)
+        {
+            var result = await CreatePurchaseOrderWithResultAsync(command);
+            return result.Data;
         }
 
         public async Task<PurchaseOrderDto?> RespondToPurchaseOrderAsync(RespondToPurchaseOrderCommand command)
@@ -1118,6 +1167,25 @@ namespace VenodorManagementFrontend.Services
                 return result?.DeliveryRecord;
             }
             return null;
+        }
+
+        public async Task<GetSpoilageAdviceResponse?> GetSpoilageAdviceAsync(int purchaseOrderId)
+        {
+            SetAuthHeader();
+            try
+            {
+                var response = await _httpClient.GetAsync($"api/deliveryrecords/spoilage-advice/{purchaseOrderId}");
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadFromJsonAsync<GetSpoilageAdviceResponse>();
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ApiService] GetSpoilageAdviceAsync error: {ex.Message}");
+                return null;
+            }
         }
 
         public async Task<ContractDto?> GetContractByIdAsync(int contractId)

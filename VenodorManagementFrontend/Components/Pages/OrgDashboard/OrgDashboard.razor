@@ -272,26 +272,26 @@ else
                                                         if (notif.RelatedRequestID.HasValue && notif.RelatedRequestID.Value > 0)
                                                         {
                                                             <button class="btn btn-link btn-sm p-0 text-success fw-bold text-decoration-none" style="font-size: 0.72rem;" @onclick='() => Nav.NavigateTo($"/organization/purchase-orders?id={notif.RelatedRequestID.Value}")'>
-                                                                View PO Details &rarr;
+                                                                View PO Details
                                                             </button>
                                                         }
                                                         else
                                                         {
                                                             <button class="btn btn-link btn-sm p-0 text-success fw-bold text-decoration-none" style="font-size: 0.72rem;" @onclick='() => Nav.NavigateTo("/organization/purchase-orders")'>
-                                                                View Purchase Orders &rarr;
+                                                                View Purchase Orders
                                                             </button>
                                                         }
                                                     }
                                                     else if (notif.NotificationType == "QuotationSubmitted")
                                                     {
                                                         <button class="btn btn-link btn-sm p-0 text-primary fw-bold text-decoration-none" style="font-size: 0.72rem;" @onclick='() => Nav.NavigateTo("/quotations")'>
-                                                            Review Quotation &rarr;
+                                                            Review Quotation
                                                         </button>
                                                     }
                                                     else if (notif.NotificationType == "InvoiceSubmitted" || notif.Title.Contains("Invoice", StringComparison.OrdinalIgnoreCase))
                                                     {
                                                         <button class="btn btn-link btn-sm p-0 text-success fw-bold text-decoration-none" style="font-size: 0.72rem;" @onclick='() => Nav.NavigateTo("/organization/invoices")'>
-                                                            Review Invoice &rarr;
+                                                            Review Invoice
                                                         </button>
                                                     }
                                                     else
@@ -403,7 +403,7 @@ else
                                     <div class="metric-value metric-value-green">@OutletsCount</div>
                                     <div class="metric-sub">Active outlets</div>
                                 </div>
-                                <div class="metric-action">View outlet details &rarr;</div>
+                                <div class="metric-action">View outlet details</div>
                             </div>
 
                             <!-- CARD 2: PURCHASE REQUESTS -->
@@ -423,7 +423,7 @@ else
                                     <div class="metric-value metric-value-green">@PurchaseRequestsCount</div>
                                     <div class="metric-sub">Total requests</div>
                                 </div>
-                                <div class="metric-action">View requests &rarr;</div>
+                                <div class="metric-action">View requests</div>
                             </div>
 
                             <!-- CARD 3: PENDING QUOTATIONS -->
@@ -442,7 +442,7 @@ else
                                     <div class="metric-value @(PendingQuotationsCount > 0 ? "metric-value-amber" : "metric-value-green")">@PendingQuotationsCount</div>
                                     <div class="metric-sub">@(PendingQuotationsCount == 0 ? "No pending quotations" : $"{PendingQuotationsCount} pending review")</div>
                                 </div>
-                                <div class="metric-action @(PendingQuotationsCount > 0 ? "metric-action-amber" : "")">Review quotations &rarr;</div>
+                                <div class="metric-action @(PendingQuotationsCount > 0 ? "metric-action-amber" : "")">Review quotations</div>
                             </div>
 
                             <!-- CARD 4: ACTIVE CONTRACTS -->
@@ -461,7 +461,7 @@ else
                                     <div class="metric-value metric-value-green">@ActiveContractsCount</div>
                                     <div class="metric-sub">Active contracts</div>
                                 </div>
-                                <div class="metric-action">View contracts &rarr;</div>
+                                <div class="metric-action">View contracts</div>
                             </div>
                         </div>
 
@@ -549,7 +549,7 @@ else
                                                     </td>
                                                     <td>
                                                         <button type="button" class="btn-details-action" @onclick="() => OpenOutletDetails(o)" title="View outlet details">
-                                                            View Details &rarr;
+                                                            View Details
                                                         </button>
                                                     </td>
                                                 </tr>
@@ -572,7 +572,7 @@ else
                                     <p class="section-subtitle">Quotations awaiting your review and approval</p>
                                 </div>
                                 <button type="button" class="btn-section-link" @onclick='() => Nav.NavigateTo("/quotations")'>
-                                    View All Quotations &rarr;
+                                    View All Quotations
                                 </button>
                             </div>
 
@@ -623,7 +623,7 @@ else
                                                     <td><span class="status-pill-active">@q.Status</span></td>
                                                     <td>
                                                         <button class="btn-details-action" @onclick='() => Nav.NavigateTo($"/quotation-review/{q.QuotationID}")'>
-                                                            Review &rarr;
+                                                            Review
                                                         </button>
                                                     </td>
                                                 </tr>
@@ -677,7 +677,7 @@ else
                                                     <td><span class="status-pill-active">@(string.IsNullOrWhiteSpace(c.Status) ? "Active" : c.Status)</span></td>
                                                     <td>
                                                         <button type="button" class="btn-details-action" @onclick='() => Nav.NavigateTo($"/contract/{c.ContractID}")'>
-                                                            View Details &rarr;
+                                                            View Details
                                                         </button>
                                                     </td>
                                                 </tr>

@@ -21,7 +21,7 @@ public partial class LoginForm : ComponentBase
     public string RoleDescription { get; set; } = "Sign in to access your dashboard workspace.";
 
     [Parameter]
-    public string RoleIcon { get; set; } = "🔐";
+    public string RoleIcon { get; set; } = string.Empty;
 
     [Parameter]
     public string RoleIconBgClass { get; set; } = "bg-primary";

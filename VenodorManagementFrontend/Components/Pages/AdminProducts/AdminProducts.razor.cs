@@ -131,7 +131,7 @@ public partial class AdminProducts : ComponentBase
             var result = await Api.CreateProductAsync(command);
             if (result.Success && result.Data != null)
             {
-                SuccessMessage = "✓ Product created successfully";
+                SuccessMessage = "Product created successfully";
                 IsAddModalOpen = false;
                 await LoadData();
             }
@@ -166,7 +166,7 @@ public partial class AdminProducts : ComponentBase
             var result = await Api.UpdateProductAsync(command.ProductID, command);
             if (result.Success)
             {
-                SuccessMessage = "✓ Product updated successfully";
+                SuccessMessage = "Product updated successfully";
                 EditingProduct = null;
                 await LoadData();
             }
