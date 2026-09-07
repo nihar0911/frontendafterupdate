@@ -1771,12 +1771,15 @@ namespace VenodorManagementFrontend.Services
             }
         }
 
-        public async Task<List<VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto>> GetVendorReviewsAsync(int vendorId)
+        public async Task<List<VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto>> GetVendorReviewsAsync(int vendorId, int? productId = null)
         {
             SetAuthHeader();
             try
             {
-                var response = await _httpClient.GetFromJsonAsync<List<VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto>>($"api/VendorFeedback/vendor/{vendorId}");
+                var url = productId.HasValue && productId.Value > 0
+                    ? $"api/VendorFeedback/vendor/{vendorId}?productId={productId.Value}"
+                    : $"api/VendorFeedback/vendor/{vendorId}";
+                var response = await _httpClient.GetFromJsonAsync<List<VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto>>(url);
                 return response ?? new List<VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto>();
             }
             catch (Exception ex)

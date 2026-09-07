@@ -11,6 +11,7 @@ public class VendorReviewDto
     public string OutletName { get; set; } = string.Empty;
     public int PurchaseOrderID { get; set; }
     public int POItemID { get; set; }
+    public int? ProductID { get; set; }
     public string ProductName { get; set; } = string.Empty;
     public int RatedByUserID { get; set; }
     public string RatedByUserName { get; set; } = string.Empty;

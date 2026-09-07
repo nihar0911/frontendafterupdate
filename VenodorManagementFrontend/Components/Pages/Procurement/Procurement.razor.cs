@@ -66,6 +66,29 @@ public partial class Procurement : ComponentBase
     private PurchaseRequestDto? CreatedPurchaseRequest { get; set; }
     private List<VendorRecommendationDto>? VendorRecommendations { get; set; }
     private List<VendorRecommendationDto> SelectedVendors { get; set; } = new();
+    private Dictionary<int, VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto> LatestReviewsByVendorDict { get; set; } = new();
+    private string VendorSortBy { get; set; } = "Reviews";
+
+    private List<VendorRecommendationDto> SortedVendorRecommendations
+    {
+        get
+        {
+            if (VendorRecommendations == null) return new();
+            return VendorSortBy switch
+            {
+                "Price" => VendorRecommendations
+                    .OrderBy(r => r.UnitPrice)
+                    .ThenByDescending(r => r.AverageRating)
+                    .ToList(),
+                "Reviews" => VendorRecommendations
+                    .OrderByDescending(r => r.AverageRating)
+                    .ThenByDescending(r => r.TotalFeedbackCount)
+                    .ThenBy(r => r.UnitPrice)
+                    .ToList(),
+                _ => VendorRecommendations
+            };
+        }
+    }
 
     // Notifications
     private List<NotificationDto> Notifications { get; set; } = new();
@@ -266,6 +289,7 @@ public partial class Procurement : ComponentBase
         CreatedPurchaseRequest = null;
         VendorRecommendations = null;
         SelectedVendors.Clear();
+        LatestReviewsByVendorDict.Clear();
         PurchaseRequestError = null;
         RecommendationsError = null;
         DispatchSuccessMessage = null;
@@ -280,6 +304,7 @@ public partial class Procurement : ComponentBase
         CreatedPurchaseRequest = null;
         VendorRecommendations = null;
         SelectedVendors.Clear();
+        LatestReviewsByVendorDict.Clear();
         PurchaseRequestError = null;
         RecommendationsError = null;
         DispatchSuccessMessage = null;
@@ -395,6 +420,30 @@ public partial class Procurement : ComponentBase
             var vendorDict = vendors?.ToDictionary(v => v.VendorID, v => v.VendorName) ?? new();
             var perfDict = performances?.ToDictionary(p => p.VendorID) ?? new();
 
+            // Concurrently fetch product-specific reviews for candidate vendors
+            var reviewTasks = matchingVP
+                .Select(vp => vp.VendorID)
+                .Distinct()
+                .ToDictionary(
+                    vId => vId,
+                    vId => Api.GetVendorReviewsAsync(vId, SelectedProduct.ProductID)
+                );
+
+            await Task.WhenAll(reviewTasks.Values);
+
+            var productReviewsByVendor = new Dictionary<int, List<VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto>>();
+            foreach (var kvp in reviewTasks)
+            {
+                try
+                {
+                    productReviewsByVendor[kvp.Key] = (await kvp.Value) ?? new();
+                }
+                catch
+                {
+                    productReviewsByVendor[kvp.Key] = new();
+                }
+            }
+
             var recs = new List<VendorRecommendationDto>();
             decimal minPrice = matchingVP.Count > 0 ? matchingVP.Min(vp => vp.UnitPrice) : 0m;
 
@@ -428,19 +477,18 @@ public partial class Procurement : ComponentBase
                 bool hasUsableContract = hasContract && remainingQty > 0;
 
                 perfDict.TryGetValue(vp.VendorID, out var perf);
-                int feedbackCount = perf?.TotalReviews ?? 0;
+                int perfFeedbackCount = perf?.TotalReviews ?? 0;
                 int completedDeliveries = perf?.CompletedDeliveries ?? 0;
                 decimal? spoilageRate = perf?.SpoilageRate;
-                decimal avgRating = (perf != null && perf.AverageRating.HasValue) ? perf.AverageRating.Value : 0m;
-                decimal avgQuality = (perf != null && perf.AverageQualityRating.HasValue) ? perf.AverageQualityRating.Value : 0m;
-                decimal avgDelivery = (perf != null && perf.AverageDeliveryRating.HasValue) ? perf.AverageDeliveryRating.Value : 0m;
+                decimal perfAvgQuality = (perf != null && perf.AverageQualityRating.HasValue) ? perf.AverageQualityRating.Value : 0m;
+                decimal perfAvgDelivery = (perf != null && perf.AverageDeliveryRating.HasValue) ? perf.AverageDeliveryRating.Value : 0m;
 
-                decimal qualityScore = feedbackCount > 0 ? (avgQuality / 5.0m) * 100m : 70m;
-                decimal deliveryScore = feedbackCount > 0 ? (avgDelivery / 5.0m) * 100m : 70m;
+                decimal qualityScore = perfFeedbackCount > 0 ? (perfAvgQuality / 5.0m) * 100m : 70m;
+                decimal deliveryScore = perfFeedbackCount > 0 ? (perfAvgDelivery / 5.0m) * 100m : 70m;
                 decimal priceScore = (vp.UnitPrice > 0 && minPrice > 0)
                     ? Math.Round((minPrice / vp.UnitPrice) * 100m, 1)
                     : 70m;
-                decimal reliabilityBonus = Math.Min(15m, feedbackCount * 3m);
+                decimal reliabilityBonus = Math.Min(15m, perfFeedbackCount * 3m);
 
                 decimal overallCompositeScore = Math.Round(
                     (qualityScore * 0.35m) +
@@ -449,6 +497,21 @@ public partial class Procurement : ComponentBase
                     reliabilityBonus,
                     1
                 );
+
+                // Product-specific review calculations
+                productReviewsByVendor.TryGetValue(vp.VendorID, out var pReviews);
+                pReviews ??= new List<VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto>();
+
+                int productFeedbackCount = pReviews.Count;
+                decimal productAvgRating = productFeedbackCount > 0 ? Math.Round(pReviews.Average(r => r.Rating), 1) : 0m;
+                decimal productAvgQuality = productFeedbackCount > 0 ? Math.Round(pReviews.Average(r => r.ProductQualityRating), 1) : perfAvgQuality;
+                decimal productAvgDelivery = productFeedbackCount > 0 ? Math.Round(pReviews.Average(r => r.DeliveryRating), 1) : perfAvgDelivery;
+
+                var latestReview = pReviews.FirstOrDefault();
+                if (latestReview != null)
+                {
+                    LatestReviewsByVendorDict[vp.VendorID] = latestReview;
+                }
 
                 recs.Add(new VendorRecommendationDto
                 {
@@ -459,10 +522,10 @@ public partial class Procurement : ComponentBase
                     UnitPrice = vp.UnitPrice,
                     EstimatedDeliveryDays = vp.EstimatedDeliveryDays,
                     OverallScore = overallCompositeScore,
-                    AverageRating = avgRating,
-                    AverageQualityRating = avgQuality,
-                    AverageDeliveryRating = avgDelivery,
-                    TotalFeedbackCount = feedbackCount,
+                    AverageRating = productAvgRating,
+                    AverageQualityRating = productAvgQuality,
+                    AverageDeliveryRating = productAvgDelivery,
+                    TotalFeedbackCount = productFeedbackCount,
                     CompletedDeliveries = completedDeliveries,
                     SpoilageRate = spoilageRate,
                     HasActiveContract = hasUsableContract,
@@ -737,7 +800,8 @@ public partial class Procurement : ComponentBase
 
         try
         {
-            var reviews = await Api.GetVendorReviewsAsync(vendor.VendorID);
+            int? productId = vendor.ProductID > 0 ? vendor.ProductID : SelectedProduct?.ProductID;
+            var reviews = await Api.GetVendorReviewsAsync(vendor.VendorID, productId);
             CurrentVendorReviews = reviews ?? new();
         }
         catch (Exception ex)
@@ -765,5 +829,17 @@ public partial class Procurement : ComponentBase
         if (rating >= 3.0m) return "Good";
         if (rating >= 2.0m) return "Average";
         return "Poor";
+    }
+
+    private decimal CurrentVendorAvgRating => CurrentVendorReviews.Count > 0 ? (decimal)Math.Round(CurrentVendorReviews.Average(r => r.Rating), 1) : 0m;
+    private decimal CurrentVendorAvgQuality => CurrentVendorReviews.Count > 0 ? (decimal)Math.Round(CurrentVendorReviews.Average(r => r.ProductQualityRating), 1) : 0m;
+    private decimal CurrentVendorAvgDelivery => CurrentVendorReviews.Count > 0 ? (decimal)Math.Round(CurrentVendorReviews.Average(r => r.DeliveryRating), 1) : 0m;
+    private VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto? LatestReviewInModal => CurrentVendorReviews.FirstOrDefault();
+
+    private static string GetStarString(decimal rating)
+    {
+        int rounded = (int)Math.Round(rating, MidpointRounding.AwayFromZero);
+        rounded = Math.Clamp(rounded, 1, 5);
+        return new string('★', rounded) + new string('☆', 5 - rounded);
     }
 }

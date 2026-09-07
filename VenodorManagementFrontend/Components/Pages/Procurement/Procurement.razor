@@ -325,70 +325,210 @@ else
                 @if (IsReviewsModalOpen && SelectedVendorForReviews != null)
                 {
                     <!-- =======================================================
-                         VENDOR REVIEWS MODAL VIEW
+                         DEDICATED VENDOR REVIEWS PAGE VIEW
                          ======================================================= -->
-                    <div class="pm-panel mb-4">
-                        <div class="panel-header">
-                            <div class="panel-title-wrap">
-                                <h3 class="panel-title">Customer Reviews &mdash; @SelectedVendorForReviews.VendorName</h3>
-                                <p class="panel-subtitle">Verified feedback from completed purchase order deliveries</p>
+                    <div class="vendor-reviews-page mb-4">
+                        <!-- Navigation & Page Header -->
+                        <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+                            <div>
+                                <button type="button" class="btn-back-link" @onclick="CloseVendorReviewsModal">
+                                    &larr; Back to Vendor Recommendations
+                                </button>
+                                <h2 class="greeting-title mt-2">Customer Reviews</h2>
+                                <div class="d-flex align-items-center gap-2 mt-1 flex-wrap">
+                                    <span class="fs-5 fw-bold text-dark">@SelectedVendorForReviews.VendorName</span>
+                                    <span class="text-muted">&bull;</span>
+                                    <span class="fs-6 text-success fw-semibold bg-success-subtle px-2.5 py-0.5 rounded border border-success-subtle">
+                                        @(SelectedProduct?.ProductName ?? SelectedVendorForReviews.ProductName)
+                                    </span>
+                                </div>
+                                <p class="greeting-subtitle mt-1">Verified feedback from completed purchase orders</p>
                             </div>
-                            <button type="button" class="btn btn-sm btn-outline-secondary fw-semibold" @onclick="CloseVendorReviewsModal">
-                                &larr; Back to Wizard
-                            </button>
+                            <div>
+                                <button type="button" class="btn btn-outline-secondary fw-semibold px-3 py-1.5" @onclick="CloseVendorReviewsModal">
+                                    &larr; Back to Vendor Recommendations
+                                </button>
+                            </div>
                         </div>
-                        <div class="p-4">
-                            @if (IsLoadingVendorReviews)
-                            {
-                                <div class="text-center py-4 text-muted">
-                                    <div class="spinner-border spinner-border-sm text-success me-2" role="status"></div>
-                                    <span>Loading reviews...</span>
+
+                        @if (IsLoadingVendorReviews)
+                        {
+                            <div class="pm-panel p-5 text-center text-muted mb-4">
+                                <div class="spinner-border text-success mb-3" role="status" style="width: 2.5rem; height: 2.5rem;"></div>
+                                <div class="fs-6 fw-semibold text-dark">Loading verified reviews...</div>
+                                <div class="small text-muted mt-1">Fetching feedback records for @SelectedVendorForReviews.VendorName</div>
+                            </div>
+                        }
+                        else if (CurrentVendorReviews.Count == 0)
+                        {
+                            <!-- Empty State -->
+                            <div class="pm-panel p-5 text-center mb-4">
+                                <div class="empty-reviews-icon mx-auto mb-3">
+                                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="text-muted">
+                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                    </svg>
                                 </div>
-                            }
-                            else if (CurrentVendorReviews.Count == 0)
-                            {
-                                <div class="text-center py-4 text-muted small">
-                                    No reviews registered for this vendor yet.
+                                <h4 class="fw-bold text-dark mb-1">No Reviews Yet</h4>
+                                <p class="text-muted small mb-4" style="max-width: 440px; margin: 0 auto;">
+                                    There are no verified customer reviews for <strong>@SelectedVendorForReviews.VendorName</strong> supplying <strong>@(SelectedProduct?.ProductName ?? SelectedVendorForReviews.ProductName)</strong> yet.
+                                </p>
+                                <button type="button" class="btn-primary-action px-4 py-2" @onclick="CloseVendorReviewsModal">
+                                    &larr; Back to Vendor Recommendations
+                                </button>
+                            </div>
+                        }
+                        else
+                        {
+                            <!-- SUMMARY METRICS CARDS -->
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-4">
+                                    <div class="review-stat-card p-3 h-100">
+                                        <div class="stat-card-label">AVERAGE RATING</div>
+                                        <div class="d-flex align-items-baseline gap-2 mt-2">
+                                            <span class="fs-2 fw-bold text-success">★ @CurrentVendorAvgRating.ToString("0.0")</span>
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold">
+                                                @GetQualitativeRatingText(CurrentVendorAvgRating)
+                                            </span>
+                                        </div>
+                                        <div class="small text-muted mt-1">
+                                            Based on <strong>@CurrentVendorReviews.Count</strong> @(CurrentVendorReviews.Count == 1 ? "verified review" : "verified reviews")
+                                        </div>
+                                    </div>
                                 </div>
-                            }
-                            else
+                                <div class="col-md-4">
+                                    <div class="review-stat-card p-3 h-100">
+                                        <div class="stat-card-label">QUALITY RATING</div>
+                                        <div class="d-flex align-items-baseline gap-2 mt-2">
+                                            <span class="fs-2 fw-bold text-dark">★ @(CurrentVendorAvgQuality > 0 ? CurrentVendorAvgQuality.ToString("0.0") : "5.0")</span>
+                                            <span class="small text-muted">/ 5.0</span>
+                                        </div>
+                                        <div class="small text-muted mt-1">Average Product Quality Score</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="review-stat-card p-3 h-100">
+                                        <div class="stat-card-label">DELIVERY RATING</div>
+                                        <div class="d-flex align-items-baseline gap-2 mt-2">
+                                            <span class="fs-2 fw-bold text-dark">★ @(CurrentVendorAvgDelivery > 0 ? CurrentVendorAvgDelivery.ToString("0.0") : "5.0")</span>
+                                            <span class="small text-muted">/ 5.0</span>
+                                        </div>
+                                        <div class="small text-muted mt-1">Average Delivery Punctuality Score</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- LATEST REVIEW HIGHLIGHT SECTION -->
+                            @if (LatestReviewInModal != null)
                             {
-                                <div class="table-responsive">
-                                    <table class="pm-table">
-                                        <thead>
-                                            <tr>
-                                                <th>OUTLET</th>
-                                                <th>PRODUCT</th>
-                                                <th>RATING</th>
-                                                <th>REVIEWED BY</th>
-                                                <th>DATE</th>
-                                                <th>COMMENT</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach (var rev in CurrentVendorReviews)
+                                var latest = LatestReviewInModal;
+                                <div class="pm-panel p-4 mb-4 border-success-subtle bg-white shadow-sm">
+                                    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="badge bg-success text-white px-2.5 py-1 fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.05em;">
+                                                Latest Review
+                                            </span>
+                                            <span class="text-success fw-bold fs-5">@GetStarString(latest.Rating) @latest.Rating.ToString("0.0")</span>
+                                            <span class="text-muted small fw-semibold">(@GetQualitativeRatingText(latest.Rating))</span>
+                                        </div>
+                                        <div class="small text-muted">
+                                            @latest.FeedbackDate.ToIst("MMMM dd, yyyy")
+                                        </div>
+                                    </div>
+
+                                    @if (!string.IsNullOrWhiteSpace(latest.Review))
+                                    {
+                                        <blockquote class="latest-review-quote p-3 rounded mb-3">
+                                            &ldquo;@latest.Review&rdquo;
+                                        </blockquote>
+                                    }
+
+                                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 pt-2 border-top border-light-subtle text-muted small">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="review-avatar">
+                                                @(string.IsNullOrWhiteSpace(latest.RatedByUserName) ? "M" : latest.RatedByUserName.Substring(0, 1).ToUpperInvariant())
+                                            </div>
+                                            <div>
+                                                <span class="text-dark fw-bold">Reviewed by @(string.IsNullOrWhiteSpace(latest.RatedByUserName) ? "Purchase Manager" : latest.RatedByUserName)</span>
+                                                <span class="text-muted small ms-1">&bull; Outlet: @latest.OutletName</span>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-3">
+                                            @if (latest.ProductQualityRating > 0)
                                             {
-                                                <tr>
-                                                    <td>@rev.OutletName</td>
-                                                    <td>@rev.ProductName</td>
-                                                    <td>
-                                                        <span class="text-success fw-bold">★ @rev.Rating.ToString("0.0")</span>
-                                                        <span class="text-muted small">(@GetQualitativeRatingText(rev.Rating))</span>
-                                                    </td>
-                                                    <td>@(string.IsNullOrWhiteSpace(rev.RatedByUserName) ? "Manager" : rev.RatedByUserName)</td>
-                                                    <td>@rev.FeedbackDate.ToIst("MMM dd, yyyy")</td>
-                                                    <td>@(string.IsNullOrWhiteSpace(rev.Review) ? "—" : rev.Review)</td>
-                                                </tr>
+                                                <span>Quality: <strong class="text-dark">★ @latest.ProductQualityRating.ToString("0.0")</strong></span>
                                             }
-                                        </tbody>
-                                    </table>
+                                            @if (latest.DeliveryRating > 0)
+                                            {
+                                                <span>Delivery: <strong class="text-dark">★ @latest.DeliveryRating.ToString("0.0")</strong></span>
+                                            }
+                                        </div>
+                                    </div>
                                 </div>
                             }
-                        </div>
+
+                            <!-- REVIEW HISTORY SECTION -->
+                            <div class="pm-panel p-4 mb-4">
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <div>
+                                        <h4 class="fw-bold text-dark mb-0">Review History</h4>
+                                        <p class="text-muted small mb-0">All verified feedback records ordered newest-first</p>
+                                    </div>
+                                    <span class="badge bg-light text-dark border px-2.5 py-1">@CurrentVendorReviews.Count Total</span>
+                                </div>
+
+                                <div class="review-cards-list d-flex flex-column gap-3">
+                                    @foreach (var rev in CurrentVendorReviews)
+                                    {
+                                        <div class="single-review-card p-3 rounded border">
+                                            <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span class="text-success fw-bold fs-6">@GetStarString(rev.Rating) @rev.Rating.ToString("0.0")</span>
+                                                    <span class="badge bg-light text-dark border small fw-normal">@GetQualitativeRatingText(rev.Rating)</span>
+                                                </div>
+                                                <div class="text-muted small">
+                                                    @rev.FeedbackDate.ToIst("MMM dd, yyyy")
+                                                </div>
+                                            </div>
+
+                                            <div class="row g-2 small text-muted mb-2">
+                                                <div class="col-sm-6">
+                                                    <span class="fw-semibold text-dark">Reviewed by:</span> @(string.IsNullOrWhiteSpace(rev.RatedByUserName) ? "Purchase Manager" : rev.RatedByUserName)
+                                                </div>
+                                                <div class="col-sm-6 text-sm-end">
+                                                    <span class="fw-semibold text-dark">Outlet:</span> @rev.OutletName
+                                                </div>
+                                                <div class="col-sm-6">
+                                                    <span class="fw-semibold text-dark">Product:</span> @(string.IsNullOrWhiteSpace(rev.ProductName) ? (SelectedProduct?.ProductName ?? "General Product") : rev.ProductName)
+                                                </div>
+                                                <div class="col-sm-6 text-sm-end">
+                                                    @if (rev.ProductQualityRating > 0 || rev.DeliveryRating > 0)
+                                                    {
+                                                        <span class="me-2">Quality: <strong class="text-dark">★ @rev.ProductQualityRating.ToString("0.0")</strong></span>
+                                                        <span>Delivery: <strong class="text-dark">★ @rev.DeliveryRating.ToString("0.0")</strong></span>
+                                                    }
+                                                </div>
+                                            </div>
+
+                                            @if (!string.IsNullOrWhiteSpace(rev.Review))
+                                            {
+                                                <div class="review-card-comment p-2.5 rounded bg-light mt-2 small text-dark">
+                                                    &ldquo;@rev.Review&rdquo;
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="text-muted small fst-italic mt-1">
+                                                    — No comment provided with this rating —
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
                     </div>
                 }
-
-                @if (!IsCreateMode)
+                else if (!IsCreateMode)
                 {
                     <!-- =======================================================
                          PURCHASE REQUESTS LANDING PAGE & LIST TABLE
@@ -753,9 +893,26 @@ else
                                     }
                                 </div>
 
-                                <!-- Vendor Recommendations -->
-                                <h5 class="fw-bold text-dark mb-1">Available Vendor Recommendations</h5>
-                                <p class="text-muted small mb-3">Ranked by active contract capacity, quality rating, and unit pricing</p>
+                                <!-- Vendor Recommendations Header & Sort Controls -->
+                                <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-3">
+                                    <div>
+                                        <h5 class="fw-bold text-dark mb-0">Step 3 &mdash; Vendor Recommendations</h5>
+                                        <p class="text-muted small mb-0">Choose the best vendor for your purchase</p>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-3 bg-light px-3 py-2 rounded border border-light-subtle">
+                                        <span class="small text-muted fw-bold">Sort vendors by:</span>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="form-check form-check-inline mb-0">
+                                                <input class="form-check-input" type="radio" name="vendorSort" id="sortReviews" value="Reviews" checked="@(VendorSortBy == "Reviews")" @onchange='() => VendorSortBy = "Reviews"' />
+                                                <label class="form-check-label small fw-semibold text-dark" for="sortReviews">Overall Reviews</label>
+                                            </div>
+                                            <div class="form-check form-check-inline mb-0">
+                                                <input class="form-check-input" type="radio" name="vendorSort" id="sortPrice" value="Price" checked="@(VendorSortBy == "Price")" @onchange='() => VendorSortBy = "Price"' />
+                                                <label class="form-check-label small fw-semibold text-dark" for="sortPrice">Unit Price</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
 
                                 @if (IsFindingVendors)
                                 {
@@ -764,7 +921,7 @@ else
                                         <span>Evaluating available supplier recommendations...</span>
                                     </div>
                                 }
-                                else if (VendorRecommendations == null || VendorRecommendations.Count == 0)
+                                else if (SortedVendorRecommendations.Count == 0)
                                 {
                                     <div class="alert alert-warning p-3 mb-3">
                                         No active vendors found supplying <strong>@SelectedProduct.ProductName</strong>. Please choose another product or contact your administrator.
@@ -773,45 +930,73 @@ else
                                 else
                                 {
                                     <div class="vendor-recommendations-list mb-4">
-                                        @foreach (var rec in VendorRecommendations)
+                                        @foreach (var rec in SortedVendorRecommendations)
                                         {
                                             bool isSelected = SelectedVendors.Any(v => v.VendorID == rec.VendorID);
                                             <div class="vendor-rec-card @(isSelected ? "selected" : "")" @onclick="() => ToggleVendorSelection(rec)">
-                                                <div class="d-flex align-items-center justify-content-between mb-2">
-                                                    <div class="d-flex align-items-center gap-2">
-                                                        <input type="radio" class="form-check-input mt-0" checked="@isSelected" @onclick:stopPropagation="true" @onchange="() => ToggleVendorSelection(rec)" />
-                                                        <h5 class="fw-bold text-dark mb-0">@rec.VendorName</h5>
-                                                        @if (!string.IsNullOrWhiteSpace(rec.SmartBadge))
-                                                        {
-                                                            <span class="badge bg-success-subtle text-success border border-success-subtle">@rec.SmartBadge</span>
-                                                        }
-                                                        @if (rec.HasActiveContract && rec.RemainingQuantity > 0)
-                                                        {
-                                                            <span class="badge bg-light text-dark border">Active Contract (@rec.RemainingQuantity:N0 @SelectedProduct.Unit remaining)</span>
-                                                        }
+                                                <div class="d-flex align-items-start justify-content-between flex-wrap gap-2 mb-2">
+                                                    <div>
+                                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                            <h5 class="fw-bold text-dark mb-0">@rec.VendorName</h5>
+                                                            @if (!string.IsNullOrWhiteSpace(rec.SmartBadge))
+                                                            {
+                                                                <span class="badge bg-success-subtle text-success border border-success-subtle">@rec.SmartBadge</span>
+                                                            }
+                                                            @if (rec.HasActiveContract && rec.RemainingQuantity > 0)
+                                                            {
+                                                                <span class="badge bg-light text-dark border">Active Contract (@rec.RemainingQuantity:N0 @SelectedProduct.Unit remaining)</span>
+                                                            }
+                                                        </div>
+                                                        <div class="small text-muted mt-0.5">
+                                                            @(string.IsNullOrWhiteSpace(rec.ProductName) ? SelectedProduct.ProductName : rec.ProductName)
+                                                        </div>
                                                     </div>
-                                                    <div class="fw-bold text-success fs-5">
-                                                        Rs. @rec.UnitPrice.ToString("N2") <span class="small text-muted fw-normal">/ @SelectedProduct.Unit</span>
+                                                    <div class="text-end">
+                                                        <div class="fw-bold text-success fs-5">
+                                                            ₹@rec.UnitPrice.ToString("N0") <span class="small text-muted fw-normal">/ @SelectedProduct.Unit</span>
+                                                        </div>
                                                     </div>
                                                 </div>
 
-                                                <div class="d-flex align-items-center gap-4 text-muted small mt-2">
-                                                    <div>
-                                                        <span>Customer Rating: </span>
-                                                        @if (rec.TotalFeedbackCount > 0)
-                                                        {
-                                                            <button type="button" class="btn p-0 text-success fw-bold text-decoration-underline border-0 bg-transparent" @onclick="() => OpenVendorReviewsModal(rec)" @onclick:stopPropagation="true">
-                                                                ★ @rec.AverageRating.ToString("0.0") (@rec.TotalFeedbackCount reviews)
-                                                            </button>
-                                                        }
-                                                        else
-                                                        {
-                                                            <span class="text-secondary">No Reviews Yet</span>
-                                                        }
+                                                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-2">
+                                                    <div class="d-flex align-items-center gap-3 text-muted small flex-wrap">
+                                                        <div>
+                                                            @if (rec.TotalFeedbackCount > 0)
+                                                            {
+                                                                <button type="button" class="btn p-0 text-success fw-bold text-decoration-underline border-0 bg-transparent" @onclick="() => OpenVendorReviewsModal(rec)" @onclick:stopPropagation="true">
+                                                                    ⭐ @rec.AverageRating.ToString("0.0") (@rec.TotalFeedbackCount @(rec.TotalFeedbackCount == 1 ? "review" : "reviews"))
+                                                                </button>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="text-secondary">⭐ No Reviews Yet</span>
+                                                            }
+                                                        </div>
+                                                        <div>&bull;</div>
+                                                        <div>Quality: <strong class="text-dark">@(rec.AverageQualityRating > 0 ? $"{rec.AverageQualityRating:0.0} / 5" : "Standard")</strong></div>
+                                                        <div>&bull;</div>
+                                                        <div>Est. Delivery: <strong class="text-dark">@rec.EstimatedDeliveryDays days</strong></div>
                                                     </div>
-                                                    <div>Quality Score: <strong class="text-dark">@(rec.AverageQualityRating > 0 ? $"{rec.AverageQualityRating:0.0} / 5" : "Standard")</strong></div>
-                                                    <div>Est. Delivery: <strong class="text-dark">@rec.EstimatedDeliveryDays days</strong></div>
+
+                                                    <div>
+                                                        <button type="button" class="btn btn-sm @(isSelected ? "btn-success" : "btn-outline-success") fw-bold px-3 py-1" @onclick="() => ToggleVendorSelection(rec)" @onclick:stopPropagation="true">
+                                                            @(isSelected ? "Selected ✓" : "Select Vendor")
+                                                        </button>
+                                                    </div>
                                                 </div>
+
+                                                @if (LatestReviewsByVendorDict.TryGetValue(rec.VendorID, out var latestRev) && !string.IsNullOrWhiteSpace(latestRev.Review))
+                                                {
+                                                    <div class="mt-2 p-2 rounded small text-muted bg-light border border-light-subtle d-flex align-items-start gap-2">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-success mt-1 flex-shrink-0">
+                                                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                                        </svg>
+                                                        <div>
+                                                            <strong class="text-dark">Latest Review: </strong>
+                                                            <span>&ldquo;@(latestRev.Review.Length > 120 ? latestRev.Review.Substring(0, 117) + "..." : latestRev.Review)&rdquo;</span>
+                                                        </div>
+                                                    </div>
+                                                }
 
                                                 @if (!string.IsNullOrWhiteSpace(rec.Recommendation))
                                                 {

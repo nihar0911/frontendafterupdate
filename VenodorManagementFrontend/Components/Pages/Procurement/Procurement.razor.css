@@ -979,3 +979,77 @@
 .btn-modal-close:hover {
     background-color: #0D332D;
 }
+
+/* ==========================================================================
+   DEDICATED VENDOR REVIEWS PAGE
+   ========================================================================== */
+.vendor-reviews-page {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.review-stat-card {
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.stat-card-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #6B7280;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.latest-review-quote {
+    background-color: #F8FAFC;
+    border-left: 3px solid #174F45;
+    font-size: 0.95rem;
+    font-style: italic;
+    color: #1F2937;
+    line-height: 1.55;
+}
+
+.review-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: #E6F4EA;
+    color: #174F45;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.single-review-card {
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.single-review-card:hover {
+    border-color: #C6E7D1;
+    box-shadow: 0 2px 4px rgba(23, 79, 69, 0.04);
+}
+
+.review-card-comment {
+    background-color: #F8FAFC;
+    border: 1px solid #F1F5F9;
+    line-height: 1.5;
+}
+
+.empty-reviews-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background-color: #F3F4F6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
