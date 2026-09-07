@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace VenodorManagementFrontend.Models;
@@ -11,4 +11,6 @@ public class PurchaseRequestItemDto
         public string ProductName { get; set; } = string.Empty;
         public decimal Quantity { get; set; }
         public string Unit { get; set; } = string.Empty;
+        public int? VendorID { get; set; }
+        public string? VendorName { get; set; }
     }

@@ -637,6 +637,30 @@ namespace VenodorManagementFrontend.Services
             return null;
         }
 
+        public async Task<DispatchPurchaseRequestResponse?> DispatchPurchaseRequestAsync(int requestId, List<ItemVendorAssignmentDto> itemVendorAssignments)
+        {
+            SetAuthHeader();
+            try
+            {
+                var command = new DispatchPurchaseRequestCommand
+                {
+                    RequestID = requestId,
+                    ItemVendorAssignments = itemVendorAssignments,
+                    SelectedVendorIDs = itemVendorAssignments.Select(a => a.VendorID).Distinct().ToList()
+                };
+                var response = await _httpClient.PostAsJsonAsync($"api/purchaserequests/{requestId}/dispatch", command);
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadFromJsonAsync<DispatchPurchaseRequestResponse>();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ApiService] DispatchPurchaseRequestAsync error: {ex.Message}");
+            }
+            return null;
+        }
+
         public async Task<VendorRecommendationResponse?> GetVendorRecommendationsAsync(int purchaseRequestId)
         {
             SetAuthHeader();

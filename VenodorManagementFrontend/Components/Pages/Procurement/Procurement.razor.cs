@@ -12,7 +12,7 @@ public partial class Procurement : ComponentBase
 {
     // Mode & View States
     private bool IsCreateMode { get; set; } = false;
-    private int CurrentStep { get; set; } = 1; // 1: Outlet, 2: Product, 3: Quantity & Recs, 4: Review
+    private int CurrentStep { get; set; } = 1; // 1: Outlet, 2: Add Products & Cart, 3: Review & Dispatch
 
     // List View State
     private List<PurchaseRequestDto> AllPurchaseRequests { get; set; } = new();
@@ -38,24 +38,34 @@ public partial class Procurement : ComponentBase
     private string OutletAddress { get; set; } = string.Empty;
     private bool IsOutletConfirmed { get; set; } = false;
 
+    // Multi-Product Procurement Cart State
+    private List<ProcurementItem> CartItems { get; set; } = new();
+    private string? EditingCartItemKey { get; set; }
+
+    // Current Product Selection & Recommendation State
     private ProductDto? SelectedProduct { get; set; }
     private string SearchProductQuery { get; set; } = string.Empty;
-
     private decimal? QuantityInput { get; set; } = 10;
+    private VendorRecommendationDto? SelectedVendorForProduct { get; set; }
+    private List<VendorRecommendationDto>? VendorRecommendations { get; set; }
+    private Dictionary<int, VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto> LatestReviewsByVendorDict { get; set; } = new();
+    private string VendorSortBy { get; set; } = "Reviews";
+
+    // Validation & Error Messages
     private string ValidationMessage { get; set; } = string.Empty;
-    private string QuantityValidationMessage { get; set; } = string.Empty;
-
-    private bool IsLoadingOutlets { get; set; } = true;
-    private bool HasErrorOutlets { get; set; } = false;
-
-    private bool IsLoadingProducts { get; set; } = false;
-    private bool HasErrorProducts { get; set; } = false;
-
-    private bool IsFindingVendors { get; set; } = false;
-    private bool IsDispatching { get; set; } = false;
+    private string ItemValidationMessage { get; set; } = string.Empty;
+    private string CartValidationMessage { get; set; } = string.Empty;
     private string? PurchaseRequestError { get; set; }
     private string? RecommendationsError { get; set; }
     private string? DispatchSuccessMessage { get; set; }
+
+    // Loading & Async Flags
+    private bool IsLoadingOutlets { get; set; } = true;
+    private bool HasErrorOutlets { get; set; } = false;
+    private bool IsLoadingProducts { get; set; } = false;
+    private bool HasErrorProducts { get; set; } = false;
+    private bool IsFindingVendors { get; set; } = false;
+    private bool IsDispatching { get; set; } = false;
 
     // Navigation & Shell State
     private bool IsSidebarCollapsed { get; set; } = false;
@@ -64,10 +74,10 @@ public partial class Procurement : ComponentBase
     private bool ShowProfileModal { get; set; } = false;
 
     private PurchaseRequestDto? CreatedPurchaseRequest { get; set; }
-    private List<VendorRecommendationDto>? VendorRecommendations { get; set; }
-    private List<VendorRecommendationDto> SelectedVendors { get; set; } = new();
-    private Dictionary<int, VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto> LatestReviewsByVendorDict { get; set; } = new();
-    private string VendorSortBy { get; set; } = "Reviews";
+
+    // Cart Computed Helpers
+    private decimal TotalCartEstimatedValue => CartItems.Sum(i => i.Quantity * i.UnitPrice);
+    private List<string> DistinctVendorNamesInCart => CartItems.Select(i => i.VendorName).Where(v => !string.IsNullOrWhiteSpace(v)).Distinct().ToList();
 
     private List<VendorRecommendationDto> SortedVendorRecommendations
     {
@@ -279,17 +289,22 @@ public partial class Procurement : ComponentBase
         }
     }
 
-    // --- MODE SWITCHING ---
+    // --- MODE SWITCHING & CART MANAGEMENT ---
     private void StartCreateRequest()
     {
         IsCreateMode = true;
         CurrentStep = 1;
+        CartItems.Clear();
+        EditingCartItemKey = null;
         SelectedProduct = null;
         QuantityInput = 10;
+        SelectedVendorForProduct = null;
         CreatedPurchaseRequest = null;
         VendorRecommendations = null;
-        SelectedVendors.Clear();
         LatestReviewsByVendorDict.Clear();
+        ValidationMessage = string.Empty;
+        ItemValidationMessage = string.Empty;
+        CartValidationMessage = string.Empty;
         PurchaseRequestError = null;
         RecommendationsError = null;
         DispatchSuccessMessage = null;
@@ -300,17 +315,22 @@ public partial class Procurement : ComponentBase
     {
         IsCreateMode = false;
         CurrentStep = 1;
+        CartItems.Clear();
+        EditingCartItemKey = null;
         SelectedProduct = null;
+        SelectedVendorForProduct = null;
         CreatedPurchaseRequest = null;
         VendorRecommendations = null;
-        SelectedVendors.Clear();
         LatestReviewsByVendorDict.Clear();
+        ValidationMessage = string.Empty;
+        ItemValidationMessage = string.Empty;
+        CartValidationMessage = string.Empty;
         PurchaseRequestError = null;
         RecommendationsError = null;
         DispatchSuccessMessage = null;
     }
 
-    private async Task GoToStep2Product()
+    private async Task GoToStep2AddProducts()
     {
         ValidationMessage = string.Empty;
         if (SelectedOutletId <= 0)
@@ -353,49 +373,219 @@ public partial class Procurement : ComponentBase
         {
             QuantityInput = 10;
         }
-        CurrentStep = 3;
-        CreatedPurchaseRequest = null;
-        VendorRecommendations = null;
-        SelectedVendors.Clear();
-        QuantityValidationMessage = string.Empty;
+        SelectedVendorForProduct = null;
+        ItemValidationMessage = string.Empty;
+        CartValidationMessage = string.Empty;
         PurchaseRequestError = null;
         RecommendationsError = null;
-        DispatchSuccessMessage = null;
 
         await FetchVendorRecommendations();
 
-        if (VendorRecommendations != null && VendorRecommendations.Count > 0 && SelectedVendors.Count == 0)
+        if (VendorRecommendations != null && VendorRecommendations.Count > 0 && SelectedVendorForProduct == null)
         {
-            SelectedVendors.Add(VendorRecommendations[0]);
+            SelectedVendorForProduct = VendorRecommendations[0];
         }
     }
 
-    private void GoToStep4Review()
+    private void SelectVendorForProduct(VendorRecommendationDto vendor)
     {
-        QuantityValidationMessage = string.Empty;
+        SelectedVendorForProduct = vendor;
+        ItemValidationMessage = string.Empty;
+    }
+
+    private void AddItemToCart()
+    {
+        ItemValidationMessage = string.Empty;
+        CartValidationMessage = string.Empty;
+
+        if (SelectedProduct == null)
+        {
+            ItemValidationMessage = "Please select a product from the catalog.";
+            return;
+        }
+
         if (!QuantityInput.HasValue || QuantityInput.Value <= 0)
         {
-            QuantityValidationMessage = "Please enter a valid quantity greater than 0.";
+            ItemValidationMessage = $"Please enter a valid quantity greater than 0 for {SelectedProduct.ProductName}.";
             return;
         }
-        if (SelectedVendors.Count == 0)
+
+        if (SelectedVendorForProduct == null)
         {
-            QuantityValidationMessage = "Please select at least one vendor to receive this purchase request.";
+            ItemValidationMessage = $"Please select a vendor for {SelectedProduct.ProductName}.";
             return;
         }
-        CurrentStep = 4;
+
+        if (!string.IsNullOrEmpty(EditingCartItemKey))
+        {
+            // Update existing cart item being edited
+            var existing = CartItems.FirstOrDefault(i => i.ItemKey == EditingCartItemKey);
+            if (existing != null)
+            {
+                existing.ProductID = SelectedProduct.ProductID;
+                existing.ProductName = SelectedProduct.ProductName;
+                existing.Category = SelectedProduct.Category ?? "General";
+                existing.Quantity = QuantityInput.Value;
+                existing.Unit = SelectedProduct.Unit;
+                existing.VendorID = SelectedVendorForProduct.VendorID;
+                existing.VendorName = SelectedVendorForProduct.VendorName;
+                existing.UnitPrice = SelectedVendorForProduct.UnitPrice;
+                existing.EstimatedDeliveryDays = SelectedVendorForProduct.EstimatedDeliveryDays;
+                existing.AverageRating = SelectedVendorForProduct.AverageRating;
+                existing.TotalFeedbackCount = SelectedVendorForProduct.TotalFeedbackCount;
+                existing.AverageQualityRating = SelectedVendorForProduct.AverageQualityRating;
+                existing.SmartBadge = SelectedVendorForProduct.SmartBadge;
+                existing.HasActiveContract = SelectedVendorForProduct.HasActiveContract;
+                existing.RemainingQuantity = SelectedVendorForProduct.RemainingQuantity;
+            }
+            EditingCartItemKey = null;
+        }
+        else
+        {
+            // Check if product already exists in cart
+            var existing = CartItems.FirstOrDefault(i => i.ProductID == SelectedProduct.ProductID);
+            if (existing != null)
+            {
+                // Update quantity and selected vendor
+                existing.Quantity = QuantityInput.Value;
+                existing.Unit = SelectedProduct.Unit;
+                existing.VendorID = SelectedVendorForProduct.VendorID;
+                existing.VendorName = SelectedVendorForProduct.VendorName;
+                existing.UnitPrice = SelectedVendorForProduct.UnitPrice;
+                existing.EstimatedDeliveryDays = SelectedVendorForProduct.EstimatedDeliveryDays;
+                existing.AverageRating = SelectedVendorForProduct.AverageRating;
+                existing.TotalFeedbackCount = SelectedVendorForProduct.TotalFeedbackCount;
+                existing.AverageQualityRating = SelectedVendorForProduct.AverageQualityRating;
+                existing.SmartBadge = SelectedVendorForProduct.SmartBadge;
+                existing.HasActiveContract = SelectedVendorForProduct.HasActiveContract;
+                existing.RemainingQuantity = SelectedVendorForProduct.RemainingQuantity;
+            }
+            else
+            {
+                // Add new item to cart
+                CartItems.Add(new ProcurementItem
+                {
+                    ProductID = SelectedProduct.ProductID,
+                    ProductName = SelectedProduct.ProductName,
+                    Category = SelectedProduct.Category ?? "General",
+                    Quantity = QuantityInput.Value,
+                    Unit = SelectedProduct.Unit,
+                    VendorID = SelectedVendorForProduct.VendorID,
+                    VendorName = SelectedVendorForProduct.VendorName,
+                    UnitPrice = SelectedVendorForProduct.UnitPrice,
+                    EstimatedDeliveryDays = SelectedVendorForProduct.EstimatedDeliveryDays,
+                    AverageRating = SelectedVendorForProduct.AverageRating,
+                    TotalFeedbackCount = SelectedVendorForProduct.TotalFeedbackCount,
+                    AverageQualityRating = SelectedVendorForProduct.AverageQualityRating,
+                    SmartBadge = SelectedVendorForProduct.SmartBadge,
+                    HasActiveContract = SelectedVendorForProduct.HasActiveContract,
+                    RemainingQuantity = SelectedVendorForProduct.RemainingQuantity
+                });
+            }
+        }
+
+        // Reset product picker for adding subsequent items
+        ResetProductPicker();
+    }
+
+    private async Task EditCartItem(ProcurementItem item)
+    {
+        EditingCartItemKey = item.ItemKey;
+        var matched = AllProducts.FirstOrDefault(p => p.ProductID == item.ProductID);
+        SelectedProduct = matched ?? new ProductDto
+        {
+            ProductID = item.ProductID,
+            ProductName = item.ProductName,
+            Category = item.Category,
+            Unit = item.Unit
+        };
+        QuantityInput = item.Quantity;
+        ItemValidationMessage = string.Empty;
+
+        await FetchVendorRecommendations();
+
+        if (VendorRecommendations != null && VendorRecommendations.Count > 0)
+        {
+            SelectedVendorForProduct = VendorRecommendations.FirstOrDefault(v => v.VendorID == item.VendorID) ?? VendorRecommendations[0];
+        }
+    }
+
+    private void CancelEditCartItem()
+    {
+        EditingCartItemKey = null;
+        ResetProductPicker();
+    }
+
+    private void RemoveCartItem(string itemKey)
+    {
+        CartItems.RemoveAll(i => i.ItemKey == itemKey);
+        if (EditingCartItemKey == itemKey)
+        {
+            CancelEditCartItem();
+        }
+        CartValidationMessage = string.Empty;
+    }
+
+    private void UpdateCartItemQuantity(ProcurementItem item, decimal newQuantity)
+    {
+        if (newQuantity > 0)
+        {
+            item.Quantity = newQuantity;
+        }
+    }
+
+    private void ResetProductPicker()
+    {
+        SelectedProduct = null;
+        SelectedVendorForProduct = null;
+        QuantityInput = 10;
+        VendorRecommendations = null;
+        SearchProductQuery = string.Empty;
+        ItemValidationMessage = string.Empty;
+        EditingCartItemKey = null;
+    }
+
+    private void GoToStepReview()
+    {
+        CartValidationMessage = string.Empty;
+        PurchaseRequestError = null;
+
+        // Auto-add current valid selection if cart is currently empty
+        if (CartItems.Count == 0 && SelectedProduct != null && SelectedVendorForProduct != null && QuantityInput.HasValue && QuantityInput.Value > 0)
+        {
+            AddItemToCart();
+        }
+
+        if (CartItems.Count == 0)
+        {
+            CartValidationMessage = "Please add at least one product with an assigned vendor to your procurement request.";
+            return;
+        }
+
+        // Validate all cart items
+        foreach (var item in CartItems)
+        {
+            if (item.Quantity <= 0)
+            {
+                CartValidationMessage = $"Please enter a valid quantity greater than 0 for {item.ProductName}.";
+                return;
+            }
+            if (item.VendorID <= 0)
+            {
+                CartValidationMessage = $"Please select a vendor for {item.ProductName}.";
+                return;
+            }
+        }
+
+        CurrentStep = 3;
     }
 
     private void GoBackToStep(int step)
     {
         CurrentStep = step;
         PurchaseRequestError = null;
-        QuantityValidationMessage = string.Empty;
-    }
-
-    private void OnQuantityChanged()
-    {
-        QuantityValidationMessage = string.Empty;
+        CartValidationMessage = string.Empty;
+        ItemValidationMessage = string.Empty;
     }
 
     private async Task FetchVendorRecommendations()
@@ -605,9 +795,9 @@ public partial class Procurement : ComponentBase
                 }
             }
 
-            if (VendorRecommendations.Count > 0 && SelectedVendors.Count == 0)
+            if (VendorRecommendations.Count > 0 && SelectedVendorForProduct == null)
             {
-                SelectedVendors.Add(VendorRecommendations[0]);
+                SelectedVendorForProduct = VendorRecommendations[0];
             }
             RecommendationsError = null;
         }
@@ -624,23 +814,25 @@ public partial class Procurement : ComponentBase
         }
     }
 
-    private void ToggleVendorSelection(VendorRecommendationDto vendor)
-    {
-        if (SelectedVendors.Any(v => v.VendorID == vendor.VendorID))
-        {
-            SelectedVendors.RemoveAll(v => v.VendorID == vendor.VendorID);
-        }
-        else
-        {
-            SelectedVendors.Clear();
-            SelectedVendors.Add(vendor);
-        }
-    }
-
-    private async Task DispatchToSelectedVendors()
+    private async Task CreateAndDispatchPurchaseRequest()
     {
         if (!Auth.IsPurchaseManager && !Auth.IsAdmin) return;
-        if (SelectedProduct == null || SelectedVendors.Count == 0 || !QuantityInput.HasValue || QuantityInput.Value <= 0) return;
+        if (CartItems.Count == 0 || SelectedOutletId <= 0) return;
+
+        // Validate all cart items before submitting
+        foreach (var item in CartItems)
+        {
+            if (item.Quantity <= 0)
+            {
+                PurchaseRequestError = $"Invalid quantity for {item.ProductName}. Must be greater than 0.";
+                return;
+            }
+            if (item.VendorID <= 0)
+            {
+                PurchaseRequestError = $"Please select a vendor for {item.ProductName}.";
+                return;
+            }
+        }
 
         IsDispatching = true;
         PurchaseRequestError = null;
@@ -649,66 +841,99 @@ public partial class Procurement : ComponentBase
 
         try
         {
+            // Build CreatePurchaseRequestCommand with item-level VendorID
             var command = new CreatePurchaseRequestCommand
             {
                 OutletID = SelectedOutletId,
                 CreatedByUserID = Auth.UserID,
                 RequestDate = DateTime.Now,
-                Items = new List<CreatePurchaseRequestItemDto>
+                Items = CartItems.Select(i => new CreatePurchaseRequestItemDto
                 {
-                    new CreatePurchaseRequestItemDto
-                    {
-                        ProductID = SelectedProduct.ProductID,
-                        Quantity = QuantityInput.Value,
-                        Unit = SelectedProduct.Unit
-                    }
-                }
+                    ProductID = i.ProductID,
+                    Quantity = i.Quantity,
+                    Unit = i.Unit,
+                    VendorID = i.VendorID
+                }).ToList()
             };
 
             CreatedPurchaseRequest = await Api.CreatePurchaseRequestAsync(command);
             if (CreatedPurchaseRequest == null)
             {
-                PurchaseRequestError = "Unable to create Purchase Request.";
+                PurchaseRequestError = "Unable to create Purchase Request. Please try again.";
                 IsDispatching = false;
                 StateHasChanged();
                 return;
             }
 
-            var selectedIds = SelectedVendors.Select(v => v.VendorID).ToList();
-            var result = await Api.DispatchPurchaseRequestAsync(CreatedPurchaseRequest.RequestID, selectedIds);
+            // Resolve RequestItemIDs for dispatch
+            List<PurchaseRequestItemDto> serverItems = CreatedPurchaseRequest.Items ?? new();
+            if (serverItems.Count == 0 || serverItems.Any(si => si.ItemID <= 0))
+            {
+                var detailedPr = await Api.GetPurchaseRequestByIdAsync(CreatedPurchaseRequest.RequestID);
+                if (detailedPr?.Items != null && detailedPr.Items.Count > 0)
+                {
+                    serverItems = detailedPr.Items;
+                }
+            }
+
+            // Map each cart item to its corresponding RequestItemID, ProductID, and VendorID
+            var assignments = new List<ItemVendorAssignmentDto>();
+            for (int i = 0; i < CartItems.Count; i++)
+            {
+                var cartItem = CartItems[i];
+                var matchedServerItem = serverItems.FirstOrDefault(si => si.ProductID == cartItem.ProductID && !assignments.Any(a => a.RequestItemID == si.ItemID));
+                int requestItemId = matchedServerItem != null ? matchedServerItem.ItemID : (serverItems.Count > i ? serverItems[i].ItemID : 0);
+
+                assignments.Add(new ItemVendorAssignmentDto
+                {
+                    RequestItemID = requestItemId,
+                    ProductID = cartItem.ProductID,
+                    VendorID = cartItem.VendorID
+                });
+            }
+
+            var result = await Api.DispatchPurchaseRequestAsync(CreatedPurchaseRequest.RequestID, assignments);
 
             if (result != null && result.Success)
             {
-                string vendorNames = string.Join(", ", SelectedVendors.Select(v => $"'{v.VendorName}'"));
-                DispatchSuccessMessage = $"Purchase Request PR-{CreatedPurchaseRequest.RequestID} has been successfully created and sent to {vendorNames}.";
+                var distinctVendors = CartItems.Select(c => c.VendorName).Distinct().ToList();
+                string vendorNames = string.Join(", ", distinctVendors.Select(v => $"'{v}'"));
+                DispatchSuccessMessage = $"Purchase Request PR-{CreatedPurchaseRequest.RequestID} ({CartItems.Count} item{(CartItems.Count > 1 ? "s" : "")}) has been successfully created and dispatched to {vendorNames}.";
 
                 // Refresh the local purchase requests list in background
                 _ = Task.Run(async () =>
                 {
-                    var updated = await Api.GetPurchaseRequestsAsync();
-                    if (updated != null)
+                    try
                     {
-                        AllPurchaseRequests = updated;
-                        if (Auth.OutletID.HasValue && Auth.OutletID.Value > 0)
+                        var updated = await Api.GetPurchaseRequestsAsync();
+                        if (updated != null)
                         {
-                            ScopedPurchaseRequests = AllPurchaseRequests.Where(r => r.OutletID == Auth.OutletID.Value).ToList();
+                            AllPurchaseRequests = updated;
+                            if (Auth.OutletID.HasValue && Auth.OutletID.Value > 0)
+                            {
+                                ScopedPurchaseRequests = AllPurchaseRequests.Where(r => r.OutletID == Auth.OutletID.Value).ToList();
+                            }
+                            else
+                            {
+                                ScopedPurchaseRequests = AllPurchaseRequests;
+                            }
                         }
-                        else
-                        {
-                            ScopedPurchaseRequests = AllPurchaseRequests;
-                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[Procurement] Background PR list refresh error: {ex.Message}");
                     }
                 });
             }
             else
             {
-                PurchaseRequestError = result?.Message ?? "Unable to dispatch Purchase Request to selected vendor(s).";
+                PurchaseRequestError = result?.Message ?? "Unable to dispatch Purchase Request to assigned vendor(s).";
             }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"[Procurement] Dispatch error: {ex.Message}");
-            PurchaseRequestError = "An error occurred while dispatching the Purchase Request.";
+            PurchaseRequestError = "An error occurred while creating and dispatching the Purchase Request.";
         }
         finally
         {
@@ -752,8 +977,12 @@ public partial class Procurement : ComponentBase
     {
         if (pr.Items != null && pr.Items.Count > 0)
         {
-            var first = pr.Items[0];
-            return $"{first.Quantity:G29} {first.Unit}".Trim();
+            if (pr.Items.Count == 1)
+            {
+                var first = pr.Items[0];
+                return $"{first.Quantity:G29} {first.Unit}".Trim();
+            }
+            return $"{pr.Items.Count} Items";
         }
         return "—";
     }
