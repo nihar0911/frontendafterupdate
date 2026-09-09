@@ -1485,15 +1485,14 @@ namespace VenodorManagementFrontend.Services
                 var result = new List<VendorProcurementOpportunityDto>();
 
                 var allQuotations = await GetQuotationsAsync() ?? new List<QuotationDto>();
-                var myQuotedRequestIds = allQuotations
-                    .Where(q => q.VendorID == vendorId.Value)
-                    .Select(q => q.RequestID)
+                var myQuotedItems = allQuotations
+                    .Where(q => q.VendorID == vendorId.Value && q.Items != null)
+                    .SelectMany(q => q.Items.Select(i => (RequestID: q.RequestID, ProductID: i.ProductID)))
                     .ToHashSet();
 
                 foreach (var req in requests)
                 {
                     if (req.Items == null || req.Items.Count == 0) continue;
-                    if (myQuotedRequestIds.Contains(req.RequestID)) continue;
                     if (string.Equals(req.Status, "Cancelled", StringComparison.OrdinalIgnoreCase) ||
                         string.Equals(req.Status, "Completed", StringComparison.OrdinalIgnoreCase))
                         continue;
@@ -1504,6 +1503,7 @@ namespace VenodorManagementFrontend.Services
 
                     foreach (var item in req.Items)
                     {
+                        if (myQuotedItems.Contains((req.RequestID, item.ProductID))) continue;
                         if (activeProductIds.Contains(item.ProductID))
                         {
                             var vp = mappingDict[item.ProductID];

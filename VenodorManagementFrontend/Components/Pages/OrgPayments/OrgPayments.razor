@@ -11,7 +11,7 @@
         <div class="org-po-warning-card">
             <h4 class="fw-bold mb-2 text-dark">Authentication Required</h4>
             <p class="text-muted mb-3">Please log in to access Payments.</p>
-            <button class="btn btn-primary" @onclick='() => Nav.NavigateTo(Auth.IsPurchaseManager ? "/purchase-manager/login" : "/login")'>Go to Login</button>
+            <button class="btn btn-primary" @onclick='() => Nav.NavigateTo("/login")'>Go to Login</button>
         </div>
     </div>
 }

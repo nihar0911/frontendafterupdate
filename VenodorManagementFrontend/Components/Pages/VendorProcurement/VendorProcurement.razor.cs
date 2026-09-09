@@ -13,6 +13,9 @@ public partial class VendorProcurement : ComponentBase
     [Parameter]
     public int RequestId { get; set; }
 
+    [SupplyParameterFromQuery(Name = "productId")]
+    public int? ProductId { get; set; }
+
     private bool IsLoading { get; set; } = true;
     private bool HasError { get; set; } = false;
     private string ErrorMessage { get; set; } = string.Empty;
@@ -42,6 +45,15 @@ public partial class VendorProcurement : ComponentBase
         }
     }
 
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Auth.IsAuthenticated && Auth.IsVendorManager && Opportunity != null &&
+            (Opportunity.RequestID != RequestId || (ProductId.HasValue && ProductId.Value > 0 && Opportunity.ProductID != ProductId.Value)))
+        {
+            await LoadData();
+        }
+    }
+
     private async Task LoadData()
     {
         IsLoading = true;
@@ -51,7 +63,9 @@ public partial class VendorProcurement : ComponentBase
         try
         {
             var opportunities = await Api.GetVendorProcurementOpportunitiesAsync();
-            Opportunity = opportunities?.FirstOrDefault(o => o.RequestID == RequestId);
+            Opportunity = ProductId.HasValue && ProductId.Value > 0
+                ? opportunities?.FirstOrDefault(o => o.RequestID == RequestId && o.ProductID == ProductId.Value)
+                : opportunities?.FirstOrDefault(o => o.RequestID == RequestId);
 
             if (Opportunity != null)
             {

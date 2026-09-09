@@ -13,7 +13,7 @@
         <div class="unauth-card">
             <h4 class="unauth-title">Authentication Required</h4>
             <p class="unauth-desc">Please log in to review quotations.</p>
-            <button class="btn-login-redirect" @onclick='() => Nav.NavigateTo(Auth.IsPurchaseManager ? "/purchase-manager/login" : "/login")'>Go to Login</button>
+            <button class="btn-login-redirect" @onclick='() => Nav.NavigateTo("/login")'>Go to Login</button>
         </div>
     </div>
 }

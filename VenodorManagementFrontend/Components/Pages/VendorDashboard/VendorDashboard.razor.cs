@@ -1066,9 +1066,16 @@ public partial class VendorDashboard : ComponentBase
         }
     }
 
-    private void ViewOpportunity(int requestId)
+    private void ViewOpportunity(int requestId, int productId = 0)
     {
-        Nav.NavigateTo($"/vendor/procurement/{requestId}");
+        if (productId > 0)
+        {
+            Nav.NavigateTo($"/vendor/procurement/{requestId}?productId={productId}");
+        }
+        else
+        {
+            Nav.NavigateTo($"/vendor/procurement/{requestId}");
+        }
     }
 
     private async Task OpenCreateInvoiceModal(PurchaseOrderDto po)

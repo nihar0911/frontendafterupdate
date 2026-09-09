@@ -188,7 +188,7 @@ public partial class Procurement : ComponentBase
     private void HandleLogout()
     {
         Auth.Logout();
-        Nav.NavigateTo("/purchase-manager/login", true);
+        Nav.NavigateTo("/login", true);
     }
 
     private async Task MarkNotificationRead(int notificationId)

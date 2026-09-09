@@ -1,13 +1,10 @@
 @page "/purchase-manager/login"
 @page "/purchase/login"
-@rendermode InteractiveServer
+@inject NavigationManager Nav
 
-<PageTitle>Purchase Manager Login - Smart Vendor Management System</PageTitle>
-
-<LoginForm RoleTitle="Purchase Manager Portal"
-           RoleBadge="Purchase Manager"
-           PortalDisplayName="Purchase Manager"
-           ExpectedRole="Purchase Manager"
-           RoleBadgeClass="bg-info text-white"
-           RoleDescription="Create purchase requests, evaluate quotations, submit purchase orders for approval, record deliveries, and track fulfillment."
-           RoleIconColor="#5B7890" />
+@code {
+    protected override void OnInitialized()
+    {
+        Nav.NavigateTo("/login", true);
+    }
+}
