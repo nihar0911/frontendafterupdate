@@ -259,20 +259,98 @@ public partial class Procurement : ComponentBase
                 }
             }
 
-            // Resolve Org Name
-            if (Auth.OrganizationID.HasValue && Auth.OrganizationID.Value > 0)
+            // Resolve Org Name associated with the assigned outlet (consistent with PurchaseRequestDetails)
+            var activeOutlet = Outlets.FirstOrDefault(o => o.OutletID == SelectedOutletId);
+            string resolvedOrgName = string.Empty;
+
+            // 1. Direct from activeOutlet.OrganizationName
+            if (activeOutlet != null && !string.IsNullOrWhiteSpace(activeOutlet.OrganizationName) && !activeOutlet.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase))
             {
-                var matchedOrg = allOrgs.FirstOrDefault(o => o.OrganizationID == Auth.OrganizationID.Value);
-                OrganizationName = matchedOrg?.OrganizationName ?? $"Organization #{Auth.OrganizationID.Value}";
+                resolvedOrgName = activeOutlet.OrganizationName;
             }
-            else if (allOrgs.Count > 0)
+
+            // 2. Lookup in allOrgs by activeOutlet.OrganizationID
+            if (string.IsNullOrWhiteSpace(resolvedOrgName) && activeOutlet != null && activeOutlet.OrganizationID > 0)
             {
-                OrganizationName = allOrgs[0].OrganizationName;
+                var matchedOrg = allOrgs.FirstOrDefault(o => o.OrganizationID == activeOutlet.OrganizationID);
+                if (matchedOrg != null && !string.IsNullOrWhiteSpace(matchedOrg.OrganizationName) && !matchedOrg.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase))
+                {
+                    resolvedOrgName = matchedOrg.OrganizationName;
+                }
             }
-            else
+
+            // 3. Direct API call GetOrganizationByIdAsync for activeOutlet.OrganizationID
+            if (string.IsNullOrWhiteSpace(resolvedOrgName) && activeOutlet != null && activeOutlet.OrganizationID > 0)
             {
-                OrganizationName = "Smart Vendor Enterprise";
+                try
+                {
+                    var directOrg = await Api.GetOrganizationByIdAsync(activeOutlet.OrganizationID);
+                    if (directOrg != null && !string.IsNullOrWhiteSpace(directOrg.OrganizationName) && !directOrg.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase))
+                    {
+                        resolvedOrgName = directOrg.OrganizationName;
+                    }
+                }
+                catch { }
             }
+
+            // 4. Sibling outlet matching the same OrganizationID
+            if (string.IsNullOrWhiteSpace(resolvedOrgName) && activeOutlet != null && activeOutlet.OrganizationID > 0)
+            {
+                var sibling = Outlets.FirstOrDefault(o => o.OrganizationID == activeOutlet.OrganizationID && !string.IsNullOrWhiteSpace(o.OrganizationName) && !o.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase));
+                if (sibling != null)
+                {
+                    resolvedOrgName = sibling.OrganizationName;
+                }
+            }
+
+            // 5. Invoices associated with this outlet
+            if (string.IsNullOrWhiteSpace(resolvedOrgName) && activeOutlet != null)
+            {
+                try
+                {
+                    var invoices = await Api.GetInvoicesAsync();
+                    var invMatch = invoices?.FirstOrDefault(i => i.OutletID == activeOutlet.OutletID && !string.IsNullOrWhiteSpace(i.OrganizationName) && !i.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase));
+                    if (invMatch != null)
+                    {
+                        resolvedOrgName = invMatch.OrganizationName;
+                    }
+                }
+                catch { }
+            }
+
+            // 6. User Auth Organization as fallback if matches
+            if (string.IsNullOrWhiteSpace(resolvedOrgName) && Auth.OrganizationID.HasValue && Auth.OrganizationID.Value > 0)
+            {
+                var authOrg = allOrgs.FirstOrDefault(o => o.OrganizationID == Auth.OrganizationID.Value);
+                if (authOrg != null && !string.IsNullOrWhiteSpace(authOrg.OrganizationName) && !authOrg.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase))
+                {
+                    resolvedOrgName = authOrg.OrganizationName;
+                }
+                else
+                {
+                    try
+                    {
+                        var directAuthOrg = await Api.GetOrganizationByIdAsync(Auth.OrganizationID.Value);
+                        if (directAuthOrg != null && !string.IsNullOrWhiteSpace(directAuthOrg.OrganizationName) && !directAuthOrg.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase))
+                        {
+                            resolvedOrgName = directAuthOrg.OrganizationName;
+                        }
+                    }
+                    catch { }
+                }
+            }
+
+            // 7. First named organization in allOrgs
+            if (string.IsNullOrWhiteSpace(resolvedOrgName) && allOrgs.Count > 0)
+            {
+                var firstNamed = allOrgs.FirstOrDefault(o => !string.IsNullOrWhiteSpace(o.OrganizationName) && !o.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase));
+                if (firstNamed != null)
+                {
+                    resolvedOrgName = firstNamed.OrganizationName;
+                }
+            }
+
+            OrganizationName = !string.IsNullOrWhiteSpace(resolvedOrgName) ? resolvedOrgName : "Organization";
 
             IsOutletConfirmed = SelectedOutletId > 0;
         }
@@ -1049,6 +1127,25 @@ public partial class Procurement : ComponentBase
         IsReviewsModalOpen = false;
         SelectedVendorForReviews = null;
         CurrentVendorReviews.Clear();
+    }
+
+    private string ResolveReviewOutletName(VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto? rev)
+    {
+        if (rev == null) return string.Empty;
+        if (!string.IsNullOrWhiteSpace(rev.OutletName) && !rev.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
+            return rev.OutletName;
+
+        if (rev.OutletID > 0)
+        {
+            var matched = Outlets.FirstOrDefault(o => o.OutletID == rev.OutletID);
+            if (matched != null && !string.IsNullOrWhiteSpace(matched.OutletName))
+                return GetDisplayOutletName(matched);
+        }
+
+        if (!string.IsNullOrWhiteSpace(ConfirmedOutletName) && !ConfirmedOutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
+            return ConfirmedOutletName;
+
+        return !string.IsNullOrWhiteSpace(rev.OutletName) ? rev.OutletName : (rev.OutletID > 0 ? $"Outlet #{rev.OutletID}" : string.Empty);
     }
 
     private string GetQualitativeRatingText(decimal rating)

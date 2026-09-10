@@ -43,6 +43,20 @@ public partial class OrgPayments : ComponentBase
     protected string? PaymentErrorMessage { get; set; }
     protected string? PaymentSuccessMessage { get; set; }
 
+    protected Dictionary<int, string> OutletDictionary { get; set; } = new();
+
+    protected string GetInvoiceOutletName(InvoiceDto? invoice)
+    {
+        if (invoice == null) return string.Empty;
+        if (!string.IsNullOrWhiteSpace(invoice.OutletName))
+            return invoice.OutletName;
+        if (OutletDictionary.TryGetValue(invoice.OutletID, out var name) && !string.IsNullOrWhiteSpace(name))
+            return name;
+        if (!string.IsNullOrWhiteSpace(OutletDisplayName) && invoice.OutletID == (Auth.OutletID ?? 0))
+            return OutletDisplayName;
+        return invoice.OutletID > 0 ? $"Outlet #{invoice.OutletID}" : string.Empty;
+    }
+
     protected override async Task OnInitializedAsync()
     {
         if (!Auth.IsAuthenticated || (!Auth.IsOrgManager && !Auth.IsAdmin && !Auth.IsPurchaseManager))
@@ -64,18 +78,28 @@ public partial class OrgPayments : ComponentBase
             catch { }
         }
 
-        if ((Auth.IsPurchaseManager || Auth.IsOutletManager) && Auth.OutletID.HasValue && Auth.OutletID.Value > 0)
+        try
         {
-            try
+            var outlets = await Api.GetOutletsAsync();
+            if (outlets != null)
             {
-                var outlets = await Api.GetOutletsAsync();
-                var myOutlet = outlets?.FirstOrDefault(o => o.OutletID == Auth.OutletID.Value);
-                if (myOutlet != null && !string.IsNullOrWhiteSpace(myOutlet.OutletName))
+                foreach (var o in outlets)
                 {
-                    OutletDisplayName = myOutlet.OutletName;
+                    if (o.OutletID > 0 && !string.IsNullOrWhiteSpace(o.OutletName))
+                    {
+                        OutletDictionary[o.OutletID] = o.OutletName;
+                    }
                 }
             }
-            catch { }
+        }
+        catch { }
+
+        if ((Auth.IsPurchaseManager || Auth.IsOutletManager) && Auth.OutletID.HasValue && Auth.OutletID.Value > 0)
+        {
+            if (OutletDictionary.TryGetValue(Auth.OutletID.Value, out var myName) && !string.IsNullOrWhiteSpace(myName))
+            {
+                OutletDisplayName = myName;
+            }
         }
 
         await LoadDataAsync();

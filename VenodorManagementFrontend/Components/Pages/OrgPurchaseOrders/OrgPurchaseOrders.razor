@@ -495,19 +495,6 @@ else
                             </div>
                         }
 
-                        @if (!string.IsNullOrWhiteSpace(DeliverySuccessMessage))
-                        {
-                            <div class="alert alert-success d-flex align-items-center justify-content-between mb-4 shadow-sm rounded-3 py-2 px-3">
-                                <div class="d-flex align-items-center gap-2">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                    <span class="small fw-semibold">@DeliverySuccessMessage</span>
-                                </div>
-                                <button type="button" class="btn-close btn-close-sm" @onclick="() => DeliverySuccessMessage = string.Empty"></button>
-                            </div>
-                        }
-
                         @if (!string.IsNullOrWhiteSpace(DeliveryFormError))
                         {
                             <div class="alert alert-danger d-flex align-items-center justify-content-between mb-4 shadow-sm rounded-3 py-2 px-3">

@@ -378,7 +378,7 @@ else
                                             </td>
                                             <td>PO-@p.PurchaseOrderID</td>
                                             <td class="vendor-name-cell">@p.VendorName</td>
-                                            <td>@p.OutletName</td>
+                                            <td>@(string.IsNullOrWhiteSpace(p.OutletName) ? (OutletDictionary.TryGetValue(p.OutletID, out var oName) ? oName : (p.OutletID > 0 ? $"Outlet #{p.OutletID}" : "—")) : p.OutletName)</td>
                                             <td class="fw-bold text-dark">Rs. @p.Amount.ToString("N2")</td>
                                             <td>@p.PaymentDate.ToIst("dd MMM yyyy")</td>
                                             <td>
@@ -451,7 +451,7 @@ else
                                             <td class="fw-semibold text-dark">INV-@inv.InvoiceID</td>
                                             <td>PO-@inv.PurchaseOrderID</td>
                                             <td class="vendor-name-cell">@inv.VendorName</td>
-                                            <td>@inv.OutletName</td>
+                                            <td>@GetInvoiceOutletName(inv)</td>
                                             <td>@inv.InvoiceDate.ToIst("dd MMM yyyy")</td>
                                             <td class="fw-bold text-success">Rs. @inv.TotalAmount.ToString("N2")</td>
                                             <td>
@@ -523,36 +523,28 @@ else
                         <!-- Invoice Summary Details -->
                         <div class="payment-meta-card">
                             <div class="meta-row">
-                                <span class="meta-label">Purchase Order:</span>
+                                <span class="meta-label">Purchase Order</span>
                                 <span class="meta-val">PO-@SelectedInvoiceForPayment.PurchaseOrderID</span>
                             </div>
                             <div class="meta-row">
-                                <span class="meta-label">Vendor:</span>
+                                <span class="meta-label">Vendor</span>
                                 <span class="meta-val">@SelectedInvoiceForPayment.VendorName</span>
                             </div>
                             <div class="meta-row">
-                                <span class="meta-label">Outlet:</span>
-                                <span class="meta-val">@SelectedInvoiceForPayment.OutletName</span>
+                                <span class="meta-label">Outlet</span>
+                                <span class="meta-val">@GetInvoiceOutletName(SelectedInvoiceForPayment)</span>
                             </div>
                             <div class="meta-row">
-                                <span class="meta-label">Invoice Date:</span>
+                                <span class="meta-label">Invoice Date</span>
                                 <span class="meta-val">@SelectedInvoiceForPayment.InvoiceDate.ToIst("dd MMM yyyy")</span>
                             </div>
                         </div>
 
-                        <!-- ===================================================
-                             AUTO-DERIVED SERVER-SIDE AMOUNT DUE (STRICTLY READ-ONLY)
-                             =================================================== -->
+                        <!-- Amount Due (Clean Summary Card) -->
                         <div class="amount-due-card">
-                            <div class="amount-due-top">
-                                <span class="amount-due-label">Amount Due</span>
-                                <span class="badge-auto-derived">Server Source of Truth</span>
-                            </div>
+                            <div class="amount-due-label">Amount Due</div>
                             <div class="amount-due-figure">
                                 Rs. @SelectedInvoiceForPayment.TotalAmount.ToString("N2")
-                            </div>
-                            <div class="amount-due-note">
-                                Automatically locked to approved Invoice.TotalAmount. Client modification is strictly prevented.
                             </div>
                         </div>
 
@@ -573,27 +565,23 @@ else
                         </div>
 
                         <div class="form-group-custom mb-3">
-                            <label class="form-label-custom">Transaction / Reference Number (Optional)</label>
+                            <label class="form-label-custom">Transaction / Reference Number</label>
                             <input type="text" class="form-control" placeholder="e.g. UTR / Cheque No. / NEFT Reference" @bind="TransactionReference" disabled="@IsSubmittingPayment" maxlength="100" />
                         </div>
                     </div>
 
                     <div class="modal-footer-custom">
-                        <button class="btn btn-outline-secondary" @onclick="CloseMakePaymentModal" disabled="@IsSubmittingPayment">
+                        <button type="button" class="btn-cancel-payment" @onclick="CloseMakePaymentModal" disabled="@IsSubmittingPayment">
                             Cancel
                         </button>
-                        <button class="btn btn-success d-flex align-items-center gap-2" @onclick="SubmitPaymentAsync" disabled="@IsSubmittingPayment">
+                        <button type="button" class="btn-confirm-payment" @onclick="SubmitPaymentAsync" disabled="@IsSubmittingPayment">
                             @if (IsSubmittingPayment)
                             {
-                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
                                 <span>Recording Payment...</span>
                             }
                             else
                             {
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                                </svg>
                                 <span>Confirm Payment (Rs. @SelectedInvoiceForPayment.TotalAmount.ToString("N2"))</span>
                             }
                         </button>

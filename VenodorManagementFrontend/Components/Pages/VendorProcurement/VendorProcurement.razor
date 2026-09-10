@@ -219,7 +219,7 @@ else
 
                     <div class="row g-4">
                         <!-- LEFT COLUMN: REQUEST DETAILS PANEL -->
-                        <div class="col-lg-7">
+                        <div class="@(Opportunity.OpportunityStatus == "Pending" ? "col-12" : "col-lg-7")">
                             <div class="procurement-card">
                                 <div class="card-section-header">
                                     <h3 class="card-section-title">Purchase Request PR-@Opportunity.RequestID</h3>
@@ -331,48 +331,27 @@ else
                             </div>
                         </div>
 
-                        <!-- RIGHT COLUMN: QUOTATION SUBMISSION AREA -->
-                        <div class="col-lg-5">
-                            @if (Opportunity.OpportunityStatus == "Pending")
-                            {
-                                <div class="procurement-card text-center p-4 h-100 d-flex flex-column justify-content-center">
-                                    <h5 class="fw-bold text-dark mb-2">Quotation Form Locked</h5>
-                                    <p class="text-muted small mb-4">
-                                        You must accept this procurement request before preparing and submitting a quotation.
-                                    </p>
-                                    <div class="d-flex flex-column gap-2">
-                                        <button type="button" 
-                                                class="btn-procurement-accept w-100"
-                                                @onclick='() => HandleRespond("Accept")' 
-                                                disabled="@IsResponding">
-                                            Accept Request
-                                        </button>
-                                        <button type="button" 
-                                                class="btn-procurement-reject w-100"
-                                                @onclick="OpenRejectModal" 
-                                                disabled="@IsResponding">
-                                            Reject Request
+                        <!-- RIGHT COLUMN: QUOTATION SUBMISSION AREA (ONLY SHOWN AFTER DECISION) -->
+                        @if (Opportunity.OpportunityStatus != "Pending")
+                        {
+                            <div class="col-lg-5">
+                                @if (Opportunity.OpportunityStatus == "Rejected")
+                                {
+                                    <div class="procurement-card text-center p-4 h-100 d-flex flex-column justify-content-center">
+                                        <h5 class="fw-bold text-danger mb-2">Request Declined</h5>
+                                        <p class="text-muted small mb-4">
+                                            Quotation submission is disabled because this procurement request was rejected.
+                                            @if (!string.IsNullOrWhiteSpace(Opportunity.RejectionReason))
+                                            {
+                                                <span class="d-block mt-2 text-dark"><strong>Reason:</strong> @Opportunity.RejectionReason</span>
+                                            }
+                                        </p>
+                                        <button type="button" class="btn btn-outline-secondary fw-semibold py-2" style="border-radius: 4px;"
+                                                @onclick='() => Nav.NavigateTo("/vendor-dashboard")'>
+                                            Return to Dashboard
                                         </button>
                                     </div>
-                                </div>
-                            }
-                            else if (Opportunity.OpportunityStatus == "Rejected")
-                            {
-                                <div class="procurement-card text-center p-4 h-100 d-flex flex-column justify-content-center">
-                                    <h5 class="fw-bold text-danger mb-2">Request Declined</h5>
-                                    <p class="text-muted small mb-4">
-                                        Quotation submission is disabled because this procurement request was rejected.
-                                        @if (!string.IsNullOrWhiteSpace(Opportunity.RejectionReason))
-                                        {
-                                            <span class="d-block mt-2 text-dark"><strong>Reason:</strong> @Opportunity.RejectionReason</span>
-                                        }
-                                    </p>
-                                    <button type="button" class="btn btn-outline-secondary fw-semibold py-2" style="border-radius: 4px;"
-                                            @onclick='() => Nav.NavigateTo("/vendor-dashboard")'>
-                                        Return to Dashboard
-                                    </button>
-                                </div>
-                            }
+                                }
                             else if (CreatedQuotation != null)
                             {
                                 <div class="procurement-card text-center p-4 h-100 d-flex flex-column justify-content-center">
@@ -440,6 +419,7 @@ else
                                 </div>
                             }
                         </div>
+                    }
                     </div>
                 }
             </div>

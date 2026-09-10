@@ -1367,8 +1367,8 @@ public partial class OrgPurchaseOrders : ComponentBase
 
             IsRecordingDelivery = false;
             IsReviewingDelivery = false;
-            DeliverySuccessMessage = $"Delivery for PO-#{SelectedPoForDetail.PurchaseOrderID} confirmed successfully! Status updated to {SelectedPoForDetail.Status}.";
-            ActionSuccessMessage = DeliverySuccessMessage;
+            DeliverySuccessMessage = string.Empty;
+            ActionSuccessMessage = $"Delivery for PO-{SelectedPoForDetail.PurchaseOrderID} confirmed successfully. Status updated to {SelectedPoForDetail.Status}.";
 
             try
             {

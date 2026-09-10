@@ -1066,7 +1066,7 @@ else
                                                 var firstItem = po.Items?.FirstOrDefault();
                                                 string prodName = firstItem != null && ProductDictionary.TryGetValue(firstItem.ProductID, out var pn) ? pn : "General Product";
                                                 string qtyStr = firstItem != null ? $"{firstItem.Quantity:N2} units" : "N/A";
-                                                string outletName = OutletDictionary.TryGetValue(po.OutletID, out var on) ? on : $"Outlet #{po.OutletID}";
+                                                string outletName = GetPurchaseOrderOutletName(po);
 
                                                 <tr>
                                                     <td>
@@ -1177,28 +1177,22 @@ else
                         <!-- =======================================================
                              INVOICES VIEW (VENDOR WORKSPACE)
                              ======================================================= -->
-                        <div class="vd-card">
-                            <div class="vd-card-header pb-0">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <div>
-                                        <h3 class="vd-card-title mb-1">Invoice Management</h3>
-                                        <p class="text-muted small mb-0">Generate invoices for delivered purchase orders and track payment status</p>
-                                    </div>
-                                </div>
+                        <div class="vd-card p-4">
+                            <div class="mb-4 pb-3 border-bottom">
+                                <h3 class="fw-bold mb-1 text-dark">Invoice Management</h3>
+                                <p class="text-muted small mb-3">Generate invoices for delivered purchase orders and track payment status</p>
 
-                                <!-- Sub-tabs -->
-                                <div class="vd-tabs-nav">
+                                <!-- Navigation / Filter Controls -->
+                                <div class="vd-status-tabs-row">
                                     <button type="button" 
-                                            class="vd-tab-btn @(InvoiceSubTab == "Ready" ? "active" : "")"
+                                            class="vd-status-tab @(InvoiceSubTab == "Ready" ? "active" : "")"
                                             @onclick='() => InvoiceSubTab = "Ready"'>
-                                        <span>Ready to Invoice</span>
-                                        <span class="vd-tab-count">@EligiblePurchaseOrders.Count</span>
+                                        New Invoices
                                     </button>
                                     <button type="button" 
-                                            class="vd-tab-btn @(InvoiceSubTab == "History" ? "active" : "")"
+                                            class="vd-status-tab @(InvoiceSubTab == "History" ? "active" : "")"
                                             @onclick='() => InvoiceSubTab = "History"'>
-                                        <span>Invoice History</span>
-                                        <span class="vd-tab-count">@MyInvoices.Count</span>
+                                        View All Invoices
                                     </button>
                                 </div>
                             </div>
@@ -1239,13 +1233,13 @@ else
                                                 <tbody>
                                                     @foreach (var po in EligiblePurchaseOrders)
                                                     {
-                                                        var outletName = OutletDictionary.GetValueOrDefault(po.OutletID, $"Outlet #{po.OutletID}");
+                                                        var outletName = GetPurchaseOrderOutletName(po);
                                                         <tr>
                                                             <td>
                                                                 <span class="fw-bold text-dark">PO-@po.PurchaseOrderID</span>
                                                             </td>
-                                                            <td>
-                                                                <span class="text-dark">@outletName</span>
+                                                            <td style="max-width: 220px; word-break: break-word;">
+                                                                <span class="fw-semibold text-dark">@outletName</span>
                                                             </td>
                                                             <td>
                                                                 <span class="text-muted">@(po.ActualDeliveryDate.HasValue ? po.ActualDeliveryDate.Value.ToIst("dd MMM yyyy, hh:mm tt") : "Confirmed")</span>
@@ -1287,7 +1281,7 @@ else
                                                 </svg>
                                             </div>
                                             <h5 class="fw-bold text-dark">No Invoices Submitted Yet</h5>
-                                            <p class="text-muted small mb-0">Generate an invoice from the "Ready to Invoice" tab once a purchase order is delivered.</p>
+                                            <p class="text-muted small mb-0">Generate an invoice from the "New Invoices" tab once a purchase order is delivered.</p>
                                         </div>
                                     }
                                     else
@@ -1310,7 +1304,7 @@ else
                                                 <tbody>
                                                     @foreach (var inv in MyInvoices.OrderByDescending(i => i.InvoiceID))
                                                     {
-                                                        var outletName = !string.IsNullOrWhiteSpace(inv.OutletName) ? inv.OutletName : OutletDictionary.GetValueOrDefault(inv.OutletID, $"Outlet #{inv.OutletID}");
+                                                        var outletName = GetInvoiceOutletName(inv);
                                                         <tr>
                                                             <td>
                                                                 <span class="fw-bold text-dark">INV-@inv.InvoiceID</span>
@@ -1318,8 +1312,8 @@ else
                                                             <td>
                                                                 <span class="text-muted">PO-@inv.PurchaseOrderID</span>
                                                             </td>
-                                                            <td>
-                                                                <span class="text-dark">@outletName</span>
+                                                            <td style="max-width: 220px; word-break: break-word;">
+                                                                <span class="fw-semibold text-dark">@outletName</span>
                                                             </td>
                                                             <td>
                                                                 <span class="text-muted">@inv.InvoiceDate.ToIst("dd MMM yyyy")</span>
@@ -1893,7 +1887,7 @@ else
                         <div class="vd-modal-header">
                             <div>
                                 <h4 class="vd-modal-title">Generate Invoice for PO-@SelectedPoForInvoice.PurchaseOrderID</h4>
-                                <p class="vd-modal-subtitle text-muted mb-0">Customer Outlet: @OutletDictionary.GetValueOrDefault(SelectedPoForInvoice.OutletID, $"Outlet #{SelectedPoForInvoice.OutletID}")</p>
+                                <p class="vd-modal-subtitle text-muted mb-0">Customer Outlet: @GetPurchaseOrderOutletName(SelectedPoForInvoice)</p>
                             </div>
                             <button type="button" class="vd-modal-close" @onclick="CloseCreateInvoiceModal">&times;</button>
                         </div>

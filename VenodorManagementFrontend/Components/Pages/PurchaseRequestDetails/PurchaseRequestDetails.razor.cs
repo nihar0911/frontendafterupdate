@@ -149,15 +149,96 @@ public partial class PurchaseRequestDetails : ComponentBase
             }
 
             var orgs = await orgsTask;
-            var matchedOrg = orgs?.FirstOrDefault(o => o.OrganizationID == (matchedOutlet?.OrganizationID ?? Auth.OrganizationID ?? 0));
-            if (matchedOrg != null && !string.IsNullOrWhiteSpace(matchedOrg.OrganizationName))
+            string resolvedOrgName = string.Empty;
+
+            // 1. Direct from matchedOutlet.OrganizationName
+            if (matchedOutlet != null && !string.IsNullOrWhiteSpace(matchedOutlet.OrganizationName) && !matchedOutlet.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase))
             {
-                OrganizationName = matchedOrg.OrganizationName;
+                resolvedOrgName = matchedOutlet.OrganizationName;
             }
-            else
+
+            // 2. Lookup in allOrgs by matchedOutlet.OrganizationID
+            if (string.IsNullOrWhiteSpace(resolvedOrgName) && matchedOutlet != null && matchedOutlet.OrganizationID > 0)
             {
-                OrganizationName = "Smart Vendor Enterprise";
+                var matchedOrg = orgs?.FirstOrDefault(o => o.OrganizationID == matchedOutlet.OrganizationID);
+                if (matchedOrg != null && !string.IsNullOrWhiteSpace(matchedOrg.OrganizationName) && !matchedOrg.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase))
+                {
+                    resolvedOrgName = matchedOrg.OrganizationName;
+                }
             }
+
+            // 3. Direct API call GetOrganizationByIdAsync for matchedOutlet.OrganizationID
+            if (string.IsNullOrWhiteSpace(resolvedOrgName) && matchedOutlet != null && matchedOutlet.OrganizationID > 0)
+            {
+                try
+                {
+                    var directOrg = await Api.GetOrganizationByIdAsync(matchedOutlet.OrganizationID);
+                    if (directOrg != null && !string.IsNullOrWhiteSpace(directOrg.OrganizationName) && !directOrg.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase))
+                    {
+                        resolvedOrgName = directOrg.OrganizationName;
+                    }
+                }
+                catch { }
+            }
+
+            // 4. Sibling outlet matching the same OrganizationID
+            if (string.IsNullOrWhiteSpace(resolvedOrgName) && matchedOutlet != null && matchedOutlet.OrganizationID > 0)
+            {
+                var sibling = outlets?.FirstOrDefault(o => o.OrganizationID == matchedOutlet.OrganizationID && !string.IsNullOrWhiteSpace(o.OrganizationName) && !o.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase));
+                if (sibling != null)
+                {
+                    resolvedOrgName = sibling.OrganizationName;
+                }
+            }
+
+            // 5. Check invoices for this outlet which carry OrganizationName
+            if (string.IsNullOrWhiteSpace(resolvedOrgName) && matchedOutlet != null)
+            {
+                try
+                {
+                    var invoices = await Api.GetInvoicesAsync();
+                    var invMatch = invoices?.FirstOrDefault(i => i.OutletID == matchedOutlet.OutletID && !string.IsNullOrWhiteSpace(i.OrganizationName) && !i.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase));
+                    if (invMatch != null)
+                    {
+                        resolvedOrgName = invMatch.OrganizationName;
+                    }
+                }
+                catch { }
+            }
+
+            // 6. User Auth Organization as fallback if matches
+            if (string.IsNullOrWhiteSpace(resolvedOrgName) && Auth.OrganizationID.HasValue && Auth.OrganizationID.Value > 0)
+            {
+                var authOrg = orgs?.FirstOrDefault(o => o.OrganizationID == Auth.OrganizationID.Value);
+                if (authOrg != null && !string.IsNullOrWhiteSpace(authOrg.OrganizationName) && !authOrg.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase))
+                {
+                    resolvedOrgName = authOrg.OrganizationName;
+                }
+                else
+                {
+                    try
+                    {
+                        var directAuthOrg = await Api.GetOrganizationByIdAsync(Auth.OrganizationID.Value);
+                        if (directAuthOrg != null && !string.IsNullOrWhiteSpace(directAuthOrg.OrganizationName) && !directAuthOrg.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase))
+                        {
+                            resolvedOrgName = directAuthOrg.OrganizationName;
+                        }
+                    }
+                    catch { }
+                }
+            }
+
+            // 7. First named organization in allOrgs
+            if (string.IsNullOrWhiteSpace(resolvedOrgName) && orgs != null)
+            {
+                var firstNamed = orgs.FirstOrDefault(o => !string.IsNullOrWhiteSpace(o.OrganizationName) && !o.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase));
+                if (firstNamed != null)
+                {
+                    resolvedOrgName = firstNamed.OrganizationName;
+                }
+            }
+
+            OrganizationName = !string.IsNullOrWhiteSpace(resolvedOrgName) ? resolvedOrgName : "Organization";
 
             // PRESERVE ACTUAL HISTORICAL CREATOR
             if (!string.IsNullOrWhiteSpace(PurchaseRequest.CreatedByName))

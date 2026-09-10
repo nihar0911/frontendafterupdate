@@ -165,32 +165,6 @@ else
                     </li>
                 </ul>
 
-                <!-- VENDOR MANAGEMENT -->
-                <div class="nav-section-title">VENDOR MANAGEMENT</div>
-                <ul class="nav-list">
-                    <li class="nav-item">
-                        <button class="sidebar-nav-link" @onclick='() => Nav.NavigateTo("/organization/vendor-performance")'>
-                            <span class="nav-icon">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <line x1="18" y1="20" x2="18" y2="10"></line>
-                                    <line x1="12" y1="20" x2="12" y2="4"></line>
-                                    <line x1="6" y1="20" x2="6" y2="14"></line>
-                                </svg>
-                            </span>
-                            <span class="nav-label">Vendor Performance</span>
-                        </button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="sidebar-nav-link" @onclick='() => Nav.NavigateTo("/organization/vendor-performance")'>
-                            <span class="nav-icon">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-                                </svg>
-                            </span>
-                            <span class="nav-label">Vendor Feedback</span>
-                        </button>
-                    </li>
-                </ul>
 
                 <!-- ACCOUNT -->
                 <div class="nav-section-account">
@@ -329,26 +303,21 @@ else
                          ======================================================= -->
                     <div class="vendor-reviews-page mb-4">
                         <!-- Navigation & Page Header -->
-                        <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
-                            <div>
-                                <button type="button" class="btn-back-link" @onclick="CloseVendorReviewsModal">
-                                    Back to Procurement Request
-                                </button>
-                                <h2 class="greeting-title mt-2">Customer Reviews</h2>
-                                <div class="d-flex align-items-center gap-2 mt-1 flex-wrap">
-                                    <span class="fs-5 fw-bold text-dark">@SelectedVendorForReviews.VendorName</span>
-                                    <span class="text-muted">&bull;</span>
-                                    <span class="fs-6 text-success fw-semibold bg-success-subtle px-2.5 py-0.5 rounded border border-success-subtle">
-                                        @(SelectedProduct?.ProductName ?? SelectedVendorForReviews.ProductName)
-                                    </span>
-                                </div>
-                                <p class="greeting-subtitle mt-1">Verified feedback from completed purchase orders</p>
-                            </div>
-                            <div>
-                                <button type="button" class="btn btn-outline-secondary fw-semibold px-3 py-1.5" @onclick="CloseVendorReviewsModal">
+                        <div class="mb-4">
+                            <div class="mb-2">
+                                <button type="button" class="btn btn-outline-secondary btn-sm fw-semibold px-3 py-1.5" @onclick="CloseVendorReviewsModal">
                                     Back to Procurement Request
                                 </button>
                             </div>
+                            <h2 class="greeting-title mt-2 mb-1">Customer Reviews</h2>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <span class="fs-5 fw-bold text-dark">@SelectedVendorForReviews.VendorName</span>
+                                <span class="text-muted">&bull;</span>
+                                <span class="fs-6 text-success fw-semibold bg-success-subtle px-2.5 py-0.5 rounded border border-success-subtle">
+                                    @(SelectedProduct?.ProductName ?? SelectedVendorForReviews.ProductName)
+                                </span>
+                            </div>
+                            <p class="greeting-subtitle mt-1 mb-0">Verified feedback from completed purchase orders</p>
                         </div>
 
                         @if (IsLoadingVendorReviews)
@@ -372,7 +341,7 @@ else
                                 <p class="text-muted small mb-4" style="max-width: 440px; margin: 0 auto;">
                                     There are no verified customer reviews for <strong>@SelectedVendorForReviews.VendorName</strong> supplying <strong>@(SelectedProduct?.ProductName ?? SelectedVendorForReviews.ProductName)</strong> yet.
                                 </p>
-                                <button type="button" class="btn-primary-action px-4 py-2" @onclick="CloseVendorReviewsModal">
+                                <button type="button" class="btn btn-outline-secondary btn-sm fw-semibold px-4 py-2" @onclick="CloseVendorReviewsModal">
                                     Back to Procurement Request
                                 </button>
                             </div>
@@ -385,8 +354,9 @@ else
                                     <div class="review-stat-card p-3 h-100">
                                         <div class="stat-card-label">AVERAGE RATING</div>
                                         <div class="d-flex align-items-baseline gap-2 mt-2">
-                                            <span class="fs-2 fw-bold text-success">★ @CurrentVendorAvgRating.ToString("0.0")</span>
-                                            <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold">
+                                            <span class="fs-2 fw-bold text-success">@CurrentVendorAvgRating.ToString("0.0")</span>
+                                            <span class="text-muted fw-normal">/ 5.0</span>
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold ms-1">
                                                 @GetQualitativeRatingText(CurrentVendorAvgRating)
                                             </span>
                                         </div>
@@ -399,8 +369,8 @@ else
                                     <div class="review-stat-card p-3 h-100">
                                         <div class="stat-card-label">QUALITY RATING</div>
                                         <div class="d-flex align-items-baseline gap-2 mt-2">
-                                            <span class="fs-2 fw-bold text-dark">★ @(CurrentVendorAvgQuality > 0 ? CurrentVendorAvgQuality.ToString("0.0") : "5.0")</span>
-                                            <span class="small text-muted">/ 5.0</span>
+                                            <span class="fs-2 fw-bold text-dark">@(CurrentVendorAvgQuality > 0 ? CurrentVendorAvgQuality.ToString("0.0") : "5.0")</span>
+                                            <span class="text-muted fw-normal">/ 5.0</span>
                                         </div>
                                         <div class="small text-muted mt-1">Average Product Quality Score</div>
                                     </div>
@@ -409,8 +379,8 @@ else
                                     <div class="review-stat-card p-3 h-100">
                                         <div class="stat-card-label">DELIVERY RATING</div>
                                         <div class="d-flex align-items-baseline gap-2 mt-2">
-                                            <span class="fs-2 fw-bold text-dark">★ @(CurrentVendorAvgDelivery > 0 ? CurrentVendorAvgDelivery.ToString("0.0") : "5.0")</span>
-                                            <span class="small text-muted">/ 5.0</span>
+                                            <span class="fs-2 fw-bold text-dark">@(CurrentVendorAvgDelivery > 0 ? CurrentVendorAvgDelivery.ToString("0.0") : "5.0")</span>
+                                            <span class="text-muted fw-normal">/ 5.0</span>
                                         </div>
                                         <div class="small text-muted mt-1">Average Delivery Punctuality Score</div>
                                     </div>
@@ -427,8 +397,9 @@ else
                                             <span class="badge bg-success text-white px-2.5 py-1 fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.05em;">
                                                 Latest Review
                                             </span>
-                                            <span class="text-success fw-bold fs-5">@GetStarString(latest.Rating) @latest.Rating.ToString("0.0")</span>
-                                            <span class="text-muted small fw-semibold">(@GetQualitativeRatingText(latest.Rating))</span>
+                                            <span class="text-dark fw-bold fs-6">Rating:</span>
+                                            <span class="text-success fw-bold fs-5">@latest.Rating.ToString("0.0") / 5.0</span>
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle small fw-semibold">(@GetQualitativeRatingText(latest.Rating))</span>
                                         </div>
                                         <div class="small text-muted">
                                             @latest.FeedbackDate.ToIst("MMMM dd, yyyy")
@@ -448,18 +419,19 @@ else
                                                 @(string.IsNullOrWhiteSpace(latest.RatedByUserName) ? "M" : latest.RatedByUserName.Substring(0, 1).ToUpperInvariant())
                                             </div>
                                             <div>
-                                                <span class="text-dark fw-bold">Reviewed by @(string.IsNullOrWhiteSpace(latest.RatedByUserName) ? "Purchase Manager" : latest.RatedByUserName)</span>
-                                                <span class="text-muted small ms-1">&bull; Outlet: @latest.OutletName</span>
+                                                <span class="text-dark fw-semibold">Reviewed by:</span>
+                                                <span class="text-dark fw-bold ms-1">@(string.IsNullOrWhiteSpace(latest.RatedByUserName) ? "Purchase Manager" : latest.RatedByUserName)</span>
+                                                <span class="text-muted small ms-2">&bull; <span class="fw-semibold text-dark">Outlet:</span> @ResolveReviewOutletName(latest)</span>
                                             </div>
                                         </div>
                                         <div class="d-flex align-items-center gap-3">
                                             @if (latest.ProductQualityRating > 0)
                                             {
-                                                <span>Quality: <strong class="text-dark">★ @latest.ProductQualityRating.ToString("0.0")</strong></span>
+                                                <span>Quality: <strong class="text-dark">@latest.ProductQualityRating.ToString("0.0") / 5.0</strong></span>
                                             }
                                             @if (latest.DeliveryRating > 0)
                                             {
-                                                <span>Delivery: <strong class="text-dark">★ @latest.DeliveryRating.ToString("0.0")</strong></span>
+                                                <span>Delivery: <strong class="text-dark">@latest.DeliveryRating.ToString("0.0") / 5.0</strong></span>
                                             }
                                         </div>
                                     </div>
@@ -482,7 +454,7 @@ else
                                         <div class="single-review-card p-3 rounded border">
                                             <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
                                                 <div class="d-flex align-items-center gap-2">
-                                                    <span class="text-success fw-bold fs-6">@GetStarString(rev.Rating) @rev.Rating.ToString("0.0")</span>
+                                                    <span class="text-success fw-bold fs-6">@rev.Rating.ToString("0.0") / 5.0</span>
                                                     <span class="badge bg-light text-dark border small fw-normal">@GetQualitativeRatingText(rev.Rating)</span>
                                                 </div>
                                                 <div class="text-muted small">
@@ -495,7 +467,7 @@ else
                                                     <span class="fw-semibold text-dark">Reviewed by:</span> @(string.IsNullOrWhiteSpace(rev.RatedByUserName) ? "Purchase Manager" : rev.RatedByUserName)
                                                 </div>
                                                 <div class="col-sm-6 text-sm-end">
-                                                    <span class="fw-semibold text-dark">Outlet:</span> @rev.OutletName
+                                                    <span class="fw-semibold text-dark">Outlet:</span> @ResolveReviewOutletName(rev)
                                                 </div>
                                                 <div class="col-sm-6">
                                                     <span class="fw-semibold text-dark">Product:</span> @(string.IsNullOrWhiteSpace(rev.ProductName) ? (SelectedProduct?.ProductName ?? "General Product") : rev.ProductName)
@@ -503,8 +475,8 @@ else
                                                 <div class="col-sm-6 text-sm-end">
                                                     @if (rev.ProductQualityRating > 0 || rev.DeliveryRating > 0)
                                                     {
-                                                        <span class="me-2">Quality: <strong class="text-dark">★ @rev.ProductQualityRating.ToString("0.0")</strong></span>
-                                                        <span>Delivery: <strong class="text-dark">★ @rev.DeliveryRating.ToString("0.0")</strong></span>
+                                                        <span class="me-3">Quality: <strong class="text-dark">@rev.ProductQualityRating.ToString("0.0") / 5.0</strong></span>
+                                                        <span>Delivery: <strong class="text-dark">@rev.DeliveryRating.ToString("0.0") / 5.0</strong></span>
                                                     }
                                                 </div>
                                             </div>
@@ -806,406 +778,401 @@ else
                         else if (CurrentStep == 2)
                         {
                             <!-- =======================================================
-                                 STEP 2: ADD PRODUCTS & VENDORS (MULTI-PRODUCT CART)
+                                 STEP 2: ADD PRODUCTS & VENDORS (2-COLUMN WORKSPACE)
                                  ======================================================= -->
-                            
-                            <!-- TOP INLINE PRODUCT BUILDER: ADD PRODUCT TO REQUEST -->
-                            <div class="pm-panel p-4 mb-4 builder-panel" id="add-product-builder">
-                                <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-                                    <div>
-                                        <h4 class="fw-bold text-dark mb-1">
-                                            @(!string.IsNullOrEmpty(EditingCartItemKey) ? "Edit Item Vendor & Quantity" : "ADD PRODUCT TO REQUEST")
-                                        </h4>
-                                        <p class="text-muted small mb-0">
-                                            @(!string.IsNullOrEmpty(EditingCartItemKey) ? "Update product quantity or switch to a different supplier" : "Search and select a product, set quantity, and choose an authorized supplier")
-                                        </p>
-                                    </div>
-                                    @if (SelectedProduct != null)
-                                    {
-                                        <button type="button" class="btn btn-sm btn-outline-secondary fw-semibold" @onclick="ResetProductPicker">
-                                            Choose Different Product
-                                        </button>
-                                    }
-                                </div>
-
-                                @if (SelectedProduct == null)
-                                {
-                                    <!-- Product Catalog Search & Selector -->
-                                    <div class="product-picker-container">
-                                        <div class="mb-3">
-                                            <label class="form-label small fw-bold text-dark mb-1">Select a product</label>
-                                            <div class="search-input-box">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <circle cx="11" cy="11" r="8"></circle>
-                                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                                                </svg>
-                                                <input type="text" class="search-control" placeholder="Search product (e.g. Pineapple, Chicken, Tomatoes)..." @bind="SearchProductQuery" @bind:event="oninput" id="product-search-input" />
+                            <div class="procurement-workspace-grid">
+                                <!-- LEFT COLUMN: Product Catalog & Active Configuration -->
+                                <div class="procurement-left-col">
+                                    <div class="pm-panel p-4 mb-3 builder-panel" id="add-product-builder">
+                                        <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                                            <div>
+                                                <h4 class="fw-bold text-dark mb-1">
+                                                    @(!string.IsNullOrEmpty(EditingCartItemKey) ? "Edit Item Vendor & Quantity" : "ADD PRODUCT TO REQUEST")
+                                                </h4>
+                                                <p class="text-muted small mb-0">
+                                                    @(!string.IsNullOrEmpty(EditingCartItemKey) ? "Update product quantity or switch to a different supplier" : "Search and select a product, set quantity, and choose an authorized supplier")
+                                                </p>
                                             </div>
+                                            @if (SelectedProduct != null)
+                                            {
+                                                <button type="button" class="btn btn-sm btn-outline-secondary fw-semibold" @onclick="ResetProductPicker">
+                                                    Choose Different Product
+                                                </button>
+                                            }
                                         </div>
 
-                                        @if (IsLoadingProducts)
+                                        @if (SelectedProduct == null)
                                         {
-                                            <div class="text-center py-4 text-muted">
-                                                <div class="spinner-border spinner-border-sm text-success mb-2" role="status"></div>
-                                                <p class="small mb-0">Loading product catalog...</p>
-                                            </div>
-                                        }
-                                        else if (FilteredProducts.Count == 0)
-                                        {
-                                            <div class="text-center py-4 text-muted bg-light rounded border">
-                                                <p class="small mb-0">No matching products found for "@SearchProductQuery".</p>
+                                            <!-- Product Catalog Search & Selector -->
+                                            <div class="product-picker-container">
+                                                <div class="mb-3">
+                                                    <label class="form-label small fw-bold text-dark mb-1">Select a product</label>
+                                                    <div class="search-input-box">
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                            <circle cx="11" cy="11" r="8"></circle>
+                                                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                                        </svg>
+                                                        <input type="text" class="search-control" placeholder="Search product (e.g. Pineapple, Chicken, Tomatoes)..." @bind="SearchProductQuery" @bind:event="oninput" id="product-search-input" />
+                                                    </div>
+                                                </div>
+
+                                                @if (IsLoadingProducts)
+                                                {
+                                                    <div class="text-center py-4 text-muted">
+                                                        <div class="spinner-border spinner-border-sm text-success mb-2" role="status"></div>
+                                                        <p class="small mb-0">Loading product catalog...</p>
+                                                    </div>
+                                                }
+                                                else if (FilteredProducts.Count == 0)
+                                                {
+                                                    <div class="text-center py-4 text-muted bg-light rounded border">
+                                                        <p class="small mb-0">No matching products found for "@SearchProductQuery".</p>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <!-- Compact Product Selection Grid -->
+                                                    <div class="product-selection-grid compact-grid mb-1">
+                                                        @foreach (var prod in FilteredProducts)
+                                                        {
+                                                            bool isInCart = CartItems.Any(i => i.ProductID == prod.ProductID);
+                                                            <div class="product-card-selectable compact @(isInCart ? "selected" : "")" @onclick="() => SelectProduct(prod)">
+                                                                <div class="product-card-header">
+                                                                    <div class="product-card-name">
+                                                                        <div class="fw-bold text-dark text-truncate" title="@prod.ProductName">@prod.ProductName</div>
+                                                                        <div class="text-muted text-truncate" style="font-size: 0.72rem;">@(string.IsNullOrWhiteSpace(prod.Category) ? "General" : prod.Category)</div>
+                                                                    </div>
+                                                                    <span class="product-unit-badge">@prod.Unit</span>
+                                                                </div>
+                                                                <div class="mt-2">
+                                                                    @if (isInCart)
+                                                                    {
+                                                                        <span class="badge bg-success-subtle text-success border border-success-subtle w-100 py-1 fw-bold text-center d-block" style="font-size: 0.72rem;">
+                                                                            In Cart (Modify)
+                                                                        </span>
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        <button type="button" class="btn btn-sm btn-outline-success w-100 py-0.5 fw-bold" style="font-size: 0.75rem;">
+                                                                            Select Item
+                                                                        </button>
+                                                                    }
+                                                                </div>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                }
                                             </div>
                                         }
                                         else
                                         {
-                                            <!-- Compact Product Selection Grid -->
-                                            <div class="product-selection-grid compact-grid mb-1">
-                                                @foreach (var prod in FilteredProducts)
-                                                {
-                                                    bool isInCart = CartItems.Any(i => i.ProductID == prod.ProductID);
-                                                    <div class="product-card-selectable compact @(isInCart ? "selected" : "")" @onclick="() => SelectProduct(prod)">
-                                                        <div class="d-flex align-items-center justify-content-between gap-2">
-                                                            <div class="min-w-0">
-                                                                <div class="fw-bold text-dark text-truncate" title="@prod.ProductName">@prod.ProductName</div>
-                                                                <div class="text-muted text-truncate" style="font-size: 0.72rem;">@(string.IsNullOrWhiteSpace(prod.Category) ? "General" : prod.Category)</div>
-                                                            </div>
-                                                            <span class="badge bg-light text-dark border flex-shrink-0" style="font-size: 0.72rem;">@prod.Unit</span>
+                                            <!-- Selected Product Active Form -->
+                                            <div class="product-config-form p-3 rounded border bg-light">
+                                                <!-- Product Header Details Bar -->
+                                                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 pb-3 mb-3 border-bottom bg-white p-3 rounded border">
+                                                    <div class="d-flex align-items-center gap-3">
+                                                        <div class="outlet-badge-icon" style="width: 38px; height: 38px;">
+                                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                                            </svg>
                                                         </div>
-                                                        <div class="mt-2">
-                                                            @if (isInCart)
-                                                            {
-                                                                <span class="badge bg-success-subtle text-success border border-success-subtle w-100 py-1 fw-bold text-center" style="font-size: 0.72rem;">
-                                                                    In Cart (Modify)
-                                                                </span>
-                                                            }
-                                                            else
-                                                            {
-                                                                <button type="button" class="btn btn-sm btn-outline-success w-100 py-0.5 fw-bold" style="font-size: 0.75rem;">
-                                                                    Select Item
-                                                                </button>
-                                                            }
+                                                        <div>
+                                                            <div class="small text-muted fw-semibold">Product:</div>
+                                                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                                <h5 class="fw-bold text-dark mb-0">@SelectedProduct.ProductName</h5>
+                                                                <span class="text-muted">&bull;</span>
+                                                                <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold">Unit: @SelectedProduct.Unit</span>
+                                                                @if (!string.IsNullOrWhiteSpace(SelectedProduct.Category))
+                                                                {
+                                                                    <span class="badge bg-light text-dark border">@SelectedProduct.Category</span>
+                                                                }
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                }
-                                            </div>
-                                        }
-                                    </div>
-                                }
-                                else
-                                {
-                                    <!-- Selected Product Active Form -->
-                                    <div class="product-config-form p-3 rounded border bg-light">
-                                        <!-- Product Header Details Bar -->
-                                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 pb-3 mb-3 border-bottom bg-white p-3 rounded border">
-                                            <div class="d-flex align-items-center gap-3">
-                                                <div class="outlet-badge-icon" style="width: 38px; height: 38px;">
-                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                                                    </svg>
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary fw-semibold" @onclick="ResetProductPicker">
+                                                        Choose Different Product
+                                                    </button>
                                                 </div>
-                                                <div>
-                                                    <div class="small text-muted fw-semibold">Product:</div>
-                                                    <div class="d-flex align-items-center gap-2 flex-wrap">
-                                                        <h5 class="fw-bold text-dark mb-0">@SelectedProduct.ProductName</h5>
-                                                        <span class="text-muted">&bull;</span>
-                                                        <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold">Unit: @SelectedProduct.Unit</span>
-                                                        @if (!string.IsNullOrWhiteSpace(SelectedProduct.Category))
+
+                                                <!-- Quantity Input & Sort Controls -->
+                                                <div class="row g-3 align-items-center mb-3">
+                                                    <div class="col-sm-5 col-md-4">
+                                                        <label class="form-label fw-bold text-dark mb-1 small">Quantity:</label>
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <input type="number" class="form-control fw-bold fs-6" @bind="QuantityInput" min="0.01" step="any" placeholder="Quantity" />
+                                                            <span class="input-group-text fw-bold bg-white text-dark">@SelectedProduct.Unit</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-sm-7 col-md-8">
+                                                        <label class="form-label small text-muted fw-bold mb-1">Sort candidate vendors:</label>
+                                                        <div class="d-flex align-items-center gap-3 bg-white px-3 py-1.5 rounded border" style="height: 38px;">
+                                                            <div class="form-check form-check-inline mb-0">
+                                                                <input class="form-check-input" type="radio" name="vendorSortRadio" id="vSortReviews" value="Reviews" checked="@(VendorSortBy == "Reviews")" @onchange='() => VendorSortBy = "Reviews"' />
+                                                                <label class="form-check-label small fw-semibold text-dark" for="vSortReviews">Overall Reviews</label>
+                                                            </div>
+                                                            <div class="form-check form-check-inline mb-0">
+                                                                <input class="form-check-input" type="radio" name="vendorSortRadio" id="vSortPrice" value="Price" checked="@(VendorSortBy == "Price")" @onchange='() => VendorSortBy = "Price"' />
+                                                                <label class="form-check-label small fw-semibold text-dark" for="vSortPrice">Unit Price</label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Vendor Recommendations Header & List -->
+                                                <div class="mb-3">
+                                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                                        <label class="form-label fw-bold text-dark mb-0 small">Vendor Recommendations</label>
+                                                        @if (SortedVendorRecommendations.Count > 0)
                                                         {
-                                                            <span class="badge bg-light text-dark border">@SelectedProduct.Category</span>
+                                                            <span class="small text-muted">@SortedVendorRecommendations.Count available</span>
                                                         }
                                                     </div>
-                                                </div>
-                                            </div>
-                                            <button type="button" class="btn btn-sm btn-outline-secondary fw-semibold" @onclick="ResetProductPicker">
-                                                Choose Different Product
-                                            </button>
-                                        </div>
 
-                                        <!-- Quantity Input & Sort Controls -->
-                                        <div class="row g-3 align-items-center mb-3">
-                                            <div class="col-sm-5 col-md-4">
-                                                <label class="form-label fw-bold text-dark mb-1 small">Quantity:</label>
-                                                <div class="d-flex align-items-center gap-2">
-                                                    <input type="number" class="form-control fw-bold fs-6" @bind="QuantityInput" min="0.01" step="any" placeholder="Quantity" />
-                                                    <span class="input-group-text fw-bold bg-white text-dark">@SelectedProduct.Unit</span>
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-7 col-md-8">
-                                                <label class="form-label small text-muted fw-bold mb-1">Sort candidate vendors:</label>
-                                                <div class="d-flex align-items-center gap-3 bg-white px-3 py-1.5 rounded border" style="height: 38px;">
-                                                    <div class="form-check form-check-inline mb-0">
-                                                        <input class="form-check-input" type="radio" name="vendorSortRadio" id="vSortReviews" value="Reviews" checked="@(VendorSortBy == "Reviews")" @onchange='() => VendorSortBy = "Reviews"' />
-                                                        <label class="form-check-label small fw-semibold text-dark" for="vSortReviews">Overall Reviews</label>
-                                                    </div>
-                                                    <div class="form-check form-check-inline mb-0">
-                                                        <input class="form-check-input" type="radio" name="vendorSortRadio" id="vSortPrice" value="Price" checked="@(VendorSortBy == "Price")" @onchange='() => VendorSortBy = "Price"' />
-                                                        <label class="form-check-label small fw-semibold text-dark" for="vSortPrice">Unit Price</label>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Vendor Recommendations Header & List -->
-                                        <div class="mb-3">
-                                            <div class="d-flex align-items-center justify-content-between mb-2">
-                                                <label class="form-label fw-bold text-dark mb-0 small">Vendor Recommendations</label>
-                                                @if (SortedVendorRecommendations.Count > 0)
-                                                {
-                                                    <span class="small text-muted">@SortedVendorRecommendations.Count available</span>
-                                                }
-                                            </div>
-
-                                            @if (IsFindingVendors)
-                                            {
-                                                <div class="text-center py-3 text-muted bg-white rounded border">
-                                                    <div class="spinner-border spinner-border-sm text-success me-2" role="status"></div>
-                                                    <span class="small">Evaluating supplier recommendations for @SelectedProduct.ProductName...</span>
-                                                </div>
-                                            }
-                                            else if (SortedVendorRecommendations.Count == 0)
-                                            {
-                                                <div class="alert alert-warning p-3 mb-0 small">
-                                                    No active vendors found supplying <strong>@SelectedProduct.ProductName</strong>. Please choose another product or contact your administrator.
-                                                </div>
-                                            }
-                                            else
-                                            {
-                                                <div class="vendor-recommendations-list compact-vendor-list">
-                                                    @foreach (var rec in SortedVendorRecommendations)
+                                                    @if (IsFindingVendors)
                                                     {
-                                                        bool isSelected = SelectedVendorForProduct?.VendorID == rec.VendorID;
-                                                        <div class="vendor-rec-card compact-card @(isSelected ? "selected" : "")" @onclick="() => SelectVendorForProduct(rec)">
-                                                            <div class="d-flex align-items-start justify-content-between flex-wrap gap-2">
-                                                                <div>
-                                                                    <div class="d-flex align-items-center gap-2 flex-wrap">
-                                                                        <h6 class="fw-bold text-dark mb-0">@rec.VendorName</h6>
-                                                                        @if (!string.IsNullOrWhiteSpace(rec.SmartBadge))
-                                                                        {
-                                                                            <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.7rem;">@rec.SmartBadge</span>
-                                                                        }
-                                                                        @if (rec.HasActiveContract && rec.RemainingQuantity > 0)
-                                                                        {
-                                                                            <span class="badge bg-light text-dark border" style="font-size: 0.7rem;">Active Contract (@rec.RemainingQuantity:N0 @SelectedProduct.Unit remaining)</span>
-                                                                        }
-                                                                    </div>
-
-                                                                    <div class="d-flex align-items-center gap-2.5 text-muted small flex-wrap mt-1">
-                                                                        <div>
-                                                                            @if (rec.TotalFeedbackCount > 0)
-                                                                            {
-                                                                                <button type="button" class="btn p-0 text-success fw-bold text-decoration-underline border-0 bg-transparent" style="font-size: 0.78rem;" @onclick="() => OpenVendorReviewsModal(rec)" @onclick:stopPropagation="true">
-                                                                                    ★ @rec.AverageRating.ToString("0.0") (@rec.TotalFeedbackCount @(rec.TotalFeedbackCount == 1 ? "review" : "reviews"))
-                                                                                </button>
-                                                                            }
-                                                                            else
-                                                                            {
-                                                                                <span class="text-secondary" style="font-size: 0.78rem;">★ No Reviews Yet</span>
-                                                                            }
-                                                                        </div>
-                                                                        <div>&bull;</div>
-                                                                        <div style="font-size: 0.78rem;">Quality: <strong class="text-dark">@(rec.AverageQualityRating > 0 ? $"{rec.AverageQualityRating:0.0} / 5" : "Standard")</strong></div>
-                                                                        <div>&bull;</div>
-                                                                        <div style="font-size: 0.78rem;">Est. Delivery: <strong class="text-dark">@rec.EstimatedDeliveryDays days</strong></div>
-                                                                    </div>
-                                                                </div>
-
-                                                                <div class="d-flex align-items-center gap-3 text-end">
-                                                                    <div>
-                                                                        <div class="fw-bold text-success fs-5 lh-1">
-                                                                            ₹@rec.UnitPrice.ToString("N0")
-                                                                        </div>
-                                                                        <div class="small text-muted" style="font-size: 0.72rem;">/ @SelectedProduct.Unit</div>
-                                                                    </div>
-                                                                    <button type="button" class="btn btn-sm @(isSelected ? "btn-success" : "btn-outline-success") fw-bold px-3 py-1.5" @onclick="() => SelectVendorForProduct(rec)" @onclick:stopPropagation="true">
-                                                                        @(isSelected ? "Selected" : "Select Vendor")
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-
-                                                            @if (LatestReviewsByVendorDict.TryGetValue(rec.VendorID, out var latestRev) && !string.IsNullOrWhiteSpace(latestRev.Review))
+                                                        <div class="text-center py-3 text-muted bg-white rounded border">
+                                                            <div class="spinner-border spinner-border-sm text-success me-2" role="status"></div>
+                                                            <span class="small">Evaluating supplier recommendations for @SelectedProduct.ProductName...</span>
+                                                        </div>
+                                                    }
+                                                    else if (SortedVendorRecommendations.Count == 0)
+                                                    {
+                                                        <div class="alert alert-warning p-3 mb-0 small">
+                                                            No active vendors found supplying <strong>@SelectedProduct.ProductName</strong>. Please choose another product or contact your administrator.
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="vendor-recommendations-list compact-vendor-list">
+                                                            @foreach (var rec in SortedVendorRecommendations)
                                                             {
-                                                                <div class="mt-2 p-1.5 px-2 rounded small text-muted bg-white border border-light-subtle d-flex align-items-center gap-2" style="font-size: 0.75rem;">
-                                                                    <span class="fw-bold text-dark flex-shrink-0">Latest:</span>
-                                                                    <span class="text-truncate">&ldquo;@latestRev.Review&rdquo;</span>
+                                                                bool isSelected = SelectedVendorForProduct?.VendorID == rec.VendorID;
+                                                                <div class="vendor-rec-card compact-card @(isSelected ? "selected" : "")" @onclick="() => SelectVendorForProduct(rec)">
+                                                                    <div class="d-flex align-items-start justify-content-between flex-wrap gap-2">
+                                                                        <div>
+                                                                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                                                <h6 class="fw-bold text-dark mb-0">@rec.VendorName</h6>
+                                                                                @if (!string.IsNullOrWhiteSpace(rec.SmartBadge))
+                                                                                {
+                                                                                    <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.7rem;">@rec.SmartBadge</span>
+                                                                                }
+                                                                                @if (rec.HasActiveContract && rec.RemainingQuantity > 0)
+                                                                                {
+                                                                                    <span class="badge bg-light text-dark border" style="font-size: 0.7rem;">Active Contract (@rec.RemainingQuantity:N0 @SelectedProduct.Unit remaining)</span>
+                                                                                }
+                                                                            </div>
+
+                                                                            <div class="d-flex align-items-center gap-2.5 text-muted small flex-wrap mt-1">
+                                                                                <div>
+                                                                                    @if (rec.TotalFeedbackCount > 0)
+                                                                                    {
+                                                                                        <button type="button" class="btn p-0 text-success fw-bold text-decoration-underline border-0 bg-transparent" style="font-size: 0.78rem;" @onclick="() => OpenVendorReviewsModal(rec)" @onclick:stopPropagation="true">
+                                                                                            ★ @rec.AverageRating.ToString("0.0") (@rec.TotalFeedbackCount @(rec.TotalFeedbackCount == 1 ? "review" : "reviews"))
+                                                                                        </button>
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        <span class="text-secondary" style="font-size: 0.78rem;">★ No Reviews Yet</span>
+                                                                                    }
+                                                                                </div>
+                                                                                <div>&bull;</div>
+                                                                                <div style="font-size: 0.78rem;">Quality: <strong class="text-dark">@(rec.AverageQualityRating > 0 ? $"{rec.AverageQualityRating:0.0} / 5" : "Standard")</strong></div>
+                                                                                <div>&bull;</div>
+                                                                                <div style="font-size: 0.78rem;">Est. Delivery: <strong class="text-dark">@rec.EstimatedDeliveryDays days</strong></div>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div class="d-flex align-items-center gap-3 text-end">
+                                                                            <div>
+                                                                                <div class="fw-bold text-success fs-5 lh-1">
+                                                                                    ₹@rec.UnitPrice.ToString("N0")
+                                                                                </div>
+                                                                                <div class="small text-muted" style="font-size: 0.72rem;">/ @SelectedProduct.Unit</div>
+                                                                            </div>
+                                                                            <button type="button" class="btn btn-sm @(isSelected ? "btn-success" : "btn-outline-success") fw-bold px-3 py-1.5" @onclick="() => SelectVendorForProduct(rec)" @onclick:stopPropagation="true">
+                                                                                @(isSelected ? "Selected" : "Select Vendor")
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    @if (LatestReviewsByVendorDict.TryGetValue(rec.VendorID, out var latestRev) && !string.IsNullOrWhiteSpace(latestRev.Review))
+                                                                    {
+                                                                        <div class="mt-2 p-1.5 px-2 rounded small text-muted bg-white border border-light-subtle d-flex align-items-center gap-2" style="font-size: 0.75rem;">
+                                                                            <span class="fw-bold text-dark flex-shrink-0">Latest:</span>
+                                                                            <span class="text-truncate">&ldquo;@latestRev.Review&rdquo;</span>
+                                                                        </div>
+                                                                    }
                                                                 </div>
                                                             }
                                                         </div>
                                                     }
                                                 </div>
+
+                                                @if (!string.IsNullOrEmpty(ItemValidationMessage))
+                                                {
+                                                    <div class="alert alert-danger p-2 mb-3 small">@ItemValidationMessage</div>
+                                                }
+
+                                                <!-- Add / Update Item Action Button -->
+                                                <div class="d-flex align-items-center justify-content-between pt-3 mt-3 border-top flex-wrap gap-2">
+                                                    <button type="button" class="btn btn-outline-secondary fw-semibold px-3 py-2" @onclick="ResetProductPicker">
+                                                        Cancel Selection
+                                                    </button>
+                                                    <button type="button" class="btn-primary-action px-4 py-2 fw-bold" @onclick="AddItemToCart" disabled="@(SelectedVendorForProduct == null || !QuantityInput.HasValue || QuantityInput.Value <= 0)">
+                                                        @(!string.IsNullOrEmpty(EditingCartItemKey) ? "Update Item in Cart" : "Add to Cart")
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <!-- Left Column Secondary Navigation -->
+                                    <div class="d-flex align-items-center justify-content-between pt-1">
+                                        <button type="button" class="btn btn-outline-secondary fw-semibold px-4 py-2" @onclick="() => GoBackToStep(1)">
+                                            Back to Outlet
+                                        </button>
+                                        @if (SelectedProduct != null && CartItems.Count > 0)
+                                        {
+                                            <button type="button" class="btn btn-outline-success fw-bold px-3 py-2" @onclick="ResetProductPicker">
+                                                Back to Product Catalog
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+
+                                <!-- RIGHT COLUMN: Procurement Cart / Selected Items Summary -->
+                                <div class="procurement-right-col">
+                                    <div class="pm-panel p-3.5 p-lg-4 procurement-cart-panel sticky-cart">
+                                        <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <h5 class="fw-bold text-dark mb-0">PROCUREMENT CART</h5>
+                                                <span class="badge bg-success text-white px-2.5 py-1" style="font-size: 0.75rem;">@CartItems.Count @(CartItems.Count == 1 ? "Item" : "Items")</span>
+                                            </div>
+                                            @if (CartItems.Count > 0)
+                                            {
+                                                <span class="small text-muted" style="font-size: 0.75rem;">@DistinctVendorNamesInCart.Count @(DistinctVendorNamesInCart.Count == 1 ? "Vendor" : "Vendors")</span>
                                             }
                                         </div>
 
-                                        @if (!string.IsNullOrEmpty(ItemValidationMessage))
+                                        @if (!string.IsNullOrEmpty(CartValidationMessage))
                                         {
-                                            <div class="alert alert-danger p-2 mb-3 small">@ItemValidationMessage</div>
+                                            <div class="alert alert-danger p-2 mb-3 small">@CartValidationMessage</div>
                                         }
 
-                                        <!-- Add / Update Item Action Button -->
-                                        <div class="d-flex align-items-center justify-content-between pt-2.5 border-top flex-wrap gap-2">
-                                            <button type="button" class="btn btn-sm btn-outline-secondary fw-semibold px-3" @onclick="ResetProductPicker">
-                                                Cancel Selection
-                                            </button>
-                                            <button type="button" class="btn-primary-action px-4 py-2" @onclick="AddItemToCart" disabled="@(SelectedVendorForProduct == null || !QuantityInput.HasValue || QuantityInput.Value <= 0)">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
-                                                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                                                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                                                </svg>
-                                                <span>@(!string.IsNullOrEmpty(EditingCartItemKey) ? "Update Item in Cart" : "Add Product")</span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                }
-                            </div>
-
-                            <!-- =======================================================
-                                 PROCUREMENT ITEMS LIST (CART)
-                                 ======================================================= -->
-                            <div class="pm-panel p-4 mb-4">
-                                <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <h4 class="fw-bold text-dark mb-0">PROCUREMENT ITEMS LIST</h4>
-                                        <span class="badge bg-success text-white px-2.5 py-1">@CartItems.Count @(CartItems.Count == 1 ? "Item" : "Items")</span>
-                                    </div>
-                                    @if (CartItems.Count > 0 && SelectedProduct != null)
-                                    {
-                                        <span class="small text-muted">Currently configuring: <strong>@SelectedProduct.ProductName</strong></span>
-                                    }
-                                </div>
-
-                                @if (!string.IsNullOrEmpty(CartValidationMessage))
-                                {
-                                    <div class="alert alert-danger p-3 mb-3">@CartValidationMessage</div>
-                                }
-
-                                @if (CartItems.Count == 0)
-                                {
-                                    <div class="p-4 text-center text-muted border rounded-3 bg-light">
-                                        <div class="mb-2">
-                                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                                <circle cx="9" cy="21" r="1"></circle>
-                                                <circle cx="20" cy="21" r="1"></circle>
-                                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                                            </svg>
-                                        </div>
-                                        <h6 class="fw-bold text-dark mb-1">Your Procurement Cart is Empty</h6>
-                                        <p class="small mb-0">Select a product from the section above, choose a vendor, and click <strong>Add Product</strong>.</p>
-                                    </div>
-                                }
-                                else
-                                {
-                                    <div class="cart-table-wrapper mb-3">
-                                        <table class="cart-table">
-                                            <thead>
-                                                <tr>
-                                                    <th style="width: 50px;">#</th>
-                                                    <th>PRODUCT</th>
-                                                    <th style="width: 140px;">QUANTITY</th>
-                                                    <th>ASSIGNED VENDOR</th>
-                                                    <th>EST. UNIT PRICE</th>
-                                                    <th>EST. SUB-TOTAL</th>
-                                                    <th style="width: 140px; text-align: center;">ACTIONS</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
+                                        @if (CartItems.Count == 0)
+                                        {
+                                            <!-- Compact Empty State -->
+                                            <div class="cart-empty-state text-center py-4 px-3 rounded border bg-light mb-3">
+                                                <div class="cart-empty-icon mb-2">
+                                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                                                        <circle cx="9" cy="21" r="1"></circle>
+                                                        <circle cx="20" cy="21" r="1"></circle>
+                                                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                                                    </svg>
+                                                </div>
+                                                <h6 class="fw-bold text-dark mb-1" style="font-size: 0.9rem;">Your procurement cart is empty.</h6>
+                                                <p class="text-muted small mb-0" style="font-size: 0.78rem;">Select a product to add it to the request.</p>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <!-- Selected Items List in Cart -->
+                                            <div class="cart-items-stack mb-3">
                                                 @for (int i = 0; i < CartItems.Count; i++)
                                                 {
                                                     var idx = i + 1;
                                                     var item = CartItems[i];
                                                     bool isBeingEdited = EditingCartItemKey == item.ItemKey;
-                                                    <tr class="@(isBeingEdited ? "table-active" : "")">
-                                                        <td class="text-muted fw-bold">@idx</td>
-                                                        <td>
-                                                            <div class="fw-bold text-dark">@item.ProductName</div>
-                                                            <div class="small text-muted">@item.Category</div>
-                                                        </td>
-                                                        <td>
-                                                            <div class="d-flex align-items-center gap-1">
-                                                                <input type="number" class="cart-qty-input form-control form-control-sm"
+                                                    <div class="cart-item-card p-2.5 rounded border mb-2 @(isBeingEdited ? "editing" : "")">
+                                                        <div class="d-flex align-items-start justify-content-between gap-2 mb-1.5">
+                                                            <div class="min-w-0">
+                                                                <div class="fw-bold text-dark text-truncate" title="@item.ProductName" style="font-size: 0.88rem;">
+                                                                    @idx. @item.ProductName
+                                                                </div>
+                                                                <div class="small text-muted" style="font-size: 0.72rem;">@item.Category</div>
+                                                            </div>
+                                                            <div class="text-end flex-shrink-0">
+                                                                <div class="fw-bold text-success" style="font-size: 0.88rem;">
+                                                                    ₹@((item.Quantity * item.UnitPrice).ToString("N0"))
+                                                                </div>
+                                                                <div class="text-muted" style="font-size: 0.7rem;">
+                                                                    ₹@item.UnitPrice.ToString("N0")/@item.Unit
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-1 mb-2 pt-1 border-top border-light-subtle">
+                                                            <div class="d-flex align-items-center gap-1.5">
+                                                                <span class="small text-muted" style="font-size: 0.75rem;">Qty:</span>
+                                                                <input type="number" class="cart-qty-inline form-control form-control-sm"
                                                                        value="@item.Quantity"
                                                                        @onchange="@((ChangeEventArgs e) => { if (decimal.TryParse(e.Value?.ToString(), out var q)) UpdateCartItemQuantity(item, q); })"
                                                                        min="0.01" step="any" />
-                                                                <span class="small fw-semibold text-muted">@item.Unit</span>
+                                                                <span class="small text-muted fw-semibold" style="font-size: 0.75rem;">@item.Unit</span>
                                                             </div>
-                                                        </td>
-                                                        <td>
-                                                            <div class="d-flex align-items-center gap-2 flex-wrap">
-                                                                <span class="vendor-tag-badge">
-                                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                                                        <circle cx="12" cy="7" r="4"></circle>
-                                                                    </svg>
-                                                                    @item.VendorName
-                                                                </span>
+                                                            <div class="vendor-tag-badge-sm text-truncate" title="@item.VendorName">
+                                                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                                                    <circle cx="12" cy="7" r="4"></circle>
+                                                                </svg>
+                                                                <span>@item.VendorName</span>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="d-flex align-items-center justify-content-between pt-1 border-top border-light-subtle">
+                                                            <div>
                                                                 @if (!string.IsNullOrWhiteSpace(item.SmartBadge))
                                                                 {
-                                                                    <span class="badge bg-light text-dark border small">@item.SmartBadge</span>
+                                                                    <span class="badge bg-light text-dark border" style="font-size: 0.65rem;">@item.SmartBadge</span>
                                                                 }
                                                             </div>
-                                                        </td>
-                                                        <td>
-                                                            <span class="fw-semibold">₹@item.UnitPrice.ToString("N0")</span>
-                                                            <span class="small text-muted">/@item.Unit</span>
-                                                        </td>
-                                                        <td>
-                                                            <span class="fw-bold text-success">₹@((item.Quantity * item.UnitPrice).ToString("N0"))</span>
-                                                        </td>
-                                                        <td>
-                                                            <div class="d-flex align-items-center justify-content-center gap-2">
-                                                                <button type="button" class="btn-cart-edit" @onclick="() => EditCartItem(item)" title="Edit quantity or vendor">
+                                                            <div class="d-flex align-items-center gap-1.5">
+                                                                <button type="button" class="btn-cart-edit-sm" @onclick="() => EditCartItem(item)" title="Edit quantity or vendor">
                                                                     Edit
                                                                 </button>
-                                                                <button type="button" class="btn-cart-remove" @onclick="() => RemoveCartItem(item.ItemKey)" title="Remove from list">
+                                                                <button type="button" class="btn-cart-remove-sm" @onclick="() => RemoveCartItem(item.ItemKey)" title="Remove item">
                                                                     Remove
                                                                 </button>
                                                             </div>
-                                                        </td>
-                                                    </tr>
+                                                        </div>
+                                                    </div>
                                                 }
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                            </div>
 
-                                    <!-- Cart Summary Box -->
-                                    <div class="cart-summary-box mb-3">
-                                        <div class="row g-3 align-items-center">
-                                            <div class="col-sm-4">
-                                                <div class="cart-summary-metric">
-                                                    <span class="label">Total Products</span>
-                                                    <span class="value">@CartItems.Count Items</span>
+                                            <!-- Cart Summary Totals Box -->
+                                            <div class="cart-sidebar-summary p-3 rounded border bg-light mb-3">
+                                                <div class="d-flex align-items-center justify-content-between mb-1.5">
+                                                    <span class="small text-muted">Total Products:</span>
+                                                    <span class="small fw-bold text-dark">@CartItems.Count @(CartItems.Count == 1 ? "Item" : "Items")</span>
+                                                </div>
+                                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                                    <span class="small text-muted">Suppliers:</span>
+                                                    <span class="small fw-bold text-dark">@DistinctVendorNamesInCart.Count @(DistinctVendorNamesInCart.Count == 1 ? "Vendor" : "Vendors")</span>
+                                                </div>
+                                                <div class="d-flex align-items-center justify-content-between pt-2 border-top">
+                                                    <span class="fw-bold text-dark" style="font-size: 0.84rem;">Estimated Total:</span>
+                                                    <span class="fw-bold text-success fs-5">₹@TotalCartEstimatedValue.ToString("N0")</span>
                                                 </div>
                                             </div>
-                                            <div class="col-sm-4">
-                                                <div class="cart-summary-metric">
-                                                    <span class="label">Assigned Vendors</span>
-                                                    <span class="value">@DistinctVendorNamesInCart.Count Vendor(s)</span>
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-4 text-sm-end">
-                                                <div class="cart-summary-metric">
-                                                    <span class="label">Estimated Total</span>
-                                                    <span class="value highlight">₹@TotalCartEstimatedValue.ToString("N0")</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
-
-                                <!-- Navigation Footer Actions -->
-                                <div class="d-flex justify-content-between align-items-center pt-3 border-top flex-wrap gap-2">
-                                    <button type="button" class="btn btn-outline-secondary fw-semibold px-4" @onclick="() => GoBackToStep(1)">
-                                        Back to Outlet
-                                    </button>
-
-                                    <div class="d-flex align-items-center gap-2">
-                                        @if (CartItems.Count > 0)
-                                        {
-                                            <button type="button" class="btn btn-outline-success fw-bold px-3 py-2" @onclick="ResetProductPicker">
-                                                Add Another Product
-                                            </button>
                                         }
-                                        <button type="button" class="btn-primary-action px-4 py-2" @onclick="GoToStepReview" disabled="@(CartItems.Count == 0 && SelectedProduct == null)">
-                                            Proceed to Review &amp; Dispatch (@(CartItems.Count > 0 ? $"{CartItems.Count} items" : "1 item"))
-                                        </button>
+
+                                        <!-- Proceed to Review & Dispatch Button in Cart -->
+                                        <div class="cart-actions-footer">
+                                            <button type="button" class="btn-primary-action w-100 py-2.5 fw-bold" @onclick="GoToStepReview" disabled="@(CartItems.Count == 0 && SelectedProduct == null)">
+                                                @if (CartItems.Count > 0)
+                                                {
+                                                    <span>Proceed to Review &amp; Dispatch (@CartItems.Count @(CartItems.Count == 1 ? "item" : "items"))</span>
+                                                }
+                                                else if (SelectedProduct != null)
+                                                {
+                                                    <span>Proceed to Review &amp; Dispatch (1 item)</span>
+                                                }
+                                                else
+                                                {
+                                                    <span>Proceed to Review &amp; Dispatch</span>
+                                                }
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

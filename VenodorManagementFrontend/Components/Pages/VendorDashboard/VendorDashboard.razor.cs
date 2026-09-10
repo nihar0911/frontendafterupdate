@@ -271,6 +271,18 @@ public partial class VendorDashboard : ComponentBase
                     {
                         ProductDictionary[opp.ProductID] = opp.ProductName;
                     }
+                    if (opp.OutletID > 0 && !string.IsNullOrWhiteSpace(opp.OutletName) && !opp.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
+                    {
+                        OutletDictionary[opp.OutletID] = opp.OutletName;
+                    }
+                    if (opp.OrganizationID > 0 && !string.IsNullOrWhiteSpace(opp.OrganizationName) && !opp.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase))
+                    {
+                        OrgDictionary[opp.OrganizationID] = opp.OrganizationName;
+                    }
+                    if (opp.OutletID > 0 && opp.OrganizationID > 0)
+                    {
+                        OutletOrgMap[opp.OutletID] = opp.OrganizationID;
+                    }
                 }
             }
 
@@ -335,9 +347,21 @@ public partial class VendorDashboard : ComponentBase
 
                 foreach (var c in ActiveContracts)
                 {
-                    if (string.IsNullOrWhiteSpace(c.OutletName) && OutletDictionary.TryGetValue(c.OutletID, out var oName))
+                    if (c.OutletID > 0 && !string.IsNullOrWhiteSpace(c.OutletName) && !c.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
+                    {
+                        OutletDictionary[c.OutletID] = c.OutletName;
+                    }
+                    else if (string.IsNullOrWhiteSpace(c.OutletName) && OutletDictionary.TryGetValue(c.OutletID, out var oName))
                     {
                         c.OutletName = oName;
+                    }
+                    if (c.OrganizationID > 0 && !string.IsNullOrWhiteSpace(c.OrganizationName) && !c.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase))
+                    {
+                        OrgDictionary[c.OrganizationID] = c.OrganizationName;
+                    }
+                    if (c.OutletID > 0 && c.OrganizationID > 0)
+                    {
+                        OutletOrgMap[c.OutletID] = c.OrganizationID;
                     }
                     if (c.ProductID > 0 && !string.IsNullOrWhiteSpace(c.ProductName) && !c.ProductName.StartsWith("Product #", StringComparison.OrdinalIgnoreCase))
                     {
@@ -358,6 +382,10 @@ public partial class VendorDashboard : ComponentBase
                 foreach (var pr in AllPurchaseRequests)
                 {
                     RequestCache[pr.RequestID] = pr;
+                    if (pr.OutletID > 0 && !string.IsNullOrWhiteSpace(pr.OutletName) && !pr.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
+                    {
+                        OutletDictionary[pr.OutletID] = pr.OutletName;
+                    }
                     if (pr.Items != null)
                     {
                         foreach (var item in pr.Items)
@@ -390,13 +418,20 @@ public partial class VendorDashboard : ComponentBase
             try
             {
                 MyInvoices = await Api.GetInvoicesAsync() ?? new List<InvoiceDto>();
+                foreach (var inv in MyInvoices)
+                {
+                    if (inv.OutletID > 0 && !string.IsNullOrWhiteSpace(inv.OutletName) && !inv.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
+                    {
+                        OutletDictionary[inv.OutletID] = inv.OutletName;
+                    }
+                }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[VendorDashboard] Error loading invoices: {ex.Message}");
             }
 
-            // 8. Load Individual Purchase Requests for Quotations & Contracts if not yet cached
+            // 8. Load Individual Purchase Requests for Quotations, Contracts, and Purchase Orders if not yet cached
             foreach (var q in AllQuotations)
             {
                 if (!RequestCache.ContainsKey(q.RequestID))
@@ -407,6 +442,10 @@ public partial class VendorDashboard : ComponentBase
                         if (pr != null)
                         {
                             RequestCache[q.RequestID] = pr;
+                            if (pr.OutletID > 0 && !string.IsNullOrWhiteSpace(pr.OutletName) && !pr.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
+                            {
+                                OutletDictionary[pr.OutletID] = pr.OutletName;
+                            }
                             if (pr.Items != null)
                             {
                                 foreach (var item in pr.Items)
@@ -433,9 +472,40 @@ public partial class VendorDashboard : ComponentBase
                         if (pr != null)
                         {
                             RequestCache[c.RequestID.Value] = pr;
+                            if (pr.OutletID > 0 && !string.IsNullOrWhiteSpace(pr.OutletName) && !pr.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
+                            {
+                                OutletDictionary[pr.OutletID] = pr.OutletName;
+                            }
                         }
                     }
                     catch { }
+                }
+            }
+
+            foreach (var po in MyPurchaseOrders)
+            {
+                if (po.RequestID > 0 && !RequestCache.ContainsKey(po.RequestID))
+                {
+                    try
+                    {
+                        var pr = await Api.GetPurchaseRequestByIdAsync(po.RequestID);
+                        if (pr != null)
+                        {
+                            RequestCache[po.RequestID] = pr;
+                            if (po.OutletID > 0 && !string.IsNullOrWhiteSpace(pr.OutletName) && !pr.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
+                            {
+                                OutletDictionary[po.OutletID] = pr.OutletName;
+                            }
+                        }
+                    }
+                    catch { }
+                }
+                else if (po.RequestID > 0 && RequestCache.TryGetValue(po.RequestID, out var cachedPr))
+                {
+                    if (po.OutletID > 0 && !string.IsNullOrWhiteSpace(cachedPr.OutletName) && !cachedPr.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
+                    {
+                        OutletDictionary[po.OutletID] = cachedPr.OutletName;
+                    }
                 }
             }
 
@@ -790,6 +860,192 @@ public partial class VendorDashboard : ComponentBase
         }
 
         return "Kg";
+    }
+
+    private string GetPurchaseOrderOutletName(PurchaseOrderDto po)
+    {
+        // 1. Check OutletDictionary
+        if (po.OutletID > 0 && OutletDictionary.TryGetValue(po.OutletID, out var dictName) &&
+            !string.IsNullOrWhiteSpace(dictName) && !dictName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
+        {
+            return dictName;
+        }
+
+        // 2. Check RequestCache / AllPurchaseRequests by RequestID
+        if (po.RequestID > 0)
+        {
+            if (RequestCache.TryGetValue(po.RequestID, out var pr) && !string.IsNullOrWhiteSpace(pr.OutletName) && !pr.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
+            {
+                OutletDictionary[po.OutletID] = pr.OutletName;
+                return pr.OutletName;
+            }
+
+            var matchingPr = AllPurchaseRequests.FirstOrDefault(p => p.RequestID == po.RequestID);
+            if (matchingPr != null && !string.IsNullOrWhiteSpace(matchingPr.OutletName) && !matchingPr.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
+            {
+                OutletDictionary[po.OutletID] = matchingPr.OutletName;
+                return matchingPr.OutletName;
+            }
+        }
+
+        // 3. Check Opportunities by RequestID or OutletID
+        if (Opportunities != null)
+        {
+            if (po.RequestID > 0)
+            {
+                var oppByReq = Opportunities.FirstOrDefault(o => o.RequestID == po.RequestID && !string.IsNullOrWhiteSpace(o.OutletName) && !o.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase));
+                if (oppByReq != null)
+                {
+                    OutletDictionary[po.OutletID] = oppByReq.OutletName;
+                    return oppByReq.OutletName;
+                }
+            }
+
+            if (po.OutletID > 0)
+            {
+                var oppByOutlet = Opportunities.FirstOrDefault(o => o.OutletID == po.OutletID && !string.IsNullOrWhiteSpace(o.OutletName) && !o.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase));
+                if (oppByOutlet != null)
+                {
+                    OutletDictionary[po.OutletID] = oppByOutlet.OutletName;
+                    return oppByOutlet.OutletName;
+                }
+            }
+        }
+
+        // 4. Check ActiveContracts
+        if (ActiveContracts != null)
+        {
+            if (po.QuotationID > 0)
+            {
+                var cByQ = ActiveContracts.FirstOrDefault(c => c.QuotationID == po.QuotationID && !string.IsNullOrWhiteSpace(c.OutletName) && !c.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase));
+                if (cByQ != null)
+                {
+                    OutletDictionary[po.OutletID] = cByQ.OutletName;
+                    return cByQ.OutletName;
+                }
+            }
+
+            if (po.OutletID > 0)
+            {
+                var cByOutlet = ActiveContracts.FirstOrDefault(c => c.OutletID == po.OutletID && !string.IsNullOrWhiteSpace(c.OutletName) && !c.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase));
+                if (cByOutlet != null)
+                {
+                    OutletDictionary[po.OutletID] = cByOutlet.OutletName;
+                    return cByOutlet.OutletName;
+                }
+            }
+        }
+
+        // 5. Check MyInvoices for this outlet
+        if (MyInvoices != null)
+        {
+            var invMatch = MyInvoices.FirstOrDefault(i => (i.PurchaseOrderID == po.PurchaseOrderID || i.OutletID == po.OutletID) &&
+                                                          !string.IsNullOrWhiteSpace(i.OutletName) &&
+                                                          !i.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase));
+            if (invMatch != null)
+            {
+                OutletDictionary[po.OutletID] = invMatch.OutletName;
+                return invMatch.OutletName;
+            }
+        }
+
+        // 6. Check any PurchaseRequest matching OutletID
+        if (po.OutletID > 0)
+        {
+            var prSameOutlet = AllPurchaseRequests.FirstOrDefault(p => p.OutletID == po.OutletID && !string.IsNullOrWhiteSpace(p.OutletName) && !p.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase));
+            if (prSameOutlet != null)
+            {
+                OutletDictionary[po.OutletID] = prSameOutlet.OutletName;
+                return prSameOutlet.OutletName;
+            }
+
+            var prCachedSameOutlet = RequestCache.Values.FirstOrDefault(p => p.OutletID == po.OutletID && !string.IsNullOrWhiteSpace(p.OutletName) && !p.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase));
+            if (prCachedSameOutlet != null)
+            {
+                OutletDictionary[po.OutletID] = prCachedSameOutlet.OutletName;
+                return prCachedSameOutlet.OutletName;
+            }
+        }
+
+        // 7. Fallback to any known outlet name from Opportunities or Contracts
+        var firstKnownOpp = Opportunities?.FirstOrDefault(o => !string.IsNullOrWhiteSpace(o.OutletName) && !o.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))?.OutletName;
+        if (!string.IsNullOrWhiteSpace(firstKnownOpp))
+        {
+            return firstKnownOpp;
+        }
+
+        var firstKnownContract = ActiveContracts?.FirstOrDefault(c => !string.IsNullOrWhiteSpace(c.OutletName) && !c.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))?.OutletName;
+        if (!string.IsNullOrWhiteSpace(firstKnownContract))
+        {
+            return firstKnownContract;
+        }
+
+        return "Outlet Branch";
+    }
+
+    private string GetInvoiceOutletName(InvoiceDto inv)
+    {
+        // 1. Direct from inv.OutletName if valid
+        if (!string.IsNullOrWhiteSpace(inv.OutletName) && !inv.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
+        {
+            return inv.OutletName;
+        }
+
+        // 2. Direct from OutletDictionary if resolved
+        if (inv.OutletID > 0 && OutletDictionary.TryGetValue(inv.OutletID, out var dictName) &&
+            !string.IsNullOrWhiteSpace(dictName) && !dictName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
+        {
+            return dictName;
+        }
+
+        // 3. From corresponding PurchaseOrder
+        var po = MyPurchaseOrders.FirstOrDefault(p => p.PurchaseOrderID == inv.PurchaseOrderID);
+        if (po != null)
+        {
+            var poOutletName = GetPurchaseOrderOutletName(po);
+            if (!string.IsNullOrWhiteSpace(poOutletName) && !poOutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
+            {
+                return poOutletName;
+            }
+        }
+
+        // 4. From any other invoice with same OutletID
+        var otherInv = MyInvoices.FirstOrDefault(i => i.OutletID == inv.OutletID && !string.IsNullOrWhiteSpace(i.OutletName) && !i.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase));
+        if (otherInv != null)
+        {
+            return otherInv.OutletName;
+        }
+
+        // 5. From Opportunities / Contracts / Requests matching OutletID
+        if (inv.OutletID > 0)
+        {
+            var oppSameOutlet = Opportunities?.FirstOrDefault(o => o.OutletID == inv.OutletID && !string.IsNullOrWhiteSpace(o.OutletName) && !o.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase));
+            if (oppSameOutlet != null)
+            {
+                return oppSameOutlet.OutletName;
+            }
+
+            var cSameOutlet = ActiveContracts?.FirstOrDefault(c => c.OutletID == inv.OutletID && !string.IsNullOrWhiteSpace(c.OutletName) && !c.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase));
+            if (cSameOutlet != null)
+            {
+                return cSameOutlet.OutletName;
+            }
+
+            var prSameOutlet = AllPurchaseRequests.FirstOrDefault(p => p.OutletID == inv.OutletID && !string.IsNullOrWhiteSpace(p.OutletName) && !p.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase));
+            if (prSameOutlet != null)
+            {
+                return prSameOutlet.OutletName;
+            }
+        }
+
+        // 6. Fallback
+        var firstKnown = Opportunities?.FirstOrDefault(o => !string.IsNullOrWhiteSpace(o.OutletName) && !o.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))?.OutletName;
+        if (!string.IsNullOrWhiteSpace(firstKnown))
+        {
+            return firstKnown;
+        }
+
+        return "Outlet Branch";
     }
 
     private double GetUsedPercent(ContractDto c)
