@@ -41,6 +41,8 @@ public partial class VendorDashboard : ComponentBase
     private bool IsLoading { get; set; } = true;
     private bool ShowNotificationDropdown { get; set; } = false;
 
+
+
     // Selected Quotation for dedicated Details View
     private QuotationDto? SelectedQuotation { get; set; }
     private PurchaseRequestDto? SelectedQuotationPR { get; set; }
@@ -556,6 +558,7 @@ public partial class VendorDashboard : ComponentBase
         {
             ContractStatusFilter = "Active";
         }
+
 
         StateHasChanged();
     }
@@ -1322,6 +1325,101 @@ public partial class VendorDashboard : ComponentBase
         }
     }
 
+    public enum OpportunityQuotationState
+    {
+        NotSubmitted,
+        QuotationPending,
+        Accepted,
+        Rejected
+    }
+
+    private OpportunityQuotationState GetOpportunityQuotationState(VendorProcurementOpportunityDto opp)
+    {
+        if (opp == null) return OpportunityQuotationState.NotSubmitted;
+
+        // 1. Check direct QuotationStatus property on opportunity DTO if available from API/DTO
+        if (!string.IsNullOrWhiteSpace(opp.QuotationStatus))
+        {
+            if (string.Equals(opp.QuotationStatus, "Accepted", StringComparison.OrdinalIgnoreCase))
+            {
+                return OpportunityQuotationState.Accepted;
+            }
+            if (string.Equals(opp.QuotationStatus, "Rejected", StringComparison.OrdinalIgnoreCase))
+            {
+                return OpportunityQuotationState.Rejected;
+            }
+            if (string.Equals(opp.QuotationStatus, "Pending", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(opp.QuotationStatus, "Submitted", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(opp.QuotationStatus, "Under Review", StringComparison.OrdinalIgnoreCase))
+            {
+                return OpportunityQuotationState.QuotationPending;
+            }
+        }
+
+        // 2. Look up matching quotation from AllQuotations loaded for this vendor
+        var quotation = GetQuotationForOpportunity(opp);
+        if (quotation != null && !string.IsNullOrWhiteSpace(quotation.Status))
+        {
+            if (string.Equals(quotation.Status, "Accepted", StringComparison.OrdinalIgnoreCase))
+            {
+                return OpportunityQuotationState.Accepted;
+            }
+            if (string.Equals(quotation.Status, "Rejected", StringComparison.OrdinalIgnoreCase))
+            {
+                return OpportunityQuotationState.Rejected;
+            }
+            if (string.Equals(quotation.Status, "Pending", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(quotation.Status, "Submitted", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(quotation.Status, "Under Review", StringComparison.OrdinalIgnoreCase))
+            {
+                return OpportunityQuotationState.QuotationPending;
+            }
+        }
+
+        // 3. Check opp.HasQuotation boolean flag
+        if (opp.HasQuotation)
+        {
+            return OpportunityQuotationState.QuotationPending;
+        }
+
+        return OpportunityQuotationState.NotSubmitted;
+    }
+
+    private QuotationDto? GetQuotationForOpportunity(VendorProcurementOpportunityDto opp)
+    {
+        if (AllQuotations == null || AllQuotations.Count == 0 || opp == null)
+        {
+            return null;
+        }
+
+        // A. Match by QuotationID if specified
+        if (opp.QuotationID.HasValue && opp.QuotationID.Value > 0)
+        {
+            var matchById = AllQuotations.FirstOrDefault(q => q.QuotationID == opp.QuotationID.Value);
+            if (matchById != null) return matchById;
+        }
+
+        // B. Match by RequestID and ProductID (take most recent)
+        var matchByReqAndProd = AllQuotations
+            .Where(q => q.RequestID == opp.RequestID &&
+                        q.Items != null &&
+                        q.Items.Any(i => i.ProductID == opp.ProductID))
+            .OrderByDescending(q => q.QuotationID)
+            .FirstOrDefault();
+
+        if (matchByReqAndProd != null) return matchByReqAndProd;
+
+        // C. Match by RequestID ONLY if the quotation has no item details (unitemized/legacy)
+        var matchByReq = AllQuotations
+            .Where(q => q.RequestID == opp.RequestID && (q.Items == null || q.Items.Count == 0))
+            .OrderByDescending(q => q.QuotationID)
+            .FirstOrDefault();
+
+        if (matchByReq != null) return matchByReq;
+
+        return null;
+    }
+
     private void ViewOpportunity(int requestId, int productId = 0)
     {
         if (productId > 0)
@@ -1548,4 +1646,6 @@ public partial class VendorDashboard : ComponentBase
         SelectedReviewDetails = null;
         ReviewLoadErrorMessage = null;
     }
+
+
 }

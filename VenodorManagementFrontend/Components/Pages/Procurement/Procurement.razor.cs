@@ -712,6 +712,7 @@ public partial class Procurement : ComponentBase
                 }
             }
 
+            var recSettings = await Api.GetVendorRecommendationSettingsAsync() ?? new VenodorManagementFrontend.Models.VendorRecommendationSettings.VendorRecommendationSettingsDto();
             var recs = new List<VendorRecommendationDto>();
             decimal minPrice = matchingVP.Count > 0 ? matchingVP.Min(vp => vp.UnitPrice) : 0m;
 
@@ -751,17 +752,24 @@ public partial class Procurement : ComponentBase
                 decimal perfAvgQuality = (perf != null && perf.AverageQualityRating.HasValue) ? perf.AverageQualityRating.Value : 0m;
                 decimal perfAvgDelivery = (perf != null && perf.AverageDeliveryRating.HasValue) ? perf.AverageDeliveryRating.Value : 0m;
 
-                decimal qualityScore = perfFeedbackCount > 0 ? (perfAvgQuality / 5.0m) * 100m : 70m;
-                decimal deliveryScore = perfFeedbackCount > 0 ? (perfAvgDelivery / 5.0m) * 100m : 70m;
+                decimal qWeight = recSettings.QualityWeight / 100m;
+                decimal dWeight = recSettings.DeliveryWeight / 100m;
+                decimal pWeight = recSettings.PriceWeight / 100m;
+                decimal rMaxBonus = recSettings.ReliabilityWeight;
+                decimal rPtsPerReview = recSettings.ReliabilityPointsPerReview;
+                decimal neutralScore = recSettings.NeutralScoreForNewVendors;
+
+                decimal qualityScore = perfFeedbackCount > 0 ? (perfAvgQuality / 5.0m) * 100m : neutralScore;
+                decimal deliveryScore = perfFeedbackCount > 0 ? (perfAvgDelivery / 5.0m) * 100m : neutralScore;
                 decimal priceScore = (vp.UnitPrice > 0 && minPrice > 0)
                     ? Math.Round((minPrice / vp.UnitPrice) * 100m, 1)
-                    : 70m;
-                decimal reliabilityBonus = Math.Min(15m, perfFeedbackCount * 3m);
+                    : neutralScore;
+                decimal reliabilityBonus = Math.Min(rMaxBonus, perfFeedbackCount * rPtsPerReview);
 
                 decimal overallCompositeScore = Math.Round(
-                    (qualityScore * 0.35m) +
-                    (deliveryScore * 0.25m) +
-                    (priceScore * 0.25m) +
+                    (qualityScore * qWeight) +
+                    (deliveryScore * dWeight) +
+                    (priceScore * pWeight) +
                     reliabilityBonus,
                     1
                 );
@@ -801,13 +809,23 @@ public partial class Procurement : ComponentBase
                 });
             }
 
-            VendorRecommendations = recs
-                .OrderByDescending(r => r.HasActiveContract && r.RemainingQuantity > 0)
-                .ThenByDescending(r => r.OverallScore)
-                .ThenBy(r => r.UnitPrice)
-                .ThenBy(r => r.EstimatedDeliveryDays)
-                .ThenBy(r => r.VendorID)
-                .ToList();
+            var rankedRecs = recs.AsEnumerable();
+            if (recSettings.PrioritizeActiveContracts)
+            {
+                rankedRecs = rankedRecs.OrderByDescending(r => r.HasActiveContract && r.RemainingQuantity > 0)
+                    .ThenByDescending(r => r.OverallScore)
+                    .ThenBy(r => r.UnitPrice)
+                    .ThenBy(r => r.EstimatedDeliveryDays)
+                    .ThenBy(r => r.VendorID);
+            }
+            else
+            {
+                rankedRecs = rankedRecs.OrderByDescending(r => r.OverallScore)
+                    .ThenBy(r => r.UnitPrice)
+                    .ThenBy(r => r.EstimatedDeliveryDays)
+                    .ThenBy(r => r.VendorID);
+            }
+            VendorRecommendations = rankedRecs.ToList();
 
             for (int i = 0; i < VendorRecommendations.Count; i++)
             {
@@ -817,7 +835,7 @@ public partial class Procurement : ComponentBase
                 {
                     rec.SmartBadge = "Top Recommended";
                 }
-                else if (rec.AverageQualityRating >= 4.5m)
+                else if (rec.AverageQualityRating >= recSettings.BestQualityThreshold)
                 {
                     rec.SmartBadge = "Best Quality";
                 }
@@ -825,7 +843,7 @@ public partial class Procurement : ComponentBase
                 {
                     rec.SmartBadge = "Best Price";
                 }
-                else if (rec.AverageDeliveryRating >= 4.5m)
+                else if (rec.AverageDeliveryRating >= recSettings.FastestDeliveryThreshold)
                 {
                     rec.SmartBadge = "Fastest Delivery";
                 }

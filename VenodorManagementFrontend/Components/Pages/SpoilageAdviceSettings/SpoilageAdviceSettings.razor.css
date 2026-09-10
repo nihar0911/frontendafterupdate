@@ -1,0 +1,281 @@
+/* ==========================================================================
+   SPOILAGE ADVICE SETTINGS - SCOPED STYLES
+   Design System: Dark Green (#174F45), Clean White (#FFFFFF), Modern Enterprise
+   Border-radius: 4px (crisp rectangular)
+   ========================================================================== */
+
+.vd-layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: #F4F7F5;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    color: #1F2933;
+}
+
+/* 1. FIXED FULL-HEIGHT DARK GREEN SIDEBAR */
+.vd-sidebar {
+    width: 220px;
+    background-color: #174F45;
+    color: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 1rem 0.7rem;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    height: 100vh;
+    min-height: 100vh;
+    z-index: 100;
+    box-shadow: 2px 0 12px rgba(19, 78, 72, 0.12);
+    box-sizing: border-box;
+}
+
+.vd-sidebar-top {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.vd-sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.15rem 0.4rem 0.85rem 0.4rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.vd-brand-icon-box {
+    width: 34px;
+    height: 34px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFFFFF;
+    flex-shrink: 0;
+}
+
+.vd-brand-text {
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: #FFFFFF;
+}
+
+.vd-nav-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 1.25rem 0;
+    flex: 1;
+}
+
+.vd-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.45rem 0.7rem;
+    border-radius: 4px;
+    color: #D1E0D9;
+    background: transparent;
+    border: none;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    width: 100%;
+}
+
+.vd-nav-item:hover, .vd-nav-item.active {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: #FFFFFF;
+}
+
+.vd-sidebar-bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.vd-user-profile-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.vd-avatar-circle {
+    width: 34px;
+    height: 34px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFFFFF;
+    flex-shrink: 0;
+}
+
+.vd-user-info-text {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.vd-user-name {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.vd-user-role {
+    font-size: 0.72rem;
+    color: #A3C2B6;
+}
+
+.vd-logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.6rem 0.85rem;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #F87171;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.vd-logout-btn:hover {
+    background: rgba(239, 68, 68, 0.15);
+    color: #FFFFFF;
+}
+
+/* 2. MAIN CONTENT AREA */
+.vd-main-canvas {
+    flex: 1;
+    margin-left: 220px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #F4F7F5;
+}
+
+.vd-top-header {
+    height: 68px;
+    background-color: #FFFFFF;
+    border-bottom: 1px solid #E2E8E5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 90;
+    box-shadow: 0 1px 3px rgba(31, 41, 51, 0.03);
+}
+
+.vd-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.vd-welcome-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #174F45;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.vd-welcome-subtitle {
+    font-size: 0.82rem;
+    color: #627264;
+    margin: 0.15rem 0 0 0;
+}
+
+.vd-header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.vd-logout-header-pill {
+    background: #FEE2E2;
+    border: 1px solid #FECACA;
+    color: #DC2626;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.vd-logout-header-pill:hover {
+    background-color: #FCA5A5;
+    color: #991B1B;
+}
+
+/* 3. DASHBOARD BODY & CARD */
+.vd-dashboard-body {
+    padding: 1.75rem 2rem;
+    flex: 1;
+}
+
+.vd-card {
+    background-color: #FFFFFF;
+    border: 1px solid #D2DCD6;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(38, 49, 43, 0.04);
+}
+
+/* 4. AUTH WARNING */
+.vd-auth-warning-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 80vh;
+    padding: 2rem;
+}
+
+.vd-auth-warning-card {
+    background-color: #FFFFFF;
+    border: 1px solid #D2DCD6;
+    border-radius: 4px;
+    padding: 2.5rem;
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+.vd-btn-primary {
+    background-color: #174F45;
+    border-color: #174F45;
+    color: #FFFFFF;
+    font-weight: 600;
+    padding: 0.5rem 1.25rem;
+    border-radius: 4px;
+}
+
+.vd-btn-primary:hover {
+    background-color: #113B34;
+    border-color: #113B34;
+    color: #FFFFFF;
+}

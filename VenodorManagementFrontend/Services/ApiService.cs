@@ -1963,6 +1963,102 @@ namespace VenodorManagementFrontend.Services
             }
             return null;
         }
+
+        public async Task<VenodorManagementFrontend.Models.SpoilageAdviceSettings.SpoilageAdviceSettingsDto?> GetSpoilageAdviceSettingsAsync()
+        {
+            SetAuthHeader();
+            try
+            {
+                var response = await _httpClient.GetAsync("api/spoilage-advice-settings");
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadFromJsonAsync<VenodorManagementFrontend.Models.SpoilageAdviceSettings.SpoilageAdviceSettingsDto>();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ApiService] GetSpoilageAdviceSettingsAsync error: {ex.Message}");
+            }
+            return null;
+        }
+
+        public async Task<(bool Success, string Message, VenodorManagementFrontend.Models.SpoilageAdviceSettings.SpoilageAdviceSettingsDto? Settings)> UpdateSpoilageAdviceSettingsAsync(VenodorManagementFrontend.Models.SpoilageAdviceSettings.SpoilageAdviceSettingsDto dto)
+        {
+            SetAuthHeader();
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync("api/spoilage-advice-settings", dto);
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<VenodorManagementFrontend.Models.SpoilageAdviceSettings.SpoilageAdviceSettingsDto>();
+                    return (true, "Spoilage advice settings saved successfully.", result);
+                }
+                var errorText = await response.Content.ReadAsStringAsync();
+                try
+                {
+                    using var doc = System.Text.Json.JsonDocument.Parse(errorText);
+                    if (doc.RootElement.TryGetProperty("message", out var msgProp))
+                    {
+                        return (false, msgProp.GetString() ?? errorText, null);
+                    }
+                }
+                catch { }
+                return (false, !string.IsNullOrWhiteSpace(errorText) ? errorText : "Failed to save settings.", null);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ApiService] UpdateSpoilageAdviceSettingsAsync error: {ex.Message}");
+                return (false, ex.Message, null);
+            }
+        }
+
+        public async Task<VenodorManagementFrontend.Models.VendorRecommendationSettings.VendorRecommendationSettingsDto?> GetVendorRecommendationSettingsAsync()
+        {
+            SetAuthHeader();
+            try
+            {
+                var response = await _httpClient.GetAsync("api/vendor-recommendation-settings");
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadFromJsonAsync<VenodorManagementFrontend.Models.VendorRecommendationSettings.VendorRecommendationSettingsDto>();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ApiService] GetVendorRecommendationSettingsAsync error: {ex.Message}");
+            }
+            return null;
+        }
+
+        public async Task<(bool Success, string Message, VenodorManagementFrontend.Models.VendorRecommendationSettings.VendorRecommendationSettingsDto? Settings)> UpdateVendorRecommendationSettingsAsync(VenodorManagementFrontend.Models.VendorRecommendationSettings.VendorRecommendationSettingsDto dto)
+        {
+            SetAuthHeader();
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync("api/vendor-recommendation-settings", dto);
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<VenodorManagementFrontend.Models.VendorRecommendationSettings.VendorRecommendationSettingsDto>();
+                    return (true, "Vendor recommendation settings saved successfully.", result);
+                }
+                var errorText = await response.Content.ReadAsStringAsync();
+                try
+                {
+                    using var doc = System.Text.Json.JsonDocument.Parse(errorText);
+                    if (doc.RootElement.TryGetProperty("message", out var msgProp))
+                    {
+                        return (false, msgProp.GetString() ?? errorText, null);
+                    }
+                }
+                catch { }
+                return (false, !string.IsNullOrWhiteSpace(errorText) ? errorText : "Failed to save settings.", null);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ApiService] UpdateVendorRecommendationSettingsAsync error: {ex.Message}");
+                return (false, ex.Message, null);
+            }
+        }
     }
 }
 

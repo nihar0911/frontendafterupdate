@@ -70,6 +70,23 @@ public partial class VendorProcurement : ComponentBase
             if (Opportunity != null)
             {
                 UnitPriceInput = Opportunity.UnitPrice;
+
+                // Check if vendor already has a quotation for this request/opportunity
+                if (Auth.VendorID.HasValue)
+                {
+                    try
+                    {
+                        var quotations = await Api.GetQuotationsAsync();
+                        if (quotations != null)
+                        {
+                            CreatedQuotation = quotations.FirstOrDefault(q =>
+                                q.VendorID == Auth.VendorID.Value &&
+                                q.RequestID == RequestId &&
+                                (q.Items == null || !q.Items.Any() || q.Items.Any(i => i.ProductID == Opportunity.ProductID)));
+                        }
+                    }
+                    catch { }
+                }
             }
         }
         catch (Exception ex)
@@ -149,6 +166,12 @@ public partial class VendorProcurement : ComponentBase
     {
         if (Opportunity == null) return;
         FormError = null;
+
+        if (CreatedQuotation != null)
+        {
+            FormError = "A quotation has already been submitted for this procurement opportunity.";
+            return;
+        }
 
         if (Opportunity.OpportunityStatus != "Accepted")
         {
