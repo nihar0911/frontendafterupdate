@@ -1561,34 +1561,7 @@ else
                              DASHBOARD TAB (OPPORTUNITIES & METRICS)
                              ======================================================= -->
 
-                        <!-- TOP HIGHLIGHT BANNER FOR LATEST OPPORTUNITY -->
-                        @if (TopOpportunity != null && ActiveTab == "new")
-                        {
-                            <div class="vd-opportunity-banner mb-4">
-                                <div class="vd-opportunity-banner-left">
-                                    <div class="vd-banner-icon-box">
-                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0284C7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                            <circle cx="12" cy="12" r="10"></circle>
-                                            <line x1="12" y1="16" x2="12" y2="12"></line>
-                                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <h5 class="vd-banner-title">New Procurement Opportunity Available!</h5>
-                                        <p class="vd-banner-desc">
-                                            <strong>@TopOpportunity.OutletName</strong> (@TopOpportunity.OrganizationName) has requested <strong>@TopOpportunity.RequestedQuantity.ToString("N2") @TopOpportunity.Unit</strong> of <strong>@TopOpportunity.ProductName</strong> (PR-@TopOpportunity.RequestID).
-                                        </p>
-                                    </div>
-                                </div>
-                                <button type="button" class="btn vd-btn-dark-green" @onclick='() => ViewOpportunity(TopOpportunity.RequestID, TopOpportunity.ProductID)'>
-                                    <span>View Request</span>
-                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                                        <polyline points="12 5 19 12 12 19"></polyline>
-                                    </svg>
-                                </button>
-                            </div>
-                        }
+
 
                         <!-- 4 SUMMARY METRIC CARDS -->
                         <div class="vd-metric-grid mb-4">

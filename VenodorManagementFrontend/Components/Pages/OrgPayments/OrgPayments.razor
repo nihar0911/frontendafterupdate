@@ -39,6 +39,14 @@ else
 {
     <div class="org-app-layout @(IsSidebarCollapsed ? "sidebar-collapsed" : "")">
         
+        @if (Auth.IsPurchaseManager)
+        {
+            <PurchaseManagerSidebar ActivePage="payments" 
+                                   IsSidebarCollapsed="IsSidebarCollapsed" 
+                                   OnToggleSidebar="(c) => IsSidebarCollapsed = c" />
+        }
+        else
+        {
         <!-- =======================================================================
              LEFT SIDEBAR NAVIGATION (ENTERPRISE DARK GREEN)
              ======================================================================= -->
@@ -187,6 +195,7 @@ else
                 </button>
             </div>
         </aside>
+        }
 
         <!-- =======================================================================
              MAIN CONTENT AREA
@@ -196,8 +205,16 @@ else
             <!-- Page Header -->
             <header class="org-page-header">
                 <div class="header-left">
-                    <h1 class="page-title">Payments & Settlements</h1>
-                    <p class="page-subtitle">Record payments for approved invoices and inspect complete settlement audit history.</p>
+                    @if (Auth.IsPurchaseManager)
+                    {
+                        <h1 class="page-title mb-0">Purchase Manager Portal</h1>
+                        <p class="page-subtitle mb-0">Payments &amp; Settlements • Record payments for approved invoices and inspect complete settlement audit history.</p>
+                    }
+                    else
+                    {
+                        <h1 class="page-title">Payments & Settlements</h1>
+                        <p class="page-subtitle">Record payments for approved invoices and inspect complete settlement audit history.</p>
+                    }
                 </div>
                 <div class="header-right">
                     <button class="btn btn-outline-secondary d-flex align-items-center gap-2" @onclick="LoadDataAsync" disabled="@IsLoading">

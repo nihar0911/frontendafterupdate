@@ -39,6 +39,8 @@ public partial class VendorDashboard : ComponentBase
     private string ContractStatusFilter { get; set; } = "Active";
     private string SearchQuery { get; set; } = string.Empty;
     private bool IsLoading { get; set; } = true;
+    private int? _lastLoadedVendorId;
+    private bool _isDashboardLoaded;
     private bool ShowNotificationDropdown { get; set; } = false;
 
 
@@ -224,6 +226,13 @@ public partial class VendorDashboard : ComponentBase
 
             if (Auth.VendorID.HasValue && Auth.VendorID.Value > 0)
             {
+                if (_isDashboardLoaded && _lastLoadedVendorId == Auth.VendorID.Value)
+                {
+                    return;
+                }
+
+                _lastLoadedVendorId = Auth.VendorID.Value;
+                _isDashboardLoaded = true;
                 await LoadDashboardData();
             }
             else
@@ -246,59 +255,105 @@ public partial class VendorDashboard : ComponentBase
 
         try
         {
-            // 1. Resolve Vendor Name
-            if (Auth.VendorID.HasValue)
+            if (!Auth.VendorID.HasValue)
             {
-                var vendors = await Api.GetVendorsAsync();
-                var v = vendors?.FirstOrDefault(ven => ven.VendorID == Auth.VendorID.Value);
-                VendorName = v?.VendorName ?? $"Vendor #{Auth.VendorID.Value}";
-                try
-                {
-                    MyPerformance = await Api.GetVendorPerformanceByIdAsync(Auth.VendorID.Value);
-                    MyReviews = await Api.GetVendorReviewsAsync(Auth.VendorID.Value);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[VendorDashboard] Error loading performance/reviews: {ex.Message}");
-                }
+                return;
             }
 
-            // 2. Load Real Opportunities
-            Opportunities = await Api.GetVendorProcurementOpportunitiesAsync() ?? new List<VendorProcurementOpportunityDto>();
-            if (Opportunities != null)
-            {
-                foreach (var opp in Opportunities)
-                {
-                    if (opp.ProductID > 0 && !string.IsNullOrWhiteSpace(opp.ProductName) && !opp.ProductName.StartsWith("Product #", StringComparison.OrdinalIgnoreCase))
-                    {
-                        ProductDictionary[opp.ProductID] = opp.ProductName;
-                    }
-                    if (opp.OutletID > 0 && !string.IsNullOrWhiteSpace(opp.OutletName) && !opp.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
-                    {
-                        OutletDictionary[opp.OutletID] = opp.OutletName;
-                    }
-                    if (opp.OrganizationID > 0 && !string.IsNullOrWhiteSpace(opp.OrganizationName) && !opp.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase))
-                    {
-                        OrgDictionary[opp.OrganizationID] = opp.OrganizationName;
-                    }
-                    if (opp.OutletID > 0 && opp.OrganizationID > 0)
-                    {
-                        OutletOrgMap[opp.OutletID] = opp.OrganizationID;
-                    }
-                }
-            }
+            int vendorId = Auth.VendorID.Value;
 
-            // 3. Load Quotations for this vendor
-            var allQ = await Api.GetQuotationsAsync();
-            if (allQ != null && Auth.VendorID.HasValue)
-            {
-                AllQuotations = allQ.Where(q => q.VendorID == Auth.VendorID.Value).ToList();
-            }
+            // Launch independent API calls concurrently
+            var vendorsTask = Api.GetVendorsAsync();
+            var perfTask = Api.GetVendorPerformanceByIdAsync(vendorId);
+            var reviewsTask = Api.GetVendorReviewsAsync(vendorId);
+            var oppsTask = Api.GetVendorProcurementOpportunitiesAsync();
+            var quotationsTask = Api.GetQuotationsAsync();
+            var productsTask = Api.GetProductsAsync();
+            var outletsTask = Api.GetOutletsAsync();
+            var orgsTask = Api.GetOrganizationsAsync();
+            var contractsTask = Api.GetContractsAsync();
+            var ordersTask = Api.GetPurchaseOrdersAsync();
+            var invoicesTask = Api.GetInvoicesAsync();
+            var notifsTask = Api.GetMyNotificationsAsync();
 
-            // 4. Load Products from main catalog
+            await Task.WhenAll(
+                vendorsTask,
+                perfTask,
+                reviewsTask,
+                oppsTask,
+                quotationsTask,
+                productsTask,
+                outletsTask,
+                orgsTask,
+                contractsTask,
+                ordersTask,
+                invoicesTask,
+                notifsTask
+            );
+
+            // 1. Resolve Vendor Name & Performance
             try
             {
-                var products = await Api.GetProductsAsync();
+                var vendors = await vendorsTask;
+                var v = vendors?.FirstOrDefault(ven => ven.VendorID == vendorId);
+                VendorName = v?.VendorName ?? $"Vendor #{vendorId}";
+            }
+            catch { }
+
+            try
+            {
+                MyPerformance = await perfTask;
+                MyReviews = await reviewsTask ?? new();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[VendorDashboard] Error loading performance/reviews: {ex.Message}");
+            }
+
+            // 2. Opportunities & Dictionary Lookups
+            try
+            {
+                Opportunities = await oppsTask ?? new List<VendorProcurementOpportunityDto>();
+                if (Opportunities != null)
+                {
+                    foreach (var opp in Opportunities)
+                    {
+                        if (opp.ProductID > 0 && !string.IsNullOrWhiteSpace(opp.ProductName) && !opp.ProductName.StartsWith("Product #", StringComparison.OrdinalIgnoreCase))
+                        {
+                            ProductDictionary[opp.ProductID] = opp.ProductName;
+                        }
+                        if (opp.OutletID > 0 && !string.IsNullOrWhiteSpace(opp.OutletName) && !opp.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
+                        {
+                            OutletDictionary[opp.OutletID] = opp.OutletName;
+                        }
+                        if (opp.OrganizationID > 0 && !string.IsNullOrWhiteSpace(opp.OrganizationName) && !opp.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase))
+                        {
+                            OrgDictionary[opp.OrganizationID] = opp.OrganizationName;
+                        }
+                        if (opp.OutletID > 0 && opp.OrganizationID > 0)
+                        {
+                            OutletOrgMap[opp.OutletID] = opp.OrganizationID;
+                        }
+                    }
+                }
+            }
+            catch { }
+
+            // 3. Quotations for this vendor
+            try
+            {
+                var allQ = await quotationsTask;
+                if (allQ != null)
+                {
+                    AllQuotations = allQ.Where(q => q.VendorID == vendorId).ToList();
+                }
+            }
+            catch { }
+
+            // 4. Products Catalog Lookup
+            try
+            {
+                var products = await productsTask;
                 if (products != null)
                 {
                     foreach (var p in products)
@@ -312,10 +367,10 @@ public partial class VendorDashboard : ComponentBase
             }
             catch { }
 
-            // 5. Load Outlets & Organizations
+            // 5. Outlets & Organizations Lookup
             try
             {
-                var outlets = await Api.GetOutletsAsync();
+                var outlets = await outletsTask;
                 if (outlets != null)
                 {
                     foreach (var o in outlets)
@@ -328,7 +383,7 @@ public partial class VendorDashboard : ComponentBase
                     }
                 }
 
-                var orgs = await Api.GetOrganizationsAsync();
+                var orgs = await orgsTask;
                 if (orgs != null)
                 {
                     foreach (var org in orgs)
@@ -339,92 +394,74 @@ public partial class VendorDashboard : ComponentBase
             }
             catch { }
 
-            // 6. Load Contracts for this vendor
-            var allContracts = await Api.GetContractsAsync();
-            if (allContracts != null && Auth.VendorID.HasValue)
-            {
-                ActiveContracts = allContracts.Where(c =>
-                    c.VendorID == Auth.VendorID.Value ||
-                    (c.Allocations != null && c.Allocations.Any(a => a.VendorID == Auth.VendorID.Value))).ToList();
-
-                foreach (var c in ActiveContracts)
-                {
-                    if (c.OutletID > 0 && !string.IsNullOrWhiteSpace(c.OutletName) && !c.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
-                    {
-                        OutletDictionary[c.OutletID] = c.OutletName;
-                    }
-                    else if (string.IsNullOrWhiteSpace(c.OutletName) && OutletDictionary.TryGetValue(c.OutletID, out var oName))
-                    {
-                        c.OutletName = oName;
-                    }
-                    if (c.OrganizationID > 0 && !string.IsNullOrWhiteSpace(c.OrganizationName) && !c.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase))
-                    {
-                        OrgDictionary[c.OrganizationID] = c.OrganizationName;
-                    }
-                    if (c.OutletID > 0 && c.OrganizationID > 0)
-                    {
-                        OutletOrgMap[c.OutletID] = c.OrganizationID;
-                    }
-                    if (c.ProductID > 0 && !string.IsNullOrWhiteSpace(c.ProductName) && !c.ProductName.StartsWith("Product #", StringComparison.OrdinalIgnoreCase))
-                    {
-                        ProductDictionary[c.ProductID] = c.ProductName;
-                    }
-                    else if (string.IsNullOrWhiteSpace(c.ProductName) && ProductDictionary.TryGetValue(c.ProductID, out var pName))
-                    {
-                        c.ProductName = pName;
-                    }
-                }
-            }
-
-            // 7. Load Purchase Requests & Cache
+            // 6. Contracts for this vendor
             try
             {
-                var prs = await Api.GetPurchaseRequestsAsync();
-                AllPurchaseRequests = prs ?? new List<PurchaseRequestDto>();
-                foreach (var pr in AllPurchaseRequests)
+                var allContracts = await contractsTask;
+                if (allContracts != null)
                 {
-                    RequestCache[pr.RequestID] = pr;
-                    if (pr.OutletID > 0 && !string.IsNullOrWhiteSpace(pr.OutletName) && !pr.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
+                    ActiveContracts = allContracts.Where(c =>
+                        c.VendorID == vendorId ||
+                        (c.Allocations != null && c.Allocations.Any(a => a.VendorID == vendorId))).ToList();
+
+                    foreach (var c in ActiveContracts)
                     {
-                        OutletDictionary[pr.OutletID] = pr.OutletName;
-                    }
-                    if (pr.Items != null)
-                    {
-                        foreach (var item in pr.Items)
+                        if (c.OutletID > 0 && !string.IsNullOrWhiteSpace(c.OutletName) && !c.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
                         {
-                            if (!string.IsNullOrWhiteSpace(item.ProductName) && !item.ProductName.StartsWith("Product #", StringComparison.OrdinalIgnoreCase))
-                            {
-                                ProductDictionary[item.ProductID] = item.ProductName;
-                            }
+                            OutletDictionary[c.OutletID] = c.OutletName;
+                        }
+                        else if (string.IsNullOrWhiteSpace(c.OutletName) && OutletDictionary.TryGetValue(c.OutletID, out var oName))
+                        {
+                            c.OutletName = oName;
+                        }
+                        if (c.OrganizationID > 0 && !string.IsNullOrWhiteSpace(c.OrganizationName) && !c.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase))
+                        {
+                            OrgDictionary[c.OrganizationID] = c.OrganizationName;
+                        }
+                        if (c.OutletID > 0 && c.OrganizationID > 0)
+                        {
+                            OutletOrgMap[c.OutletID] = c.OrganizationID;
+                        }
+                        if (c.ProductID > 0 && !string.IsNullOrWhiteSpace(c.ProductName) && !c.ProductName.StartsWith("Product #", StringComparison.OrdinalIgnoreCase))
+                        {
+                            ProductDictionary[c.ProductID] = c.ProductName;
+                        }
+                        else if (string.IsNullOrWhiteSpace(c.ProductName) && ProductDictionary.TryGetValue(c.ProductID, out var pName))
+                        {
+                            c.ProductName = pName;
                         }
                     }
                 }
             }
             catch { }
 
-            // 7.5. Load Purchase Orders for this Vendor
+            // 7. Purchase Orders for this vendor
             try
             {
-                var allPos = await Api.GetPurchaseOrdersAsync();
-                if (allPos != null && Auth.VendorID.HasValue)
+                var allPos = await ordersTask;
+                if (allPos != null)
                 {
                     MyPurchaseOrders = allPos
-                        .Where(p => p.VendorID == Auth.VendorID.Value)
+                        .Where(p => p.VendorID == vendorId)
                         .OrderByDescending(p => p.PurchaseOrderID)
                         .ToList();
                 }
             }
             catch { }
 
-            // 7.6. Load Invoices for this Vendor
+            // 8. Invoices for this vendor
             try
             {
-                MyInvoices = await Api.GetInvoicesAsync() ?? new List<InvoiceDto>();
-                foreach (var inv in MyInvoices)
+                var allInvoices = await invoicesTask;
+                if (allInvoices != null)
                 {
-                    if (inv.OutletID > 0 && !string.IsNullOrWhiteSpace(inv.OutletName) && !inv.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
+                    MyInvoices = allInvoices.Where(inv => inv.VendorID == vendorId).ToList();
+                    foreach (var inv in MyInvoices)
                     {
-                        OutletDictionary[inv.OutletID] = inv.OutletName;
+                        if (inv.OutletID > 0 && !string.IsNullOrWhiteSpace(inv.OutletName) && !inv.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
+                        {
+                            OutletDictionary[inv.OutletID] = inv.OutletName;
+                        }
                     }
                 }
             }
@@ -433,88 +470,10 @@ public partial class VendorDashboard : ComponentBase
                 Console.WriteLine($"[VendorDashboard] Error loading invoices: {ex.Message}");
             }
 
-            // 8. Load Individual Purchase Requests for Quotations, Contracts, and Purchase Orders if not yet cached
-            foreach (var q in AllQuotations)
-            {
-                if (!RequestCache.ContainsKey(q.RequestID))
-                {
-                    try
-                    {
-                        var pr = await Api.GetPurchaseRequestByIdAsync(q.RequestID);
-                        if (pr != null)
-                        {
-                            RequestCache[q.RequestID] = pr;
-                            if (pr.OutletID > 0 && !string.IsNullOrWhiteSpace(pr.OutletName) && !pr.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
-                            {
-                                OutletDictionary[pr.OutletID] = pr.OutletName;
-                            }
-                            if (pr.Items != null)
-                            {
-                                foreach (var item in pr.Items)
-                                {
-                                    if (!string.IsNullOrWhiteSpace(item.ProductName) && !item.ProductName.StartsWith("Product #", StringComparison.OrdinalIgnoreCase))
-                                    {
-                                        ProductDictionary[item.ProductID] = item.ProductName;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    catch { }
-                }
-            }
-
-            foreach (var c in ActiveContracts)
-            {
-                if (c.RequestID.HasValue && !RequestCache.ContainsKey(c.RequestID.Value))
-                {
-                    try
-                    {
-                        var pr = await Api.GetPurchaseRequestByIdAsync(c.RequestID.Value);
-                        if (pr != null)
-                        {
-                            RequestCache[c.RequestID.Value] = pr;
-                            if (pr.OutletID > 0 && !string.IsNullOrWhiteSpace(pr.OutletName) && !pr.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
-                            {
-                                OutletDictionary[pr.OutletID] = pr.OutletName;
-                            }
-                        }
-                    }
-                    catch { }
-                }
-            }
-
-            foreach (var po in MyPurchaseOrders)
-            {
-                if (po.RequestID > 0 && !RequestCache.ContainsKey(po.RequestID))
-                {
-                    try
-                    {
-                        var pr = await Api.GetPurchaseRequestByIdAsync(po.RequestID);
-                        if (pr != null)
-                        {
-                            RequestCache[po.RequestID] = pr;
-                            if (po.OutletID > 0 && !string.IsNullOrWhiteSpace(pr.OutletName) && !pr.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
-                            {
-                                OutletDictionary[po.OutletID] = pr.OutletName;
-                            }
-                        }
-                    }
-                    catch { }
-                }
-                else if (po.RequestID > 0 && RequestCache.TryGetValue(po.RequestID, out var cachedPr))
-                {
-                    if (po.OutletID > 0 && !string.IsNullOrWhiteSpace(cachedPr.OutletName) && !cachedPr.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
-                    {
-                        OutletDictionary[po.OutletID] = cachedPr.OutletName;
-                    }
-                }
-            }
-
-            // 9. Load Notifications
+            // 9. Notifications
             try
             {
-                Notifications = await Api.GetMyNotificationsAsync() ?? new List<NotificationDto>();
+                Notifications = await notifsTask ?? new List<NotificationDto>();
             }
             catch { }
         }

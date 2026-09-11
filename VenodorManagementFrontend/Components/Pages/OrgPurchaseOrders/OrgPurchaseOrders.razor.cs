@@ -16,6 +16,11 @@ public partial class OrgPurchaseOrders : ComponentBase
     [SupplyParameterFromQuery(Name = "id")]
     public int? QueryPoId { get; set; }
 
+    [SupplyParameterFromQuery(Name = "view")]
+    public string? View { get; set; }
+
+    public bool IsDeliveriesView => Auth.IsPurchaseManager && string.Equals(View, "deliveries", StringComparison.OrdinalIgnoreCase);
+
     private bool IsLoading { get; set; } = true;
     private bool HasError { get; set; } = false;
     private string? ErrorMessage { get; set; }
@@ -125,6 +130,39 @@ public partial class OrgPurchaseOrders : ComponentBase
 
     private bool IsAllEligibleSelected => EligiblePoOptions.Count > 0 && EligiblePoOptions.All(opt => SelectedQuotationIds.Contains(opt.QuotationID));
 
+    private bool IsDeliveryRelevant(PurchaseOrderDto po)
+    {
+        if (string.Equals(po.Status, "Dispatched", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(po.Status, "Partially Delivered", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(po.Status, "Delivered", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(po.Status, "In Transit", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(po.Status, "Completed", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (!string.IsNullOrWhiteSpace(po.DeliveryStatus) &&
+            (string.Equals(po.DeliveryStatus, "Dispatched", StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(po.DeliveryStatus, "Partially Delivered", StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(po.DeliveryStatus, "Delivered", StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(po.DeliveryStatus, "Pending Delivery", StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(po.DeliveryStatus, "In Transit", StringComparison.OrdinalIgnoreCase) ||
+             po.DeliveryStatus.StartsWith("Delayed", StringComparison.OrdinalIgnoreCase) ||
+             po.DeliveryStatus.StartsWith("On-Time", StringComparison.OrdinalIgnoreCase)))
+        {
+            return true;
+        }
+
+        if ((string.Equals(po.Status, "Approved", StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(po.Status, "Accepted", StringComparison.OrdinalIgnoreCase)) &&
+            po.ExpectedDeliveryDate.HasValue)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
     private List<PurchaseOrderDto> FilteredPurchaseOrders
     {
         get
@@ -136,15 +174,30 @@ public partial class OrgPurchaseOrders : ComponentBase
                 list = list.Where(po => po.OutletID == SelectedOutletId);
             }
 
-            if (!string.IsNullOrWhiteSpace(StatusFilter) && StatusFilter != "All")
+            if (IsDeliveriesView)
             {
-                if (string.Equals(StatusFilter, "Awaiting Approval", StringComparison.OrdinalIgnoreCase) || string.Equals(StatusFilter, "AwaitingApproval", StringComparison.OrdinalIgnoreCase))
+                if (!string.IsNullOrWhiteSpace(StatusFilter) && StatusFilter != "All")
                 {
-                    list = list.Where(po => string.Equals(po.Status, "Awaiting Approval", StringComparison.OrdinalIgnoreCase) || string.Equals(po.Status, "AwaitingApproval", StringComparison.OrdinalIgnoreCase));
+                    list = list.Where(po => string.Equals(po.Status, StatusFilter, StringComparison.OrdinalIgnoreCase)
+                                         || string.Equals(po.DeliveryStatus, StatusFilter, StringComparison.OrdinalIgnoreCase));
                 }
                 else
                 {
-                    list = list.Where(po => string.Equals(po.Status, StatusFilter, StringComparison.OrdinalIgnoreCase));
+                    list = list.Where(po => IsDeliveryRelevant(po));
+                }
+            }
+            else
+            {
+                if (!string.IsNullOrWhiteSpace(StatusFilter) && StatusFilter != "All")
+                {
+                    if (string.Equals(StatusFilter, "Awaiting Approval", StringComparison.OrdinalIgnoreCase) || string.Equals(StatusFilter, "AwaitingApproval", StringComparison.OrdinalIgnoreCase))
+                    {
+                        list = list.Where(po => string.Equals(po.Status, "Awaiting Approval", StringComparison.OrdinalIgnoreCase) || string.Equals(po.Status, "AwaitingApproval", StringComparison.OrdinalIgnoreCase));
+                    }
+                    else
+                    {
+                        list = list.Where(po => string.Equals(po.Status, StatusFilter, StringComparison.OrdinalIgnoreCase));
+                    }
                 }
             }
 
@@ -384,6 +437,13 @@ public partial class OrgPurchaseOrders : ComponentBase
         {
             await OpenPoDetails(targetPoId, updateUrl: false);
         }
+        else if (targetPoId == 0 && SelectedPoForDetail != null)
+        {
+            SelectedPoForDetail = null;
+            SelectedPoDeliveryRecords.Clear();
+            IsRecordingDelivery = false;
+            IsReviewingDelivery = false;
+        }
     }
 
     private async Task OpenPoDetails(int poId, bool updateUrl = true)
@@ -416,7 +476,14 @@ public partial class OrgPurchaseOrders : ComponentBase
 
                 if (updateUrl)
                 {
-                    Nav.NavigateTo($"/organization/purchase-orders?id={poId}", false);
+                    if (IsDeliveriesView)
+                    {
+                        Nav.NavigateTo($"/organization/purchase-orders?view=deliveries&id={poId}", false);
+                    }
+                    else
+                    {
+                        Nav.NavigateTo($"/organization/purchase-orders?id={poId}", false);
+                    }
                 }
             }
             else
@@ -443,7 +510,14 @@ public partial class OrgPurchaseOrders : ComponentBase
         IsReviewingDelivery = false;
         DeliveryFormError = string.Empty;
         DeliverySuccessMessage = string.Empty;
-        Nav.NavigateTo("/organization/purchase-orders", false);
+        if (IsDeliveriesView)
+        {
+            Nav.NavigateTo("/organization/purchase-orders?view=deliveries", false);
+        }
+        else
+        {
+            Nav.NavigateTo("/organization/purchase-orders", false);
+        }
         StateHasChanged();
     }
 

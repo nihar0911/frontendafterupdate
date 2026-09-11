@@ -38,6 +38,14 @@ else
 {
     <div class="org-app-layout @(IsSidebarCollapsed ? "sidebar-collapsed" : "")">
         
+        @if (Auth.IsPurchaseManager)
+        {
+            <PurchaseManagerSidebar ActivePage="invoices" 
+                                   IsSidebarCollapsed="IsSidebarCollapsed" 
+                                   OnToggleSidebar="(c) => IsSidebarCollapsed = c" />
+        }
+        else
+        {
         <!-- =======================================================================
              LEFT SIDEBAR NAVIGATION (ENTERPRISE DARK GREEN)
              ======================================================================= -->
@@ -220,6 +228,7 @@ else
                 </button>
             </div>
         </aside>
+        }
 
         <!-- =======================================================================
              MAIN CONTENT CANVAS
@@ -229,7 +238,31 @@ else
             <!-- TOP APP BAR -->
             <header class="org-top-bar">
                 <div class="top-bar-left">
-                    @if (IsViewingDetails)
+                    @if (Auth.IsPurchaseManager)
+                    {
+                        @if (IsViewingDetails)
+                        {
+                            <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 me-3" @onclick="BackToInvoiceList">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                                    <polyline points="12 19 5 12 12 5"></polyline>
+                                </svg>
+                                Back to Invoices
+                            </button>
+                            <div>
+                                <h1 class="page-title mb-0">Purchase Manager Portal</h1>
+                                <p class="page-subtitle mb-0">Invoice INV-@SelectedInvoice?.InvoiceID • Review against purchase order &amp; delivery records</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div>
+                                <h1 class="page-title mb-0">Purchase Manager Portal</h1>
+                                <p class="page-subtitle mb-0">Invoices &amp; Billing • Verify delivery records and manage vendor invoices for @(string.IsNullOrEmpty(OutletDisplayName) ? OrganizationName : OutletDisplayName)</p>
+                            </div>
+                        }
+                    }
+                    else if (IsViewingDetails)
                     {
                         <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 me-3" @onclick="BackToInvoiceList">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -246,7 +279,7 @@ else
                     else
                     {
                         <h1 class="page-title">Invoices &amp; Billing</h1>
-                        <p class="page-subtitle">Verify delivery records and manage vendor invoices for @(Auth.IsPurchaseManager && !string.IsNullOrEmpty(OutletDisplayName) ? OutletDisplayName : OrganizationName)</p>
+                        <p class="page-subtitle">Verify delivery records and manage vendor invoices for @OrganizationName</p>
                     }
                 </div>
 

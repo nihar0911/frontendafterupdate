@@ -31,6 +31,14 @@ else
 {
     <div class="org-app-layout @(IsSidebarCollapsed ? "sidebar-collapsed" : "")">
 
+        @if (Auth.IsPurchaseManager)
+        {
+            <PurchaseManagerSidebar ActivePage="quotations" 
+                                   IsSidebarCollapsed="IsSidebarCollapsed" 
+                                   OnToggleSidebar="(c) => IsSidebarCollapsed = c" />
+        }
+        else
+        {
         <!-- =======================================================================
              LEFT SIDEBAR NAVIGATION (ENTERPRISE DARK GREEN)
              ======================================================================= -->
@@ -186,6 +194,7 @@ else
                 </ul>
             </nav>
         </aside>
+        }
 
         <!-- =======================================================================
              MAIN BODY WRAPPER
@@ -194,13 +203,19 @@ else
 
             <!-- TOP HEADER -->
             <header class="org-top-header">
-                <button class="menu-toggle-btn" @onclick="ToggleSidebar" title="Toggle Menu">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="3" y1="12" x2="21" y2="12"></line>
-                        <line x1="3" y1="6" x2="21" y2="6"></line>
-                        <line x1="3" y1="18" x2="21" y2="18"></line>
-                    </svg>
-                </button>
+                <div class="d-flex align-items-center gap-3">
+                    <button class="menu-toggle-btn" @onclick="ToggleSidebar" title="Toggle Menu">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    @if (Auth.IsPurchaseManager)
+                    {
+                        <h1 class="topbar-title mb-0" style="font-size: 1.15rem; font-weight: 700; color: #111827;">Purchase Manager Portal</h1>
+                    }
+                </div>
 
                 <div class="header-right">
                     <div class="profile-capsule-wrapper">

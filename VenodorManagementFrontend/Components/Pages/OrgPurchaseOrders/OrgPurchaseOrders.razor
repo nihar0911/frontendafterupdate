@@ -5,7 +5,7 @@
 @inject NavigationManager Nav
 @inject ApiService Api
 
-<PageTitle>Purchase Orders - @OrganizationName</PageTitle>
+<PageTitle>@(IsDeliveriesView ? "Deliveries & Goods Receipt" : "Purchase Orders") - @OrganizationName</PageTitle>
 
 @if (!Auth.IsAuthenticated)
 {
@@ -41,6 +41,14 @@ else
 {
     <div class="org-app-layout @(IsSidebarCollapsed ? "sidebar-collapsed" : "")">
         
+        @if (Auth.IsPurchaseManager)
+        {
+            <PurchaseManagerSidebar ActivePage="@(IsDeliveriesView ? "deliveries" : "orders")" 
+                                   IsSidebarCollapsed="IsSidebarCollapsed" 
+                                   OnToggleSidebar="(c) => IsSidebarCollapsed = c" />
+        }
+        else
+        {
         <!-- =======================================================================
              LEFT SIDEBAR NAVIGATION (ENTERPRISE DARK GREEN)
              ======================================================================= -->
@@ -222,6 +230,7 @@ else
                 </ul>
             </nav>
         </aside>
+        }
 
         <!-- MAIN WRAPPER -->
         <div class="org-main-wrapper">
@@ -237,13 +246,24 @@ else
                         </svg>
                     </button>
                     <div>
-                        <h1 class="topbar-page-title mb-0">@(IsViewingPoDetails ? "Purchase Order Details" : "Purchase Orders")</h1>
-                        @if (!IsViewingPoDetails)
+                        @if (Auth.IsPurchaseManager)
                         {
-                            <p class="mb-0 small text-muted">@PageRoleSubtitle</p>
+                            <h1 class="topbar-page-title mb-0">Purchase Manager Portal</h1>
+                            <p class="mb-0 small text-muted">@(IsViewingPoDetails ? (IsDeliveriesView ? "Delivery Details & Inspection" : "Purchase Order Details") : (IsDeliveriesView ? "Deliveries & Goods Receipt" : "Purchase Orders"))</p>
+                        }
+                        else
+                        {
+                            <h1 class="topbar-page-title mb-0">@(IsViewingPoDetails ? "Purchase Order Details" : "Purchase Orders")</h1>
+                            @if (!IsViewingPoDetails)
+                            {
+                                <p class="mb-0 small text-muted">@PageRoleSubtitle</p>
+                            }
                         }
                     </div>
-                    <span class="topbar-org-badge">@OrganizationName</span>
+                    @if (!Auth.IsPurchaseManager)
+                    {
+                        <span class="topbar-org-badge">@OrganizationName</span>
+                    }
                 </div>
 
                 <div class="header-right d-flex align-items-center gap-3">
@@ -413,7 +433,7 @@ else
                                     <line x1="19" y1="12" x2="5" y2="12"></line>
                                     <polyline points="12 19 5 12 12 5"></polyline>
                                 </svg>
-                                <span>Back to Purchase Orders</span>
+                                <span>@(IsDeliveriesView ? "Back to Deliveries" : "Back to Purchase Orders")</span>
                             </button>
 
                             <div class="d-flex align-items-center gap-2">
@@ -447,18 +467,7 @@ else
                                     </button>
                                 }
 
-                                @if (Auth.IsPurchaseManager && (po.Status == "Dispatched" || po.Status == "In Transit") && !IsRecordingDelivery && !IsReviewingDelivery)
-                                {
-                                    <button type="button" class="btn btn-success d-flex align-items-center gap-2 fw-semibold px-3 py-2 rounded-3 shadow-sm" @onclick="StartRecordDelivery">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <rect x="1" y="3" width="15" height="13"></rect>
-                                            <polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon>
-                                            <circle cx="5.5" cy="18.5" r="2.5"></circle>
-                                            <circle cx="18.5" cy="18.5" r="2.5"></circle>
-                                        </svg>
-                                        <span>Record Delivery</span>
-                                    </button>
-                                }
+
 
                                 @if (isDelivered && (Auth.IsPurchaseManager || Auth.IsAdmin))
                                 {
@@ -657,7 +666,7 @@ else
                         @if (!IsRecordingDelivery && !IsReviewingDelivery)
                         {
                             <!-- RECORD DELIVERY PROMPT BOX FOR DISPATCHED PO (PHASE 2Q-C) -->
-                            @if (Auth.IsPurchaseManager && (po.Status == "Dispatched" || po.Status == "In Transit"))
+                            @if (Auth.IsPurchaseManager && (po.Status == "Dispatched" || po.Status == "In Transit" || po.Status == "Partially Delivered" || po.DeliveryStatus == "Partially Delivered" || po.DeliveryStatus == "Dispatched"))
                             {
                                 <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white border-start border-4 border-success">
                                     <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
@@ -1039,63 +1048,124 @@ else
                 {
                     <!-- METRIC CARDS -->
                     <div class="po-metrics-grid">
-                        <div class="po-metric-card">
-                            <div class="metric-icon metric-icon-total">
-                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2D6A4F" stroke-width="2">
-                                    <rect x="2" y="5" width="20" height="14" rx="2"></rect>
-                                    <line x1="2" y1="10" x2="22" y2="10"></line>
-                                </svg>
+                        @if (IsDeliveriesView)
+                        {
+                            <div class="po-metric-card">
+                                <div class="metric-icon metric-icon-total">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2D6A4F" stroke-width="2">
+                                        <rect x="1" y="3" width="15" height="13"></rect>
+                                        <polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon>
+                                        <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                        <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                                    </svg>
+                                </div>
+                                <div class="metric-details">
+                                    <span class="metric-val">@AllPurchaseOrders.Count(po => IsDeliveryRelevant(po))</span>
+                                    <span class="metric-lbl">Total Deliveries Tracked</span>
+                                </div>
                             </div>
-                            <div class="metric-details">
-                                <span class="metric-val">@AllPurchaseOrders.Count</span>
-                                <span class="metric-lbl">Total Purchase Orders</span>
-                            </div>
-                        </div>
 
-                        <div class="po-metric-card">
-                            <div class="metric-icon metric-icon-pending">
-                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <polyline points="12 6 12 12 16 14"></polyline>
-                                </svg>
+                            <div class="po-metric-card">
+                                <div class="metric-icon metric-icon-dispatched">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2">
+                                        <rect x="1" y="3" width="15" height="13"></rect>
+                                        <polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon>
+                                        <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                        <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                                    </svg>
+                                </div>
+                                <div class="metric-details">
+                                    <span class="metric-val">@AllPurchaseOrders.Count(p => p.Status == "Dispatched" || p.DeliveryStatus == "Dispatched" || p.Status == "In Transit")</span>
+                                    <span class="metric-lbl">Dispatched / In Transit</span>
+                                </div>
                             </div>
-                            <div class="metric-details">
-                                <span class="metric-val">@AllPurchaseOrders.Count(p => IsAwaitingApproval(p))</span>
-                                <span class="metric-lbl">Awaiting Manager Approval</span>
-                            </div>
-                        </div>
 
-                        <div class="po-metric-card">
-                            <div class="metric-icon metric-icon-dispatched">
-                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2">
-                                    <rect x="1" y="3" width="15" height="13"></rect>
-                                    <polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon>
-                                    <circle cx="5.5" cy="18.5" r="2.5"></circle>
-                                    <circle cx="18.5" cy="18.5" r="2.5"></circle>
-                                </svg>
+                            <div class="po-metric-card">
+                                <div class="metric-icon metric-icon-pending">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <polyline points="12 6 12 12 16 14"></polyline>
+                                    </svg>
+                                </div>
+                                <div class="metric-details">
+                                    <span class="metric-val">@AllPurchaseOrders.Count(p => p.Status == "Partially Delivered" || p.DeliveryStatus == "Partially Delivered" || p.DeliveryStatus == "Pending Delivery")</span>
+                                    <span class="metric-lbl">Awaiting Full Receipt</span>
+                                </div>
                             </div>
-                            <div class="metric-details">
-                                <span class="metric-val">@AllPurchaseOrders.Count(p => p.Status == "Dispatched" || p.Status == "Accepted")</span>
-                                <span class="metric-lbl">In Fulfillment / Transit</span>
-                            </div>
-                        </div>
 
-                        <div class="po-metric-card">
-                            <div class="metric-icon metric-icon-delivered">
-                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2">
-                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                                </svg>
+                            <div class="po-metric-card">
+                                <div class="metric-icon metric-icon-delivered">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2">
+                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                    </svg>
+                                </div>
+                                <div class="metric-details">
+                                    <span class="metric-val">@AllPurchaseOrders.Count(p => p.Status == "Delivered" || p.DeliveryStatus == "Delivered")</span>
+                                    <span class="metric-lbl">Delivered &amp; Verified</span>
+                                </div>
                             </div>
-                            <div class="metric-details">
-                                <span class="metric-val">@AllPurchaseOrders.Count(p => p.Status == "Delivered")</span>
-                                <span class="metric-lbl">Delivered &amp; Verified</span>
+                        }
+                        else
+                        {
+                            <div class="po-metric-card">
+                                <div class="metric-icon metric-icon-total">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2D6A4F" stroke-width="2">
+                                        <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                                        <line x1="2" y1="10" x2="22" y2="10"></line>
+                                    </svg>
+                                </div>
+                                <div class="metric-details">
+                                    <span class="metric-val">@AllPurchaseOrders.Count</span>
+                                    <span class="metric-lbl">Total Purchase Orders</span>
+                                </div>
                             </div>
-                        </div>
+
+                            <div class="po-metric-card">
+                                <div class="metric-icon metric-icon-pending">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <polyline points="12 6 12 12 16 14"></polyline>
+                                    </svg>
+                                </div>
+                                <div class="metric-details">
+                                    <span class="metric-val">@AllPurchaseOrders.Count(p => IsAwaitingApproval(p))</span>
+                                    <span class="metric-lbl">Awaiting Manager Approval</span>
+                                </div>
+                            </div>
+
+                            <div class="po-metric-card">
+                                <div class="metric-icon metric-icon-dispatched">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2">
+                                        <rect x="1" y="3" width="15" height="13"></rect>
+                                        <polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon>
+                                        <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                        <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                                    </svg>
+                                </div>
+                                <div class="metric-details">
+                                    <span class="metric-val">@AllPurchaseOrders.Count(p => p.Status == "Dispatched" || p.Status == "Accepted")</span>
+                                    <span class="metric-lbl">In Fulfillment / Transit</span>
+                                </div>
+                            </div>
+
+                            <div class="po-metric-card">
+                                <div class="metric-icon metric-icon-delivered">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2">
+                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                    </svg>
+                                </div>
+                                <div class="metric-details">
+                                    <span class="metric-val">@AllPurchaseOrders.Count(p => p.Status == "Delivered")</span>
+                                    <span class="metric-lbl">Delivered &amp; Verified</span>
+                                </div>
+                            </div>
+                        }
                     </div>
 
                     <!-- ELIGIBLE QUOTATIONS AWAITING PO SUBMISSION (BULK SUBMISSION SECTION) -->
-                    @if ((Auth.IsPurchaseManager || Auth.IsAdmin) && EligiblePoOptions.Count > 0)
+                    @if (!IsDeliveriesView && (Auth.IsPurchaseManager || Auth.IsAdmin) && EligiblePoOptions.Count > 0)
                     {
                         <div class="eligible-quotations-card mb-4">
                             <div class="eligible-header d-flex align-items-center justify-content-between flex-wrap gap-2 pb-3 mb-3 border-bottom">
@@ -1292,19 +1362,30 @@ else
                                     <circle cx="11" cy="11" r="8"></circle>
                                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                                 </svg>
-                                <input type="text" placeholder="Search by PO#, vendor, outlet, product..." @bind="SearchQuery" @bind:event="oninput" />
+                                <input type="text" placeholder="@(IsDeliveriesView ? "Search deliveries by PO#, vendor, outlet, product..." : "Search by PO#, vendor, outlet, product...")" @bind="SearchQuery" @bind:event="oninput" />
                             </div>
 
                             <div class="po-select-box">
                                 <select @bind="StatusFilter">
-                                    <option value="All">All</option>
-                                    <option value="Awaiting Approval">Awaiting Approval</option>
-                                    <option value="Approved">Approved</option>
-                                    <option value="Pending">Pending</option>
-                                    <option value="Accepted">Accepted</option>
-                                    <option value="Rejected">Rejected</option>
-                                    <option value="Dispatched">Dispatched</option>
-                                    <option value="Delivered">Delivered</option>
+                                    @if (IsDeliveriesView)
+                                    {
+                                        <option value="All">All Deliveries</option>
+                                        <option value="Dispatched">Dispatched / In Transit</option>
+                                        <option value="Partially Delivered">Partially Delivered</option>
+                                        <option value="Delivered">Delivered &amp; Verified</option>
+                                        <option value="Pending Delivery">Pending Delivery</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="All">All</option>
+                                        <option value="Awaiting Approval">Awaiting Approval</option>
+                                        <option value="Approved">Approved</option>
+                                        <option value="Pending">Pending</option>
+                                        <option value="Accepted">Accepted</option>
+                                        <option value="Rejected">Rejected</option>
+                                        <option value="Dispatched">Dispatched</option>
+                                        <option value="Delivered">Delivered</option>
+                                    }
                                 </select>
                             </div>
 
@@ -1340,7 +1421,7 @@ else
                             </div>
                         }
 
-                        @if (Auth.IsPurchaseManager || Auth.IsAdmin)
+                        @if (!IsDeliveriesView && (Auth.IsPurchaseManager || Auth.IsAdmin))
                         {
                             <div class="po-toolbar-right">
                                 <button type="button" class="btn-issue-po" @onclick="OpenCreateModal">
@@ -1367,9 +1448,9 @@ else
                                         <circle cx="18.5" cy="18.5" r="2.5"></circle>
                                     </svg>
                                 </div>
-                                <h5>No Purchase Orders Found</h5>
-                                <p class="text-muted">There are no purchase orders matching your search or filter criteria.</p>
-                                @if ((Auth.IsPurchaseManager || Auth.IsAdmin) && EligiblePoOptions.Count > 0)
+                                <h5>@(IsDeliveriesView ? "No Deliveries Found" : "No Purchase Orders Found")</h5>
+                                <p class="text-muted">@(IsDeliveriesView ? "There are no deliveries matching your search or filter criteria." : "There are no purchase orders matching your search or filter criteria.")</p>
+                                @if (!IsDeliveriesView && (Auth.IsPurchaseManager || Auth.IsAdmin) && EligiblePoOptions.Count > 0)
                                 {
                                     <button class="btn btn-outline-success mt-2" @onclick="OpenCreateModal">
                                         Submit Purchase Order for Approval
@@ -1389,7 +1470,7 @@ else
                                             <th>Vendor</th>
                                             <th>Order Date</th>
                                             <th>Expected Delivery</th>
-                                            <th>Status</th>
+                                            <th>@(IsDeliveriesView ? "Delivery Status" : "Status")</th>
                                             <th class="text-end">Action</th>
                                         </tr>
                                     </thead>
@@ -1437,7 +1518,7 @@ else
                                                         <button type="button" class="btn btn-sm btn-outline-danger fw-semibold px-2 py-1 me-1" @onclick="() => HandleRejectPo(p.PurchaseOrderID)" @onclick:stopPropagation="true" disabled="@IsActionProcessing">Reject</button>
                                                     }
                                                     <button type="button" class="btn btn-sm btn-outline-success fw-semibold px-2 py-1" @onclick="() => OpenPoDetails(p.PurchaseOrderID)" @onclick:stopPropagation="true">
-                                                        Details
+                                                        @(IsDeliveriesView ? "Inspect Delivery" : "Details")
                                                     </button>
                                                 </td>
                                             </tr>
