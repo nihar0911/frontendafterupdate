@@ -1,4 +1,4 @@
-@page "/organization/purchase-orders"
+﻿@page "/organization/purchase-orders"
 @page "/organization/purchase-orders/{PurchaseOrderId:int}"
 @namespace VenodorManagementFrontend.Components.Pages.OrgPurchaseOrders
 @inject AuthService Auth
@@ -286,11 +286,23 @@ else
                         {
                             <div class="card position-absolute end-0 mt-2 shadow-lg border-0 rounded-3 p-3 bg-white" style="width: 360px; z-index: 1050;">
                                 <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
-                                    <h6 class="fw-bold text-dark mb-0">Notifications</h6>
-                                    @if (UnreadNotificationCount > 0)
-                                    {
-                                        <span class="badge bg-danger">@UnreadNotificationCount new</span>
-                                    }
+                                    <div class="d-flex align-items-center gap-2">
+                                        <h6 class="fw-bold text-dark mb-0">Notifications</h6>
+                                        @if (UnreadNotificationCount > 0)
+                                        {
+                                            <span class="badge bg-danger">@UnreadNotificationCount unread</span>
+                                        }
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        @if (UnreadNotificationCount > 0)
+                                        {
+                                            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none small text-muted" @onclick="MarkAllAsRead">Mark all as read</button>
+                                        }
+                                        @if (Notifications != null && Notifications.Count > 0)
+                                        {
+                                            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none small text-danger" @onclick="ClearAll">Clear all</button>
+                                        }
+                                    </div>
                                 </div>
                                 @if (Notifications.Count == 0)
                                 {

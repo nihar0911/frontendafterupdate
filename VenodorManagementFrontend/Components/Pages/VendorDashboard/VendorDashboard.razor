@@ -1,4 +1,4 @@
-@page "/vendor-dashboard"
+﻿@page "/vendor-dashboard"
 @rendermode InteractiveServer
 @inject ApiService Api
 @inject AuthService Auth
@@ -263,25 +263,31 @@ else
                             {
                                 <span class="vd-notif-badge">@UnreadNotificationCount</span>
                             }
-                            else if (Notifications.Count > 0)
-                            {
-                                <span class="vd-notif-badge">@Notifications.Count</span>
-                            }
-                            else if (Opportunities != null && Opportunities.Count > 0)
-                            {
-                                <span class="vd-notif-badge">@Opportunities.Count</span>
-                            }
                         </button>
 
                         @if (ShowNotificationDropdown)
                         {
                             <div class="vd-notif-dropdown">
                                 <div class="vd-notif-dropdown-head">
-                                    <h6 class="mb-0 fw-bold">Vendor Notifications</h6>
-                                    @if (UnreadNotificationCount > 0)
-                                    {
-                                        <span class="badge bg-success">@UnreadNotificationCount new</span>
-                                    }
+                                    <div class="d-flex justify-content-between align-items-center w-100">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <h6 class="mb-0 fw-bold">Notifications</h6>
+                                            @if (UnreadNotificationCount > 0)
+                                            {
+                                                <span class="badge bg-success">@UnreadNotificationCount unread</span>
+                                            }
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            @if (UnreadNotificationCount > 0)
+                                            {
+                                                <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none small text-muted" @onclick="MarkAllAsRead">Mark all as read</button>
+                                            }
+                                            @if (Notifications != null && Notifications.Count > 0)
+                                            {
+                                                <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none small text-danger" @onclick="ClearAll">Clear all</button>
+                                            }
+                                        </div>
+                                    </div>
                                 </div>
                                 @if ((Notifications == null || Notifications.Count == 0) && (Opportunities == null || Opportunities.Count == 0))
                                 {

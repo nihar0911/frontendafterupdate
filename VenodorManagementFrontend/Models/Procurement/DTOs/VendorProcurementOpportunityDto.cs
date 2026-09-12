@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace VenodorManagementFrontend.Models;
@@ -6,6 +6,7 @@ namespace VenodorManagementFrontend.Models;
 public class VendorProcurementOpportunityDto
     {
         public int RequestID { get; set; }
+        public int RequestItemID { get; set; }
         public DateTime RequestDate { get; set; }
         public string Status { get; set; } = string.Empty;
         public int OrganizationID { get; set; }

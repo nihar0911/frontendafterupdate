@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -532,6 +532,32 @@ public partial class OrgPurchaseOrders : ComponentBase
         var n = Notifications.FirstOrDefault(x => x.NotificationID == notificationId);
         if (n != null) n.IsRead = true;
         StateHasChanged();
+    }
+
+    private async Task MarkAllAsRead()
+    {
+        var success = await Api.MarkAllNotificationsReadAsync();
+        if (success)
+        {
+            if (Notifications != null)
+            {
+                foreach (var notif in Notifications)
+                {
+                    notif.IsRead = true;
+                }
+            }
+            StateHasChanged();
+        }
+    }
+
+    private async Task ClearAll()
+    {
+        var success = await Api.ClearAllNotificationsAsync();
+        if (success)
+        {
+            Notifications?.Clear();
+            StateHasChanged();
+        }
     }
 
     private async Task HandleNotificationClick(NotificationDto notif)

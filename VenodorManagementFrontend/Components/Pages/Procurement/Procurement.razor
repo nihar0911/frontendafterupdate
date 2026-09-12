@@ -1,4 +1,4 @@
-@page "/procurement"
+﻿@page "/procurement"
 @rendermode InteractiveServer
 @inject ApiService Api
 @inject AuthService Auth
@@ -233,8 +233,23 @@ else
                         {
                             <div class="notification-dropdown">
                                 <div class="dropdown-header">
-                                    <span>Notifications</span>
-                                    <span class="badge bg-light text-dark">@UnreadNotificationCount unread</span>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span>Notifications</span>
+                                        @if (UnreadNotificationCount > 0)
+                                        {
+                                            <span class="badge bg-light text-dark">@UnreadNotificationCount unread</span>
+                                        }
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        @if (UnreadNotificationCount > 0)
+                                        {
+                                            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none small text-muted" @onclick="MarkAllAsRead">Mark all as read</button>
+                                        }
+                                        @if (Notifications != null && Notifications.Count > 0)
+                                        {
+                                            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none small text-danger" @onclick="ClearAll">Clear all</button>
+                                        }
+                                    </div>
                                 </div>
                                 <div class="dropdown-list">
                                     @if (Notifications.Count == 0)
@@ -848,7 +863,7 @@ else
                                                                     @if (isInCart)
                                                                     {
                                                                         <span class="badge bg-success-subtle text-success border border-success-subtle w-100 py-1 fw-bold text-center d-block" style="font-size: 0.72rem;">
-                                                                            In Cart (Modify)
+                                                                            In Cart
                                                                         </span>
                                                                     }
                                                                     else

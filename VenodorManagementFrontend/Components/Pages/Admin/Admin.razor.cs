@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -26,6 +26,52 @@ private bool IsLoading { get; set; } = true;
 
     private bool IsSidebarCollapsed { get; set; } = false;
     private bool IsProfileDropdownOpen { get; set; } = false;
+
+    private List<NotificationDto> Notifications { get; set; } = new();
+    private int UnreadNotificationCount => Notifications.Count(n => !n.IsRead);
+    private bool ShowNotificationDropdown { get; set; } = false;
+
+    private void ToggleNotifications()
+    {
+        ShowNotificationDropdown = !ShowNotificationDropdown;
+    }
+
+    private async Task MarkAsRead(int notificationId)
+    {
+        await Api.MarkNotificationReadAsync(notificationId);
+        var notif = Notifications.FirstOrDefault(n => n.NotificationID == notificationId);
+        if (notif != null)
+        {
+            notif.IsRead = true;
+        }
+        StateHasChanged();
+    }
+
+    private async Task MarkAllAsRead()
+    {
+        var success = await Api.MarkAllNotificationsReadAsync();
+        if (success)
+        {
+            if (Notifications != null)
+            {
+                foreach (var notif in Notifications)
+                {
+                    notif.IsRead = true;
+                }
+            }
+            StateHasChanged();
+        }
+    }
+
+    private async Task ClearAll()
+    {
+        var success = await Api.ClearAllNotificationsAsync();
+        if (success)
+        {
+            Notifications?.Clear();
+            StateHasChanged();
+        }
+    }
 
     private void ToggleSidebar()
     {
@@ -64,8 +110,9 @@ private bool IsLoading { get; set; } = true;
             var productsTask = Api.GetProductsAsync();
             var taxRatesTask = Api.GetTaxRatesAsync();
             var contractsTask = Api.GetContractsAsync();
+            var notifsTask = Api.GetMyNotificationsAsync();
 
-            await Task.WhenAll(orgsTask, usersTask, vendorsTask, outletsTask, productsTask, taxRatesTask, contractsTask);
+            await Task.WhenAll(orgsTask, usersTask, vendorsTask, outletsTask, productsTask, taxRatesTask, contractsTask, notifsTask);
 
             var orgs = await orgsTask;
             var users = await usersTask;
@@ -74,6 +121,7 @@ private bool IsLoading { get; set; } = true;
             var products = await productsTask;
             var taxRates = await taxRatesTask;
             var contracts = await contractsTask;
+            Notifications = await notifsTask ?? new List<NotificationDto>();
 
             TotalOrganizations = orgs?.Count ?? 0;
             TotalUsers = users?.Count ?? 0;

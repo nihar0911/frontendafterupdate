@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -1150,6 +1150,40 @@ public partial class VendorDashboard : ComponentBase
             var notif = Notifications.FirstOrDefault(n => n.NotificationID == notificationId);
             if (notif != null) notif.IsRead = true;
             StateHasChanged();
+        }
+        catch { }
+    }
+
+    private async Task MarkAllAsRead()
+    {
+        try
+        {
+            var success = await Api.MarkAllNotificationsReadAsync();
+            if (success)
+            {
+                if (Notifications != null)
+                {
+                    foreach (var notif in Notifications)
+                    {
+                        notif.IsRead = true;
+                    }
+                }
+                StateHasChanged();
+            }
+        }
+        catch { }
+    }
+
+    private async Task ClearAll()
+    {
+        try
+        {
+            var success = await Api.ClearAllNotificationsAsync();
+            if (success)
+            {
+                Notifications?.Clear();
+                StateHasChanged();
+            }
         }
         catch { }
     }

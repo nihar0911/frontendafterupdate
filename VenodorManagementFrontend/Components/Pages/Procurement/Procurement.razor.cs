@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -197,6 +197,32 @@ public partial class Procurement : ComponentBase
         var notif = Notifications.FirstOrDefault(n => n.NotificationID == notificationId);
         if (notif != null) notif.IsRead = true;
         StateHasChanged();
+    }
+
+    private async Task MarkAllAsRead()
+    {
+        var success = await Api.MarkAllNotificationsReadAsync();
+        if (success)
+        {
+            if (Notifications != null)
+            {
+                foreach (var notif in Notifications)
+                {
+                    notif.IsRead = true;
+                }
+            }
+            StateHasChanged();
+        }
+    }
+
+    private async Task ClearAll()
+    {
+        var success = await Api.ClearAllNotificationsAsync();
+        if (success)
+        {
+            Notifications?.Clear();
+            StateHasChanged();
+        }
     }
 
     private async Task LoadInitialDataAsync()
@@ -500,35 +526,59 @@ public partial class Procurement : ComponentBase
             var existing = CartItems.FirstOrDefault(i => i.ItemKey == EditingCartItemKey);
             if (existing != null)
             {
-                existing.ProductID = SelectedProduct.ProductID;
-                existing.ProductName = SelectedProduct.ProductName;
-                existing.Category = SelectedProduct.Category ?? "General";
-                existing.Quantity = QuantityInput.Value;
-                existing.Unit = SelectedProduct.Unit;
-                existing.VendorID = SelectedVendorForProduct.VendorID;
-                existing.VendorName = SelectedVendorForProduct.VendorName;
-                existing.UnitPrice = SelectedVendorForProduct.UnitPrice;
-                existing.EstimatedDeliveryDays = SelectedVendorForProduct.EstimatedDeliveryDays;
-                existing.AverageRating = SelectedVendorForProduct.AverageRating;
-                existing.TotalFeedbackCount = SelectedVendorForProduct.TotalFeedbackCount;
-                existing.AverageQualityRating = SelectedVendorForProduct.AverageQualityRating;
-                existing.SmartBadge = SelectedVendorForProduct.SmartBadge;
-                existing.HasActiveContract = SelectedVendorForProduct.HasActiveContract;
-                existing.RemainingQuantity = SelectedVendorForProduct.RemainingQuantity;
+                // Check if another cart line already exists with the newly selected product and vendor
+                var duplicate = CartItems.FirstOrDefault(i =>
+                    i.ItemKey != EditingCartItemKey &&
+                    i.ProductID == SelectedProduct.ProductID &&
+                    i.VendorID == SelectedVendorForProduct.VendorID);
+
+                if (duplicate != null)
+                {
+                    // Merge edited quantity into the already existing product + vendor line and remove this edited line
+                    duplicate.Quantity += QuantityInput.Value;
+                    duplicate.UnitPrice = SelectedVendorForProduct.UnitPrice;
+                    duplicate.EstimatedDeliveryDays = SelectedVendorForProduct.EstimatedDeliveryDays;
+                    duplicate.AverageRating = SelectedVendorForProduct.AverageRating;
+                    duplicate.TotalFeedbackCount = SelectedVendorForProduct.TotalFeedbackCount;
+                    duplicate.AverageQualityRating = SelectedVendorForProduct.AverageQualityRating;
+                    duplicate.SmartBadge = SelectedVendorForProduct.SmartBadge;
+                    duplicate.HasActiveContract = SelectedVendorForProduct.HasActiveContract;
+                    duplicate.RemainingQuantity = SelectedVendorForProduct.RemainingQuantity;
+                    CartItems.Remove(existing);
+                }
+                else
+                {
+                    existing.ProductID = SelectedProduct.ProductID;
+                    existing.ProductName = SelectedProduct.ProductName;
+                    existing.Category = SelectedProduct.Category ?? "General";
+                    existing.Quantity = QuantityInput.Value;
+                    existing.Unit = SelectedProduct.Unit;
+                    existing.VendorID = SelectedVendorForProduct.VendorID;
+                    existing.VendorName = SelectedVendorForProduct.VendorName;
+                    existing.UnitPrice = SelectedVendorForProduct.UnitPrice;
+                    existing.EstimatedDeliveryDays = SelectedVendorForProduct.EstimatedDeliveryDays;
+                    existing.AverageRating = SelectedVendorForProduct.AverageRating;
+                    existing.TotalFeedbackCount = SelectedVendorForProduct.TotalFeedbackCount;
+                    existing.AverageQualityRating = SelectedVendorForProduct.AverageQualityRating;
+                    existing.SmartBadge = SelectedVendorForProduct.SmartBadge;
+                    existing.HasActiveContract = SelectedVendorForProduct.HasActiveContract;
+                    existing.RemainingQuantity = SelectedVendorForProduct.RemainingQuantity;
+                }
             }
             EditingCartItemKey = null;
         }
         else
         {
-            // Check if product already exists in cart
-            var existing = CartItems.FirstOrDefault(i => i.ProductID == SelectedProduct.ProductID);
+            // Check if product with the same vendor already exists in cart
+            var existing = CartItems.FirstOrDefault(i =>
+                i.ProductID == SelectedProduct.ProductID &&
+                i.VendorID == SelectedVendorForProduct.VendorID);
+
             if (existing != null)
             {
-                // Update quantity and selected vendor
-                existing.Quantity = QuantityInput.Value;
+                // Increase quantity for the same product and vendor, and refresh latest rate/contract info
+                existing.Quantity += QuantityInput.Value;
                 existing.Unit = SelectedProduct.Unit;
-                existing.VendorID = SelectedVendorForProduct.VendorID;
-                existing.VendorName = SelectedVendorForProduct.VendorName;
                 existing.UnitPrice = SelectedVendorForProduct.UnitPrice;
                 existing.EstimatedDeliveryDays = SelectedVendorForProduct.EstimatedDeliveryDays;
                 existing.AverageRating = SelectedVendorForProduct.AverageRating;
@@ -540,7 +590,7 @@ public partial class Procurement : ComponentBase
             }
             else
             {
-                // Add new item to cart
+                // Add new item to cart as a separate cart line for this vendor
                 CartItems.Add(new ProcurementItem
                 {
                     ProductID = SelectedProduct.ProductID,
@@ -963,7 +1013,7 @@ public partial class Procurement : ComponentBase
 
             // Resolve RequestItemIDs for dispatch
             List<PurchaseRequestItemDto> serverItems = CreatedPurchaseRequest.Items ?? new();
-            if (serverItems.Count == 0 || serverItems.Any(si => si.ItemID <= 0))
+            if (serverItems.Count == 0 || serverItems.Any(si => si.RequestItemID <= 0))
             {
                 var detailedPr = await Api.GetPurchaseRequestByIdAsync(CreatedPurchaseRequest.RequestID);
                 if (detailedPr?.Items != null && detailedPr.Items.Count > 0)
@@ -974,11 +1024,47 @@ public partial class Procurement : ComponentBase
 
             // Map each cart item to its corresponding RequestItemID, ProductID, and VendorID
             var assignments = new List<ItemVendorAssignmentDto>();
+            var assignedItemIds = new HashSet<int>();
+
             for (int i = 0; i < CartItems.Count; i++)
             {
                 var cartItem = CartItems[i];
-                var matchedServerItem = serverItems.FirstOrDefault(si => si.ProductID == cartItem.ProductID && !assignments.Any(a => a.RequestItemID == si.ItemID));
-                int requestItemId = matchedServerItem != null ? matchedServerItem.ItemID : (serverItems.Count > i ? serverItems[i].ItemID : 0);
+                PurchaseRequestItemDto? matchedServerItem = null;
+
+                // 1. Direct positional check (server preserves insertion sequence)
+                if (serverItems.Count > i && serverItems[i].ProductID == cartItem.ProductID && !assignedItemIds.Contains(serverItems[i].RequestItemID))
+                {
+                    if (serverItems[i].Quantity == cartItem.Quantity)
+                    {
+                        matchedServerItem = serverItems[i];
+                    }
+                }
+
+                // 2. Match by ProductID + Quantity not yet assigned
+                if (matchedServerItem == null)
+                {
+                    matchedServerItem = serverItems.FirstOrDefault(si =>
+                        si.ProductID == cartItem.ProductID &&
+                        si.Quantity == cartItem.Quantity &&
+                        !assignedItemIds.Contains(si.RequestItemID));
+                }
+
+                // 3. Match by ProductID not yet assigned
+                if (matchedServerItem == null)
+                {
+                    matchedServerItem = serverItems.FirstOrDefault(si =>
+                        si.ProductID == cartItem.ProductID &&
+                        !assignedItemIds.Contains(si.RequestItemID));
+                }
+
+                int requestItemId = matchedServerItem != null && matchedServerItem.RequestItemID > 0
+                    ? matchedServerItem.RequestItemID
+                    : (serverItems.Count > i ? serverItems[i].RequestItemID : 0);
+
+                if (requestItemId > 0)
+                {
+                    assignedItemIds.Add(requestItemId);
+                }
 
                 assignments.Add(new ItemVendorAssignmentDto
                 {
@@ -987,7 +1073,6 @@ public partial class Procurement : ComponentBase
                     VendorID = cartItem.VendorID
                 });
             }
-
             var result = await Api.DispatchPurchaseRequestAsync(CreatedPurchaseRequest.RequestID, assignments);
 
             if (result != null && result.Success)

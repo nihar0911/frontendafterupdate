@@ -1,4 +1,4 @@
-@page "/purchase-manager"
+﻿@page "/purchase-manager"
 @rendermode InteractiveServer
 @inject ApiService Api
 @inject AuthService Auth
@@ -250,8 +250,23 @@ else
                         {
                             <div class="notification-dropdown">
                                 <div class="dropdown-header">
-                                    <span>Notifications</span>
-                                    <span class="badge bg-light text-dark">@UnreadNotificationCount unread</span>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span>Notifications</span>
+                                        @if (UnreadNotificationCount > 0)
+                                        {
+                                            <span class="badge bg-light text-dark">@UnreadNotificationCount unread</span>
+                                        }
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        @if (UnreadNotificationCount > 0)
+                                        {
+                                            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none small text-muted" @onclick="MarkAllAsRead">Mark all as read</button>
+                                        }
+                                        @if (Notifications != null && Notifications.Count > 0)
+                                        {
+                                            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none small text-danger" @onclick="ClearAll">Clear all</button>
+                                        }
+                                    </div>
                                 </div>
                                 <div class="dropdown-list">
                                     @if (Notifications.Count == 0)

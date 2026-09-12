@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -1608,6 +1608,36 @@ namespace VenodorManagementFrontend.Services
             }
             catch
             {
+                return false;
+            }
+        }
+
+        public async Task<bool> MarkAllNotificationsReadAsync()
+        {
+            SetAuthHeader();
+            try
+            {
+                var response = await _httpClient.PutAsync("api/notifications/read-all", null);
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ApiService] MarkAllNotificationsReadAsync error: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<bool> ClearAllNotificationsAsync()
+        {
+            SetAuthHeader();
+            try
+            {
+                var response = await _httpClient.DeleteAsync("api/notifications/clear");
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ApiService] ClearAllNotificationsAsync error: {ex.Message}");
                 return false;
             }
         }
