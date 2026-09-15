@@ -1,4 +1,4 @@
-﻿@page "/vendor-dashboard"
+@page "/vendor-dashboard"
 @rendermode InteractiveServer
 @inject ApiService Api
 @inject AuthService Auth
@@ -1551,7 +1551,7 @@ else
 
                                             @if (!string.IsNullOrWhiteSpace(rev.Review))
                                             {
-                                                <p class="mb-0 text-secondary small bg-light p-2.5 rounded-2 mt-2" style="font-style: italic;">
+                                                <p class="mb-0 text-secondary small bg-light p-2.5 rounded-2 mt-2" style="font-style: normal;">
                                                     "@rev.Review"
                                                 </p>
                                             }
