@@ -298,69 +298,134 @@ else
                                  ======================================================= -->
                             <div class="col-left">
 
-                                <!-- INHERITED CONTRACT SPECIFICATIONS CARD -->
-                                <div class="content-card mb-4">
-                                    <div class="card-header-row">
-                                        <div class="card-icon-box">
-                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                                <polyline points="14 2 14 8 20 8"></polyline>
-                                                <line x1="16" y1="13" x2="8" y2="13"></line>
-                                                <line x1="16" y1="17" x2="8" y2="17"></line>
-                                            </svg>
+                                @if (IsStandaloneMode)
+                                {
+                                    <!-- STANDALONE CONTRACT SPECIFICATIONS CARD -->
+                                    <div class="content-card mb-4">
+                                        <div class="card-header-row">
+                                            <div class="card-icon-box">
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                                </svg>
+                                            </div>
+                                            <h3 class="card-section-title">Contract Specifications</h3>
                                         </div>
-                                        <h3 class="card-section-title">Inherited Contract Specifications</h3>
-                                    </div>
 
-                                    <div class="specs-grid">
-                                        <div class="specs-cell">
-                                            <span class="specs-label">Quotation ID</span>
-                                            <span class="specs-val text-success fw-bold">@(Quotation?.QuotationID ?? QuotationId ?? 0)</span>
+                                        <div class="form-group-item mb-3">
+                                            <label class="form-label-custom">Organization</label>
+                                            <input type="text" class="form-input-custom bg-light" value="@OrganizationName" readonly disabled />
                                         </div>
-                                        <div class="specs-cell">
-                                            <span class="specs-label">Purchase Request ID</span>
-                                            <span class="specs-val text-success fw-bold">PR-@(PurchaseRequest?.RequestID ?? Quotation?.RequestID ?? 0)</span>
+
+                                        <div class="form-group-item mb-3">
+                                            <label class="form-label-custom">Select Outlet <span class="required-star">*</span></label>
+                                            <div class="select-wrapper-custom">
+                                                <select class="form-select-custom" @bind="SelectedOutletId" @bind:after="OnOutletSelected">
+                                                    <option value="0">Choose an outlet...</option>
+                                                    @foreach (var outlet in OrganizationOutlets)
+                                                    {
+                                                        <option value="@outlet.OutletID">@outlet.OutletName</option>
+                                                    }
+                                                </select>
+                                                <svg class="select-arrow-custom" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                                </svg>
+                                            </div>
                                         </div>
-                                        <div class="specs-cell">
-                                            <span class="specs-label">Organization</span>
-                                            <span class="specs-val">@OrganizationName</span>
+
+                                        <div class="form-group-item mb-3">
+                                            <label class="form-label-custom">Select Product <span class="required-star">*</span></label>
+                                            <div class="select-wrapper-custom">
+                                                <select class="form-select-custom" @bind="SelectedProductId" @bind:after="OnProductSelected">
+                                                    <option value="0">Choose a product...</option>
+                                                    @foreach (var prod in AvailableProducts)
+                                                    {
+                                                        <option value="@prod.ProductID">@prod.ProductName (@prod.Unit)</option>
+                                                    }
+                                                </select>
+                                                <svg class="select-arrow-custom" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                                </svg>
+                                            </div>
                                         </div>
-                                        <div class="specs-cell">
-                                            <span class="specs-label">Outlet</span>
-                                            <span class="specs-val">@OutletName</span>
+
+                                        <div class="form-group-item">
+                                            <label class="form-label-custom">Total Contract Quantity (@Unit) <span class="required-star">*</span></label>
+                                            <input type="number" step="1" min="1" class="form-input-custom" 
+                                                   @bind="TotalContractQuantity" 
+                                                   @bind:after="OnTotalQuantityChanged" 
+                                                   placeholder="Enter total contract quantity" />
                                         </div>
-                                        <div class="specs-cell-full">
-                                            <span class="specs-label">Product</span>
-                                            <div class="product-val-wrap">
-                                                <span class="specs-val">@ProductName</span>
-                                                @if (!string.IsNullOrEmpty(ProductCategory))
-                                                {
-                                                    <span class="badge-tag">@ProductCategory.ToLowerInvariant()</span>
-                                                }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <!-- INHERITED CONTRACT SPECIFICATIONS CARD (QUOTATION MODE) -->
+                                    <div class="content-card mb-4">
+                                        <div class="card-header-row">
+                                            <div class="card-icon-box">
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                                </svg>
+                                            </div>
+                                            <h3 class="card-section-title">Inherited Contract Specifications</h3>
+                                        </div>
+
+                                        <div class="specs-grid">
+                                            <div class="specs-cell">
+                                                <span class="specs-label">Quotation ID</span>
+                                                <span class="specs-val text-success fw-bold">@(Quotation?.QuotationID ?? QuotationId ?? 0)</span>
+                                            </div>
+                                            <div class="specs-cell">
+                                                <span class="specs-label">Purchase Request ID</span>
+                                                <span class="specs-val text-success fw-bold">PR-@(PurchaseRequest?.RequestID ?? Quotation?.RequestID ?? 0)</span>
+                                            </div>
+                                            <div class="specs-cell">
+                                                <span class="specs-label">Organization</span>
+                                                <span class="specs-val">@OrganizationName</span>
+                                            </div>
+                                            <div class="specs-cell">
+                                                <span class="specs-label">Outlet</span>
+                                                <span class="specs-val">@OutletName</span>
+                                            </div>
+                                            <div class="specs-cell-full">
+                                                <span class="specs-label">Product</span>
+                                                <div class="product-val-wrap">
+                                                    <span class="specs-val">@ProductName</span>
+                                                    @if (!string.IsNullOrEmpty(ProductCategory))
+                                                    {
+                                                        <span class="badge-tag">@ProductCategory.ToLowerInvariant()</span>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- 4 METRICS AT BOTTOM OF SPECS CARD -->
+                                        <div class="specs-metrics-grid">
+                                            <div class="spec-metric-item">
+                                                <span class="spec-metric-label">Total Contract Quantity</span>
+                                                <span class="spec-metric-val text-success">@TotalContractQuantity.ToString("N2") @Unit</span>
+                                            </div>
+                                            <div class="spec-metric-item">
+                                                <span class="spec-metric-label">Unit Price</span>
+                                                <span class="spec-metric-val">Rs. @UnitPrice.ToString("N2")</span>
+                                            </div>
+                                            <div class="spec-metric-item">
+                                                <span class="spec-metric-label">Estimated Tax</span>
+                                                <span class="spec-metric-val">Rs. @TaxAmount.ToString("N2")</span>
+                                            </div>
+                                            <div class="spec-metric-item">
+                                                <span class="spec-metric-label">Total Contract Value</span>
+                                                <span class="spec-metric-val">Rs. @TotalContractValue.ToString("N2")</span>
                                             </div>
                                         </div>
                                     </div>
-
-                                    <!-- 4 METRICS AT BOTTOM OF SPECS CARD -->
-                                    <div class="specs-metrics-grid">
-                                        <div class="spec-metric-item">
-                                            <span class="spec-metric-label">Total Contract Quantity</span>
-                                            <span class="spec-metric-val text-success">@TotalContractQuantity.ToString("N2") @Unit</span>
-                                        </div>
-                                        <div class="spec-metric-item">
-                                            <span class="spec-metric-label">Unit Price</span>
-                                            <span class="spec-metric-val">Rs. @UnitPrice.ToString("N2")</span>
-                                        </div>
-                                        <div class="spec-metric-item">
-                                            <span class="spec-metric-label">Estimated Tax</span>
-                                            <span class="spec-metric-val">Rs. @TaxAmount.ToString("N2")</span>
-                                        </div>
-                                        <div class="spec-metric-item">
-                                            <span class="spec-metric-label">Total Contract Value</span>
-                                            <span class="spec-metric-val">Rs. @TotalContractValue.ToString("N2")</span>
-                                        </div>
-                                    </div>
-                                </div>
+                                }
 
                                 <!-- CONTRACT TERMS & SCHEDULE CARD -->
                                 <div class="content-card">
@@ -432,153 +497,525 @@ else
                                         </div>
                                     </div>
 
-                                    <p class="alloc-sub-desc">
-                                        Allocate the total contract quantity (<strong>@TotalContractQuantity.ToString("N2") @Unit</strong>) across one or more eligible vendors for <strong>@ProductName</strong>.
-                                    </p>
+                                    @if (IsStandaloneMode && (SelectedOutletId <= 0 || SelectedProductId <= 0))
+                                    {
+                                        <p class="alloc-sub-desc">
+                                            Please select an outlet and product in the specifications card to discover eligible active vendors and set allocations.
+                                        </p>
 
-                                    <!-- ALLOCATION TABLE -->
-                                    <div class="alloc-table-wrap">
-                                        <table class="alloc-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>ELIGIBLE VENDOR</th>
-                                                    <th class="text-center" style="width: 140px;">ALLOCATION %</th>
-                                                    <th class="text-center" style="width: 140px;">ALLOCATED QTY</th>
-                                                    <th class="text-center" style="width: 80px;">ACTION</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach (var row in AllocationRows)
+                                        <div class="alloc-empty-notice">
+                                            <div class="alloc-empty-title">Outlet and Product Selection Required</div>
+                                            <div class="alloc-empty-desc">Choose an outlet and product on the left to view eligible vendors and allocate contract quantities.</div>
+                                        </div>
+                                    }
+                                    else if (IsLoadingVendors)
+                                    {
+                                        <div class="alloc-loading-notice">
+                                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                            <span>Discovering active eligible vendors for @ProductName...</span>
+                                        </div>
+                                    }
+                                    else if (AllEligibleVendors.Count == 0)
+                                    {
+                                        <p class="alloc-sub-desc">
+                                            Contract quantity: <strong>@TotalContractQuantity.ToString("N2") @Unit</strong> for <strong>@ProductName</strong>.
+                                        </p>
+
+                                        <div class="alloc-empty-notice">
+                                            <div class="alloc-empty-title">No Eligible Vendors Available</div>
+                                            <div class="alloc-empty-desc">There are currently no active vendors that supply <strong>@ProductName</strong>. Please assign vendors to this product before creating a contract.</div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <p class="alloc-sub-desc">
+                                            Allocate the total contract quantity (<strong>@TotalContractQuantity.ToString("N2") @Unit</strong>) across one or more eligible vendors for <strong>@ProductName</strong>.
+                                        </p>
+
+                                        <!-- ELIGIBLE VENDORS EVALUATION SECTION -->
+                                        <div class="eligible-vendors-eval-section mb-4">
+                                            <div class="eval-section-header d-flex align-items-center justify-content-between mb-2">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span class="eval-section-title">Eligible Vendors Evaluation</span>
+                                                    <span class="eval-count-badge">@AllEligibleVendors.Count @(AllEligibleVendors.Count == 1 ? "vendor" : "vendors")</span>
+                                                </div>
+                                                <span class="eval-hint-text text-muted small">Verified quality and delivery performance metrics</span>
+                                            </div>
+
+                                            <div class="eligible-vendors-grid">
+                                                @foreach (var v in AllEligibleVendors)
                                                 {
-                                                    var currentRow = row;
-                                                    <tr>
-                                                        <td class="vendor-name-cell">
-                                                            <strong>@currentRow.VendorName</strong>
-                                                            @if (currentRow.IsWinner)
-                                                            {
-                                                                <span class="badge-winner">Quotation Winner</span>
-                                                            }
-                                                        </td>
-                                                        <td class="text-center">
-                                                            <div class="percent-input-box">
-                                                                <input type="number" step="1" min="0" max="100" class="percent-control"
-                                                                       @bind="currentRow.AllocationPercentage"
-                                                                       @bind:after="OnAllocationPercentageChanged" />
-                                                                <span class="percent-sign">%</span>
+                                                    var vMetrics = GetVendorMetrics(v.VendorID);
+                                                    bool isAllocated = AllocationRows.Any(r => r.VendorID == v.VendorID);
+                                                    <div class="vendor-eval-card @(isAllocated ? "is-allocated" : "")">
+                                                        <div class="eval-card-top d-flex align-items-start justify-content-between gap-2">
+                                                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                                <strong class="vendor-eval-name text-dark">@v.VendorName</strong>
+                                                                @if (isAllocated)
+                                                                {
+                                                                    <span class="badge-allocated-status">Allocated</span>
+                                                                }
                                                             </div>
+                                                            <div class="eval-unit-price text-end">
+                                                                <span class="eval-price-val fw-bold text-success">Rs. @vMetrics.UnitRate.ToString("N2")</span>
+                                                                <span class="eval-price-unit text-muted small">/ @Unit</span>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="eval-card-metrics-row d-flex align-items-center flex-wrap gap-2 text-muted small mt-2">
+                                                            <div class="eval-metric-entry">
+                                                                @if (vMetrics.ReviewCount > 0)
+                                                                {
+                                                                    <button type="button" class="btn-eval-review-link" @onclick="() => OpenVendorReviewsModal(v)" title="View customer reviews">
+                                                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="#EAB308" stroke="#EAB308" stroke-width="1">
+                                                                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                                                        </svg>
+                                                                        <span class="fw-bold text-dark ms-1">@vMetrics.AverageRating.ToString("0.0")</span>
+                                                                        <span class="text-muted ms-1">(@vMetrics.ReviewCount @(vMetrics.ReviewCount == 1 ? "review" : "reviews"))</span>
+                                                                    </button>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <span class="text-muted d-inline-flex align-items-center">
+                                                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                                                        </svg>
+                                                                        <span class="ms-1">No Reviews</span>
+                                                                    </span>
+                                                                }
+                                                            </div>
+                                                            <span class="eval-bullet text-muted">&bull;</span>
+                                                            <div class="eval-metric-entry">
+                                                                <span>Quality: <strong class="text-dark">@(vMetrics.AverageQualityRating > 0 ? $"{vMetrics.AverageQualityRating:0.0} / 5" : "Standard")</strong></span>
+                                                            </div>
+                                                            <span class="eval-bullet text-muted">&bull;</span>
+                                                            <div class="eval-metric-entry">
+                                                                <span>Delivery: <strong class="text-dark">@(vMetrics.AverageDeliveryRating > 0 ? $"{vMetrics.AverageDeliveryRating:0.0} / 5" : "Standard")</strong></span>
+                                                            </div>
+                                                            <span class="eval-bullet text-muted">&bull;</span>
+                                                            <div class="eval-metric-entry">
+                                                                <span>Est. Delivery: <strong class="text-dark">@vMetrics.EstimatedDeliveryDays days</strong></span>
+                                                            </div>
+                                                        </div>
+
+                                                        @if (vMetrics.LatestReview != null && !string.IsNullOrWhiteSpace(vMetrics.LatestReview.Review))
+                                                        {
+                                                            <div class="eval-latest-review-box mt-2 p-1.5 px-2 rounded small bg-light border border-light-subtle d-flex align-items-center gap-2">
+                                                                <span class="fw-bold text-dark flex-shrink-0">Latest:</span>
+                                                                <span class="text-truncate text-muted">&ldquo;@vMetrics.LatestReview.Review&rdquo;</span>
+                                                            </div>
+                                                        }
+
+                                                        <div class="eval-card-footer mt-2 pt-2 d-flex align-items-center justify-content-between border-top border-light-subtle">
+                                                            <button type="button" class="btn-action-view-reviews" @onclick="() => OpenVendorReviewsModal(v)">
+                                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                                                </svg>
+                                                                <span>View Reviews</span>
+                                                            </button>
+                                                            @if (!isAllocated)
+                                                            {
+                                                                <span class="eval-avail-hint small text-muted">Use dropdown below to allocate</span>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+
+                                        <!-- ALLOCATION TABLE -->
+                                        <div class="alloc-table-wrap">
+                                            <table class="alloc-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>ELIGIBLE VENDOR</th>
+                                                        <th class="text-center" style="width: 140px;">ALLOCATION %</th>
+                                                        <th class="text-center" style="width: 140px;">ALLOCATED QTY</th>
+                                                        <th class="text-center" style="width: 80px;">ACTION</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @if (AllocationRows.Count == 0)
+                                                    {
+                                                        <tr>
+                                                            <td colspan="4" class="text-center text-muted py-4">
+                                                                No vendors selected yet. Choose an eligible vendor from the dropdown below to allocate quantity.
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                    @foreach (var row in AllocationRows)
+                                                    {
+                                                        var currentRow = row;
+                                                        <tr>
+                                                            <td class="vendor-name-cell">
+                                                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                                    <strong>@currentRow.VendorName</strong>
+                                                                    @if (currentRow.IsWinner)
+                                                                    {
+                                                                        <span class="badge-winner">Quotation Winner</span>
+                                                                    }
+                                                                </div>
+                                                                <button type="button" class="btn-table-view-reviews" @onclick="() => OpenVendorReviewsModalById(currentRow.VendorID)" title="View verified feedback">
+                                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                                                    </svg>
+                                                                    <span>View Reviews</span>
+                                                                </button>
+                                                            </td>
+                                                            <td class="text-center">
+                                                                <div class="percent-input-box">
+                                                                    <input type="number" step="1" min="0" max="100" class="percent-control"
+                                                                           @bind="currentRow.AllocationPercentage"
+                                                                           @bind:after="OnAllocationPercentageChanged" />
+                                                                    <span class="percent-sign">%</span>
+                                                                </div>
+                                                            </td>
+                                                            <td class="text-center allocated-qty-cell">
+                                                                <strong>@currentRow.AllocatedQuantity.ToString("N2") @Unit</strong>
+                                                            </td>
+                                                            <td class="text-center">
+                                                                @if (!IsStandaloneMode && (currentRow.IsWinner || AllocationRows.Count <= 1))
+                                                                {
+                                                                    <span class="text-muted">&mdash;</span>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <button type="button" class="btn-remove-vendor" @onclick="() => RemoveVendorAllocation(currentRow.VendorID)" title="Remove vendor allocation">
+                                                                        Remove
+                                                                    </button>
+                                                                }
+                                                            </td>
+                                                        </tr>
+                                                    }
+
+                                                    <!-- TOTAL ALLOCATION FOOTER ROW -->
+                                                    <tr class="total-allocation-row">
+                                                        <td><strong>Total Allocation</strong></td>
+                                                        <td class="text-center total-pct-cell">
+                                                            <strong>@TotalAllocationPercentage.ToString("0.##")%</strong>
                                                         </td>
-                                                        <td class="text-center allocated-qty-cell">
-                                                            <strong>@currentRow.AllocatedQuantity.ToString("N2") @Unit</strong>
+                                                        <td class="text-center total-qty-cell">
+                                                            <strong>@TotalAllocatedQuantity.ToString("N2") @Unit</strong>
                                                         </td>
                                                         <td class="text-center">
-                                                            @if (currentRow.IsWinner || AllocationRows.Count <= 1)
+                                                            @if (TotalAllocationPercentage == 100m)
                                                             {
-                                                                <span class="text-muted">&mdash;</span>
+                                                                <span class="check-valid-icon" title="Valid Allocation">
+                                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                                                    </svg>
+                                                                </span>
                                                             }
                                                             else
                                                             {
-                                                                <button type="button" class="btn-remove-vendor" @onclick="() => RemoveVendorAllocation(currentRow.VendorID)" title="Remove vendor allocation">
-                                                                    Remove
-                                                                </button>
+                                                                <span class="check-invalid-icon" title="Must equal 100%">
+                                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                                                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                                                                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                                                    </svg>
+                                                                </span>
                                                             }
                                                         </td>
                                                     </tr>
-                                                }
+                                                </tbody>
+                                            </table>
+                                        </div>
 
-                                                <!-- TOTAL ALLOCATION FOOTER ROW -->
-                                                <tr class="total-allocation-row">
-                                                    <td><strong>Total Allocation</strong></td>
-                                                    <td class="text-center total-pct-cell">
-                                                        <strong>@TotalAllocationPercentage.ToString("0.##")%</strong>
-                                                    </td>
-                                                    <td class="text-center total-qty-cell">
-                                                        <strong>@TotalAllocatedQuantity.ToString("N2") @Unit</strong>
-                                                    </td>
-                                                    <td class="text-center">
-                                                        @if (TotalAllocationPercentage == 100m)
+                                        <!-- ADD SECONDARY / ELIGIBLE VENDOR ROW -->
+                                        @if (UnallocatedEligibleVendors.Count > 0)
+                                        {
+                                            <div class="add-vendor-row">
+                                                <div class="select-wrapper-custom flex-grow-1">
+                                                    <select class="form-select-custom" @bind="SelectedVendorToAddId">
+                                                        <option value="0">Add eligible vendor...</option>
+                                                        @foreach (var v in UnallocatedEligibleVendors)
                                                         {
-                                                            <span class="check-valid-icon" title="Valid Allocation">&#10003;</span>
+                                                            <option value="@v.VendorID">@v.VendorName</option>
                                                         }
-                                                        else
-                                                        {
-                                                            <span class="check-invalid-icon" title="Must equal 100%">!</span>
-                                                        }
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-
-                                    <!-- ADD SECONDARY VENDOR ROW (IF ANY REMAINING) -->
-                                    @if (UnallocatedEligibleVendors.Count > 0)
-                                    {
-                                        <div class="add-vendor-row">
-                                            <div class="select-wrapper-custom flex-grow-1">
-                                                <select class="form-select-custom" @bind="SelectedVendorToAddId">
-                                                    <option value="0">Add additional eligible vendor...</option>
-                                                    @foreach (var v in UnallocatedEligibleVendors)
-                                                    {
-                                                        <option value="@v.VendorID">@v.VendorName</option>
-                                                    }
-                                                </select>
-                                                <svg class="select-arrow-custom" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                    <polyline points="6 9 12 15 18 9"></polyline>
-                                                </svg>
+                                                    </select>
+                                                    <svg class="select-arrow-custom" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                                    </svg>
+                                                </div>
+                                                <button type="button" class="btn-add-vendor-action" @onclick="AddSelectedVendor" disabled="@(SelectedVendorToAddId <= 0)">
+                                                    Add Vendor
+                                                </button>
                                             </div>
-                                            <button type="button" class="btn-add-vendor-action" @onclick="AddSelectedVendor" disabled="@(SelectedVendorToAddId <= 0)">
-                                                Add Vendor
-                                            </button>
+                                        }
+
+                                        <!-- VALIDATION STATUS BANNER -->
+                                        <div class="validation-status-card @(TotalAllocationPercentage == 100m && AllocationRows.Count > 0 ? "valid-card" : "invalid-card")">
+                                            <div class="status-icon-circle">
+                                                @if (TotalAllocationPercentage == 100m && AllocationRows.Count > 0)
+                                                {
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                                    </svg>
+                                                }
+                                                else
+                                                {
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                                                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                                    </svg>
+                                                }
+                                            </div>
+                                            <div class="status-text-content">
+                                                @if (TotalAllocationPercentage == 100m && AllocationRows.Count > 0)
+                                                {
+                                                    <span><strong>Valid:</strong> Total allocation equals 100% across @AllocationRows.Count vendor(s). Total allocated: @TotalAllocatedQuantity.ToString("N2") @Unit.</span>
+                                                }
+                                                else if (AllocationRows.Count == 0)
+                                                {
+                                                    <span><strong>Notice:</strong> Please add at least one eligible vendor to allocate the contract quantity.</span>
+                                                }
+                                                else
+                                                {
+                                                    <span><strong>Notice:</strong> Total allocation must equal exactly 100%. Current total: @TotalAllocationPercentage.ToString("0.##")% (Remaining: @((100m - TotalAllocationPercentage).ToString("0.##"))%).</span>
+                                                }
+                                            </div>
                                         </div>
+
+                                        <!-- SUBMIT BUTTON -->
+                                        <button type="button" class="btn-submit-contract"
+                                                @onclick="SubmitContractCreation"
+                                                disabled="@(!CanSubmit)">
+                                            @if (IsProcessing)
+                                            {
+                                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                                <span>CREATING CONTRACT &amp; ALLOCATIONS...</span>
+                                            }
+                                            else
+                                            {
+                                                <span>CREATE CONTRACT &amp; ALLOCATIONS</span>
+                                            }
+                                        </button>
                                     }
-
-                                    <!-- VALIDATION STATUS BANNER (MATCHING REFERENCE IMAGE) -->
-                                    <div class="validation-status-card @(TotalAllocationPercentage == 100m ? "valid-card" : "invalid-card")">
-                                        <div class="status-icon-circle">
-                                            @if (TotalAllocationPercentage == 100m)
-                                            {
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                                </svg>
-                                            }
-                                            else
-                                            {
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                                                </svg>
-                                            }
-                                        </div>
-                                        <div class="status-text-content">
-                                            @if (TotalAllocationPercentage == 100m)
-                                            {
-                                                <span><strong>Valid:</strong> Total allocation equals 100% across @AllocationRows.Count vendor(s). Total allocated: @TotalAllocatedQuantity.ToString("N2") @Unit.</span>
-                                            }
-                                            else
-                                            {
-                                                <span><strong>Notice:</strong> Total allocation must equal exactly 100%. Current total: @TotalAllocationPercentage.ToString("0.##")% (Remaining: @((100m - TotalAllocationPercentage).ToString("0.##"))%).</span>
-                                            }
-                                        </div>
-                                    </div>
-
-                                    <!-- SUBMIT BUTTON -->
-                                    <button type="button" class="btn-submit-contract"
-                                            @onclick="SubmitContractCreation"
-                                            disabled="@(IsProcessing || TotalAllocationPercentage != 100m)">
-                                        @if (IsProcessing)
-                                        {
-                                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                                            <span>CREATING CONTRACT &amp; ALLOCATIONS...</span>
-                                        }
-                                        else
-                                        {
-                                            <span>CREATE CONTRACT &amp; ALLOCATIONS</span>
-                                        }
-                                    </button>
 
                                 </div>
                             </div>
 
                         </div>
+
+                        <!-- =======================================================
+                             CUSTOMER REVIEWS & QUALITY DETAILS MODAL OVERLAY
+                             ======================================================= -->
+                        @if (IsReviewsModalOpen && SelectedVendorForReviews != null)
+                        {
+                            <div class="custom-modal-backdrop" @onclick="CloseVendorReviewsModal"></div>
+                            <div class="custom-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="reviewsModalTitle">
+                                <div class="custom-modal-content">
+                                    <!-- MODAL HEADER -->
+                                    <div class="custom-modal-header d-flex align-items-start justify-content-between p-4 border-bottom">
+                                        <div>
+                                            <h3 id="reviewsModalTitle" class="custom-modal-title mb-1 fw-bold text-dark fs-5">Customer Reviews &amp; Quality Details</h3>
+                                            <div class="d-flex align-items-center gap-2 flex-wrap mt-1">
+                                                <span class="fs-6 fw-bold text-dark">@SelectedVendorForReviews.VendorName</span>
+                                                <span class="text-muted">&bull;</span>
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1 rounded fw-semibold">
+                                                    @(string.IsNullOrWhiteSpace(ProductName) ? "Selected Product" : ProductName)
+                                                </span>
+                                            </div>
+                                            <p class="custom-modal-subtitle text-muted small mt-1 mb-0">Verified feedback from completed purchase orders</p>
+                                        </div>
+                                        <button type="button" class="btn-modal-close" @onclick="CloseVendorReviewsModal" title="Close">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                                            </svg>
+                                        </button>
+                                    </div>
+
+                                    <!-- MODAL BODY -->
+                                    <div class="custom-modal-body p-4">
+                                        @if (IsLoadingVendorReviews)
+                                        {
+                                            <div class="modal-loading-state text-center py-5">
+                                                <div class="spinner-border text-success mb-3" role="status" style="width: 2.5rem; height: 2.5rem;"></div>
+                                                <div class="fw-bold text-dark fs-6">Loading verified reviews...</div>
+                                                <div class="small text-muted mt-1">Fetching feedback records for @SelectedVendorForReviews.VendorName</div>
+                                            </div>
+                                        }
+                                        else if (CurrentVendorReviews.Count == 0)
+                                        {
+                                            <div class="modal-empty-state text-center py-5">
+                                                <div class="empty-reviews-icon mx-auto mb-3">
+                                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="text-muted">
+                                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                                    </svg>
+                                                </div>
+                                                <h4 class="fw-bold text-dark mb-1">No Reviews Yet</h4>
+                                                <p class="text-muted small mb-4" style="max-width: 440px; margin: 0 auto;">
+                                                    There are no verified customer reviews for <strong>@SelectedVendorForReviews.VendorName</strong> supplying <strong>@(string.IsNullOrWhiteSpace(ProductName) ? "this product" : ProductName)</strong> yet.
+                                                </p>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm fw-semibold px-4 py-1.5" @onclick="CloseVendorReviewsModal">
+                                                    Back to Contract Creation
+                                                </button>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <!-- SUMMARY METRICS CARDS -->
+                                            <div class="row g-3 mb-4">
+                                                <div class="col-md-4">
+                                                    <div class="review-stat-card p-3 h-100 rounded border">
+                                                        <div class="stat-card-label text-muted small fw-bold">AVERAGE RATING</div>
+                                                        <div class="d-flex align-items-baseline gap-2 mt-2">
+                                                            <span class="fs-2 fw-bold text-success">@CurrentVendorAvgRating.ToString("0.0")</span>
+                                                            <span class="text-muted fw-normal">/ 5.0</span>
+                                                            <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold ms-1">
+                                                                @GetQualitativeRatingText(CurrentVendorAvgRating)
+                                                            </span>
+                                                        </div>
+                                                        <div class="small text-muted mt-1">
+                                                            Based on <strong>@CurrentVendorReviews.Count</strong> @(CurrentVendorReviews.Count == 1 ? "verified review" : "verified reviews")
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="review-stat-card p-3 h-100 rounded border">
+                                                        <div class="stat-card-label text-muted small fw-bold">QUALITY RATING</div>
+                                                        <div class="d-flex align-items-baseline gap-2 mt-2">
+                                                            <span class="fs-2 fw-bold text-dark">@(CurrentVendorAvgQuality > 0 ? CurrentVendorAvgQuality.ToString("0.0") : "5.0")</span>
+                                                            <span class="text-muted fw-normal">/ 5.0</span>
+                                                        </div>
+                                                        <div class="small text-muted mt-1">Average Product Quality Score</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="review-stat-card p-3 h-100 rounded border">
+                                                        <div class="stat-card-label text-muted small fw-bold">DELIVERY RATING</div>
+                                                        <div class="d-flex align-items-baseline gap-2 mt-2">
+                                                            <span class="fs-2 fw-bold text-dark">@(CurrentVendorAvgDelivery > 0 ? CurrentVendorAvgDelivery.ToString("0.0") : "5.0")</span>
+                                                            <span class="text-muted fw-normal">/ 5.0</span>
+                                                        </div>
+                                                        <div class="small text-muted mt-1">Average Delivery Punctuality Score</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- LATEST REVIEW HIGHLIGHT SECTION -->
+                                            @if (LatestReviewInModal != null)
+                                            {
+                                                var latest = LatestReviewInModal;
+                                                <div class="latest-review-panel p-4 mb-4 border border-success-subtle rounded bg-white shadow-sm">
+                                                    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <span class="badge bg-success text-white px-2.5 py-1 fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.05em;">
+                                                                Latest Review
+                                                            </span>
+                                                            <span class="text-dark fw-bold fs-6">Rating:</span>
+                                                            <span class="text-success fw-bold fs-5">@latest.Rating.ToString("0.0") / 5.0</span>
+                                                            <span class="badge bg-success-subtle text-success border border-success-subtle small fw-semibold">(@GetQualitativeRatingText(latest.Rating))</span>
+                                                        </div>
+                                                        <div class="small text-muted">
+                                                            @latest.FeedbackDate.ToIst("MMMM dd, yyyy")
+                                                        </div>
+                                                    </div>
+
+                                                    @if (!string.IsNullOrWhiteSpace(latest.Review))
+                                                    {
+                                                        <blockquote class="latest-review-quote p-3 rounded mb-3">
+                                                            &ldquo;@latest.Review&rdquo;
+                                                        </blockquote>
+                                                    }
+
+                                                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 pt-2 border-top border-light-subtle text-muted small">
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <div class="review-avatar">
+                                                                @(string.IsNullOrWhiteSpace(latest.RatedByUserName) ? "M" : latest.RatedByUserName.Substring(0, 1).ToUpperInvariant())
+                                                            </div>
+                                                            <div>
+                                                                <span class="text-dark fw-semibold">Reviewed by:</span>
+                                                                <span class="text-dark fw-bold ms-1">@(string.IsNullOrWhiteSpace(latest.RatedByUserName) ? "Purchase Manager" : latest.RatedByUserName)</span>
+                                                                <span class="text-muted small ms-2">&bull; <span class="fw-semibold text-dark">Outlet:</span> @ResolveReviewOutletName(latest)</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="d-flex align-items-center gap-3">
+                                                            @if (latest.ProductQualityRating > 0)
+                                                            {
+                                                                <span>Quality: <strong class="text-dark">@latest.ProductQualityRating.ToString("0.0") / 5.0</strong></span>
+                                                            }
+                                                            @if (latest.DeliveryRating > 0)
+                                                            {
+                                                                <span>Delivery: <strong class="text-dark">@latest.DeliveryRating.ToString("0.0") / 5.0</strong></span>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+
+                                            <!-- REVIEW HISTORY SECTION -->
+                                            <div class="review-history-panel p-4 rounded border bg-white mb-2">
+                                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                                    <div>
+                                                        <h5 class="fw-bold text-dark mb-0">Review History</h5>
+                                                        <p class="text-muted small mb-0">All verified feedback records ordered newest-first</p>
+                                                    </div>
+                                                    <span class="badge bg-light text-dark border px-2.5 py-1">@CurrentVendorReviews.Count Total</span>
+                                                </div>
+
+                                                <div class="review-cards-list d-flex flex-column gap-3">
+                                                    @foreach (var rev in CurrentVendorReviews)
+                                                    {
+                                                        <div class="single-review-card p-3 rounded border">
+                                                            <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+                                                                <div class="d-flex align-items-center gap-2">
+                                                                    <span class="text-success fw-bold fs-6">@rev.Rating.ToString("0.0") / 5.0</span>
+                                                                    <span class="badge bg-light text-dark border small fw-normal">@GetQualitativeRatingText(rev.Rating)</span>
+                                                                </div>
+                                                                <div class="text-muted small">
+                                                                    @rev.FeedbackDate.ToIst("MMM dd, yyyy")
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="row g-2 small text-muted mb-2">
+                                                                <div class="col-sm-6">
+                                                                    <span class="fw-semibold text-dark">Reviewed by:</span> @(string.IsNullOrWhiteSpace(rev.RatedByUserName) ? "Purchase Manager" : rev.RatedByUserName)
+                                                                </div>
+                                                                <div class="col-sm-6 text-sm-end">
+                                                                    <span class="fw-semibold text-dark">Outlet:</span> @ResolveReviewOutletName(rev)
+                                                                </div>
+                                                                <div class="col-sm-6">
+                                                                    <span class="fw-semibold text-dark">Product:</span> @(string.IsNullOrWhiteSpace(rev.ProductName) ? ProductName : rev.ProductName)
+                                                                </div>
+                                                                <div class="col-sm-6 text-sm-end">
+                                                                    @if (rev.ProductQualityRating > 0 || rev.DeliveryRating > 0)
+                                                                    {
+                                                                        <span class="me-3">Quality: <strong class="text-dark">@rev.ProductQualityRating.ToString("0.0") / 5.0</strong></span>
+                                                                        <span>Delivery: <strong class="text-dark">@rev.DeliveryRating.ToString("0.0") / 5.0</strong></span>
+                                                                    }
+                                                                </div>
+                                                            </div>
+
+                                                            @if (!string.IsNullOrWhiteSpace(rev.Review))
+                                                            {
+                                                                <div class="review-card-comment p-2.5 rounded bg-light mt-2 small text-dark">
+                                                                    &ldquo;@rev.Review&rdquo;
+                                                                </div>
+                                                            }
+                                                            else
+                                                            {
+                                                                <div class="text-muted small mt-1">
+                                                                    — No comment provided with this rating —
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <!-- MODAL FOOTER -->
+                                    <div class="custom-modal-footer p-3 border-top d-flex justify-content-end">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm fw-semibold px-4 py-1.5" @onclick="CloseVendorReviewsModal">
+                                            Close
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
                     }
 
                 </div>

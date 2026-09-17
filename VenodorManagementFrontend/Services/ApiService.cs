@@ -1293,17 +1293,21 @@ namespace VenodorManagementFrontend.Services
             return null;
         }
 
-        public async Task<ApiResult<ContractDto>> ResetContractAsync(int contractId)
+        public Task<ApiResult<ContractDto>> ResetContractAsync(int contractId)
+            => ResetContractAsync(contractId, null);
+
+        public async Task<ApiResult<ContractDto>> ResetContractAsync(int contractId, decimal? newTotalQuantity)
         {
             SetAuthHeader();
             try
             {
-                var command = new VenodorManagementFrontend.Models.Contracts.Commands.ResetContractCommand
+                var payload = new
                 {
-                    ContractID = contractId
+                    contractID = contractId,
+                    newTotalQuantity = newTotalQuantity
                 };
 
-                var response = await _httpClient.PostAsJsonAsync("api/contract/reset", command);
+                var response = await _httpClient.PostAsJsonAsync("api/contract/reset", payload);
                 if (response.IsSuccessStatusCode)
                 {
                     var result = await response.Content.ReadFromJsonAsync<VenodorManagementFrontend.Models.Contracts.Responses.ResetContractResponse>();
