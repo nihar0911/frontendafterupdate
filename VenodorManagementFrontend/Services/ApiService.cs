@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -1119,6 +1119,49 @@ namespace VenodorManagementFrontend.Services
             catch (Exception ex)
             {
                 Console.WriteLine($"[ApiService] SendPurchaseOrderAsync error: {ex.Message}");
+                return null;
+            }
+        }
+
+        public async Task<PurchaseOrderDto?> ChangePurchaseOrderApproverRoleAsync(int purchaseOrderId, string approverRole)
+        {
+            SetAuthHeader();
+            try
+            {
+                var role = string.Equals(approverRole, "Outlet Manager", StringComparison.OrdinalIgnoreCase)
+                    ? "Outlet Manager"
+                    : "Organization Manager";
+
+                var payload = new
+                {
+                    purchaseOrderID = purchaseOrderId,
+                    approverRole = role
+                };
+
+                var response = await _httpClient.PutAsJsonAsync($"api/PurchaseOrder/{purchaseOrderId}/approver-role", payload);
+                if (response.IsSuccessStatusCode)
+                {
+                    try
+                    {
+                        var result = await response.Content.ReadFromJsonAsync<GetPurchaseOrderByIdResponse>();
+                        if (result?.PurchaseOrder != null) return result.PurchaseOrder;
+                    }
+                    catch { }
+
+                    try
+                    {
+                        var directDto = await response.Content.ReadFromJsonAsync<PurchaseOrderDto>();
+                        if (directDto != null) return directDto;
+                    }
+                    catch { }
+
+                    return await GetPurchaseOrderByIdAsync(purchaseOrderId);
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ApiService] ChangePurchaseOrderApproverRoleAsync error: {ex.Message}");
                 return null;
             }
         }

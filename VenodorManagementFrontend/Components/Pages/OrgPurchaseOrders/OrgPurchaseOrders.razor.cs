@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -464,6 +464,8 @@ public partial class OrgPurchaseOrders : ComponentBase
                 }
 
                 SelectedPoForDetail = po;
+                SelectedDetailApproverRole = GetApproverRole(po);
+                IsSavingApproverRoleForDetail = false;
 
                 try
                 {
@@ -947,6 +949,99 @@ public partial class OrgPurchaseOrders : ComponentBase
         return string.Equals(po.ApproverRole, "Outlet Manager", StringComparison.OrdinalIgnoreCase)
             ? "Outlet Manager"
             : "Organization Manager";
+    }
+
+    private static string GetApproverRole(PurchaseOrderDto? po)
+    {
+        if (po == null) return "Organization Manager";
+        return string.Equals(po.ApproverRole, "Outlet Manager", StringComparison.OrdinalIgnoreCase)
+            ? "Outlet Manager"
+            : "Organization Manager";
+    }
+
+    private string SelectedDetailApproverRole { get; set; } = "Organization Manager";
+    private bool IsSavingApproverRoleForDetail { get; set; } = false;
+
+    private void HandleDetailApproverRoleChanged(ChangeEventArgs e)
+    {
+        var val = e.Value?.ToString();
+        if (!string.IsNullOrWhiteSpace(val))
+        {
+            SelectedDetailApproverRole = string.Equals(val, "Outlet Manager", StringComparison.OrdinalIgnoreCase)
+                ? "Outlet Manager"
+                : "Organization Manager";
+        }
+    }
+
+    private async Task SaveDetailApproverRole()
+    {
+        if (SelectedPoForDetail == null || !IsAwaitingApproval(SelectedPoForDetail))
+        {
+            return;
+        }
+
+        if (!Auth.IsPurchaseManager)
+        {
+            return;
+        }
+
+        var currentRole = GetApproverRole(SelectedPoForDetail);
+        if (string.Equals(currentRole, SelectedDetailApproverRole, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        if (IsSavingApproverRoleForDetail)
+        {
+            return;
+        }
+
+        IsSavingApproverRoleForDetail = true;
+        ActionSuccessMessage = null;
+        ActionErrorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var updatedPo = await Api.ChangePurchaseOrderApproverRoleAsync(
+                SelectedPoForDetail.PurchaseOrderID,
+                SelectedDetailApproverRole);
+
+            if (updatedPo != null)
+            {
+                SelectedPoForDetail.ApproverRole = updatedPo.ApproverRole;
+                SelectedDetailApproverRole = GetApproverRole(updatedPo);
+
+                var listed = AllPurchaseOrders.FirstOrDefault(p => p.PurchaseOrderID == updatedPo.PurchaseOrderID);
+                if (listed != null)
+                {
+                    listed.ApproverRole = updatedPo.ApproverRole;
+                }
+
+                ActionSuccessMessage = $"Approval authority for PO-{updatedPo.PurchaseOrderID} changed to {SelectedDetailApproverRole}.";
+                await LoadData();
+                if (SelectedPoForDetail != null)
+                {
+                    await OpenPoDetails(SelectedPoForDetail.PurchaseOrderID, updateUrl: false);
+                }
+            }
+            else
+            {
+                SelectedDetailApproverRole = GetApproverRole(SelectedPoForDetail);
+                ActionErrorMessage = "Unable to change approval authority. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[OrgPurchaseOrders] ChangeApproverRole error: {ex.Message}");
+            SelectedDetailApproverRole = GetApproverRole(SelectedPoForDetail);
+            ActionErrorMessage = "An error occurred while changing approval authority.";
+        }
+        finally
+        {
+            IsSavingApproverRoleForDetail = false;
+            StateHasChanged();
+        }
     }
 
     private bool CanApprovePo(PurchaseOrderDto po)

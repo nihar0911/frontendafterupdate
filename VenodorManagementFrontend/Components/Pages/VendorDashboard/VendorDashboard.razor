@@ -2202,12 +2202,12 @@ else
                                         {
                                             <div class="vd-advisor-content mt-3">
                                                 <!-- Product & Risk Level Banner -->
-                                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 pb-2 border-bottom">
+                                                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3 pb-2 border-bottom">
                                                     <div>
                                                         <h6 class="fw-bold text-dark mb-0">@pAdvice.ProductName</h6>
                                                         <span class="text-muted small">Batch Size: @pAdvice.CurrentQuantity.ToString("N2") units</span>
                                                     </div>
-                                                    <div>
+                                                    <div class="d-flex flex-column align-items-start align-items-sm-end text-start text-sm-end" style="max-width: 440px;">
                                                         @if (string.Equals(pAdvice.RiskLevel, "HIGH", StringComparison.OrdinalIgnoreCase))
                                                         {
                                                             <span class="vd-risk-badge risk-high">
@@ -2235,6 +2235,13 @@ else
                                                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg>
                                                                 INSUFFICIENT DATA
                                                             </span>
+                                                        }
+                                                        @if (!string.IsNullOrWhiteSpace(pAdvice.RiskTrigger))
+                                                        {
+                                                            <div class="mt-1">
+                                                                <span class="d-block fw-bold text-dark" style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px;">Risk Trigger</span>
+                                                                <span class="d-block text-muted" style="font-size: 0.78rem; line-height: 1.25;">@pAdvice.RiskTrigger</span>
+                                                            </div>
                                                         }
                                                     </div>
                                                 </div>
@@ -2312,7 +2319,7 @@ else
                                                 @foreach (var prod in SpoilageAdvisorData.Products)
                                                 {
                                                     <div class="vd-multi-product-card p-3 border rounded bg-white">
-                                                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2 pb-2 border-bottom">
+                                                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2 pb-2 border-bottom">
                                                             <div class="d-flex align-items-center gap-2">
                                                                 @if (prod.PriorityRank.HasValue)
                                                                 {
@@ -2321,7 +2328,7 @@ else
                                                                 <strong class="text-dark">@prod.ProductName</strong>
                                                                 <span class="text-muted small">(@prod.CurrentQuantity.ToString("N2") units)</span>
                                                             </div>
-                                                            <div>
+                                                            <div class="d-flex flex-column align-items-start align-items-sm-end text-start text-sm-end" style="max-width: 440px;">
                                                                 @if (string.Equals(prod.RiskLevel, "HIGH", StringComparison.OrdinalIgnoreCase))
                                                                 {
                                                                     <span class="vd-risk-badge risk-high">HIGH RISK</span>
@@ -2337,6 +2344,13 @@ else
                                                                 else
                                                                 {
                                                                     <span class="vd-risk-badge risk-insufficient">INSUFFICIENT DATA</span>
+                                                                }
+                                                                @if (!string.IsNullOrWhiteSpace(prod.RiskTrigger))
+                                                                {
+                                                                    <div class="mt-1">
+                                                                        <span class="d-block fw-bold text-dark" style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px;">Risk Trigger</span>
+                                                                        <span class="d-block text-muted" style="font-size: 0.78rem; line-height: 1.25;">@prod.RiskTrigger</span>
+                                                                    </div>
                                                                 }
                                                             </div>
                                                         </div>

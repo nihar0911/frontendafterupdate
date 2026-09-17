@@ -1,4 +1,4 @@
-﻿@page "/organization/purchase-orders"
+@page "/organization/purchase-orders"
 @page "/organization/purchase-orders/{PurchaseOrderId:int}"
 @namespace VenodorManagementFrontend.Components.Pages.OrgPurchaseOrders
 @inject AuthService Auth
@@ -769,6 +769,36 @@ else
                                             <span class="text-muted small">Awaiting delivery</span>
                                         }
                                     </div>
+                                    @if (IsAwaitingApproval(po) && Auth.IsPurchaseManager)
+                                    {
+                                        <div class="col-md-6 col-sm-12">
+                                            <span class="text-muted small d-block mb-1">Approval Authority</span>
+                                            <div class="d-flex align-items-center gap-2" style="max-width: 360px;">
+                                                <select class="form-select form-select-sm" value="@SelectedDetailApproverRole" @onchange="HandleDetailApproverRoleChanged" disabled="@IsSavingApproverRoleForDetail">
+                                                    <option value="Organization Manager">Organization Manager</option>
+                                                    <option value="Outlet Manager">Outlet Manager</option>
+                                                </select>
+                                                <button type="button" class="btn btn-sm btn-primary fw-semibold px-3 text-nowrap" @onclick="SaveDetailApproverRole" disabled="@(IsSavingApproverRoleForDetail || SelectedDetailApproverRole == GetApproverRole(po))">
+                                                    @if (IsSavingApproverRoleForDetail)
+                                                    {
+                                                        <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                                                        <span>Saving...</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span>Save</span>
+                                                    }
+                                                </button>
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="col-md-3 col-sm-6">
+                                            <span class="text-muted small d-block">Approval Authority</span>
+                                            <strong class="text-dark fs-6">@GetApproverLabel(po)</strong>
+                                        </div>
+                                    }
                                 </div>
                             </div>
 

@@ -19,6 +19,7 @@ public class ProductSpoilageAdviceDto
     public decimal? MaximumSpoilagePercentage { get; set; }
     public string Trend { get; set; } = "None";
     public string RiskLevel { get; set; } = "INSUFFICIENT DATA";
+    public string RiskTrigger { get; set; } = string.Empty;
     public int? PriorityRank { get; set; }
     public decimal? EstimatedSpoiledQuantity { get; set; }
     public string Why { get; set; } = string.Empty;
