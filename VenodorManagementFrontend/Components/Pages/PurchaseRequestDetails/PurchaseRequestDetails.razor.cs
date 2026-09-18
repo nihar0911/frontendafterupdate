@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -20,6 +20,7 @@ public partial class PurchaseRequestDetails : ComponentBase
     private string OrganizationName { get; set; } = string.Empty;
     private string CreatedByUserName { get; set; } = string.Empty;
     private string VendorName { get; set; } = string.Empty;
+    private string RejectionReason { get; set; } = string.Empty;
     private Dictionary<int, string> ProductNames { get; set; } = new();
 
     private bool IsLoading { get; set; } = true;
@@ -306,6 +307,36 @@ public partial class PurchaseRequestDetails : ComponentBase
             }
 
             Notifications = await notifsTask ?? new List<NotificationDto>();
+
+            if (!string.IsNullOrWhiteSpace(PurchaseRequest.RejectionReason))
+            {
+                RejectionReason = PurchaseRequest.RejectionReason;
+            }
+            else if (string.Equals(PurchaseRequest.Status, "Rejected", StringComparison.OrdinalIgnoreCase))
+            {
+                var rejectionNotif = Notifications.FirstOrDefault(n =>
+                    n.RelatedRequestID == PurchaseRequest.RequestID &&
+                    (string.Equals(n.NotificationType, "OpportunityRejected", StringComparison.OrdinalIgnoreCase) ||
+                     (n.Message?.Contains("rejected", StringComparison.OrdinalIgnoreCase) ?? false)));
+
+                if (rejectionNotif != null)
+                {
+                    if (string.IsNullOrWhiteSpace(VendorName) && rejectionNotif.RelatedVendorID.HasValue && rejectionNotif.RelatedVendorID.Value > 0)
+                    {
+                        var vendors = await vendorsTask;
+                        var v = vendors?.FirstOrDefault(ven => ven.VendorID == rejectionNotif.RelatedVendorID.Value);
+                        if (v != null) VendorName = v.VendorName;
+                    }
+                    if (string.IsNullOrWhiteSpace(RejectionReason) && !string.IsNullOrWhiteSpace(rejectionNotif.Message))
+                    {
+                        int reasonIdx = rejectionNotif.Message.IndexOf("Reason:", StringComparison.OrdinalIgnoreCase);
+                        if (reasonIdx >= 0)
+                        {
+                            RejectionReason = rejectionNotif.Message.Substring(reasonIdx + 7).Trim();
+                        }
+                    }
+                }
+            }
         }
         catch (Exception ex)
         {
@@ -339,7 +370,7 @@ public partial class PurchaseRequestDetails : ComponentBase
         {
             "approved" or "accepted" or "completed" or "delivered" or "dispatched" => "status-badge-green",
             "pending" or "submitted" or "created" => "status-badge-green",
-            "rejected" or "declined" or "cancelled" => "status-badge-neutral",
+            "rejected" or "declined" or "cancelled" => "status-badge-rejected",
             _ => "status-badge-neutral"
         };
     }

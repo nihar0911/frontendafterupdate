@@ -661,6 +661,34 @@ namespace VenodorManagementFrontend.Services
             return null;
         }
 
+        public async Task<ParseVoiceProcurementOrderResponse?> ParseVoiceProcurementOrderAsync(string prompt)
+        {
+            SetAuthHeader();
+            try
+            {
+                var request = new ParseVoiceProcurementOrderRequest { Prompt = prompt };
+                var response = await _httpClient.PostAsJsonAsync("api/purchaserequests/ai-parse-order", request);
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadFromJsonAsync<ParseVoiceProcurementOrderResponse>();
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest || response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    try
+                    {
+                        var errorObj = await response.Content.ReadFromJsonAsync<ParseVoiceProcurementOrderResponse>();
+                        if (errorObj != null) return errorObj;
+                    }
+                    catch { }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ApiService] ParseVoiceProcurementOrderAsync error: {ex.Message}");
+            }
+            return null;
+        }
+
         public async Task<VendorRecommendationResponse?> GetVendorRecommendationsAsync(int purchaseRequestId)
         {
             SetAuthHeader();

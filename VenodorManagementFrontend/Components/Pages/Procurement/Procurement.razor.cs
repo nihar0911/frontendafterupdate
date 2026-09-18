@@ -1,18 +1,37 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using VenodorManagementFrontend.Models;
+using VenodorManagementFrontend.Models.VendorPerformance;
 using VenodorManagementFrontend.Services;
 
 namespace VenodorManagementFrontend.Components.Pages.Procurement;
 
-public partial class Procurement : ComponentBase
+public partial class Procurement : ComponentBase, IDisposable
 {
+    [Inject] private IJSRuntime JS { get; set; } = null!;
+
     // Mode & View States
     private bool IsCreateMode { get; set; } = false;
     private int CurrentStep { get; set; } = 1; // 1: Outlet, 2: Add Products & Cart, 3: Review & Dispatch
+
+    // AI Procurement Assistant Isolated State
+    private string ProcurementInputMode { get; set; } = "Manual"; // "Manual" or "AI"
+    private string AiPromptInput { get; set; } = string.Empty;
+    private bool IsAiParsing { get; set; } = false;
+    private string? AiErrorMessage { get; set; }
+    private ParseVoiceProcurementOrderResponse? AiResponse { get; set; }
+    private Dictionary<int, List<VendorRecommendationDto>> AiItemRecommendations { get; set; } = new();
+    private Dictionary<int, bool> AiItemLoadingStates { get; set; } = new();
+    private Dictionary<int, string?> AiItemErrorStates { get; set; } = new();
+    private Dictionary<int, VendorRecommendationDto?> AiSelectedVendors { get; set; } = new();
+    private HashSet<int> AiItemAddedToCartKeys { get; set; } = new();
+    private bool IsVoiceListening { get; set; } = false;
+    private string? VoiceMessage { get; set; }
+    private DotNetObjectReference<Procurement>? _dotNetRef;
 
     // List View State
     private List<PurchaseRequestDto> AllPurchaseRequests { get; set; } = new();
@@ -98,6 +117,24 @@ public partial class Procurement : ComponentBase
                 _ => VendorRecommendations
             };
         }
+    }
+
+    private List<VendorRecommendationDto> GetSortedAiRecommendations(List<VendorRecommendationDto>? recs)
+    {
+        if (recs == null) return new();
+        return VendorSortBy switch
+        {
+            "Price" => recs
+                .OrderBy(r => r.UnitPrice)
+                .ThenByDescending(r => r.AverageRating)
+                .ToList(),
+            "Reviews" => recs
+                .OrderByDescending(r => r.AverageRating)
+                .ThenByDescending(r => r.TotalFeedbackCount)
+                .ThenBy(r => r.UnitPrice)
+                .ToList(),
+            _ => recs
+        };
     }
 
     // Notifications
@@ -413,6 +450,8 @@ public partial class Procurement : ComponentBase
         RecommendationsError = null;
         DispatchSuccessMessage = null;
         SearchProductQuery = string.Empty;
+        ProcurementInputMode = "Manual";
+        ResetAiInput();
     }
 
     private void CancelCreateRequest()
@@ -432,6 +471,8 @@ public partial class Procurement : ComponentBase
         PurchaseRequestError = null;
         RecommendationsError = null;
         DispatchSuccessMessage = null;
+        ProcurementInputMode = "Manual";
+        ResetAiInput();
     }
 
     private async Task GoToStep2AddProducts()
@@ -716,6 +757,231 @@ public partial class Procurement : ComponentBase
         ItemValidationMessage = string.Empty;
     }
 
+    private async Task<List<VendorRecommendationDto>> EvaluateVendorRecommendationsAsync(
+        int productId,
+        string productName,
+        string unit,
+        int outletId,
+        List<VendorProductDto>? preloadedVp = null,
+        Dictionary<int, string>? preloadedVendorDict = null,
+        Dictionary<int, VendorPerformanceSummaryDto>? preloadedPerfDict = null,
+        List<ContractDto>? preloadedContracts = null,
+        VenodorManagementFrontend.Models.VendorRecommendationSettings.VendorRecommendationSettingsDto? preloadedSettings = null)
+    {
+        var vendorProducts = preloadedVp ?? await Api.GetVendorProductsAsync();
+        var vendorDict = preloadedVendorDict ?? (await Api.GetVendorsAsync())?.ToDictionary(v => v.VendorID, v => v.VendorName) ?? new();
+        var contracts = preloadedContracts ?? await Api.GetContractsAsync();
+        var perfDict = preloadedPerfDict ?? (await Api.GetVendorPerformanceSummariesAsync())?.ToDictionary(p => p.VendorID) ?? new();
+        var recSettings = preloadedSettings ?? await Api.GetVendorRecommendationSettingsAsync() ?? new VenodorManagementFrontend.Models.VendorRecommendationSettings.VendorRecommendationSettingsDto();
+
+        var matchingVP = vendorProducts?.Where(vp =>
+            vp.ProductID == productId &&
+            string.Equals(vp.Status, "Active", StringComparison.OrdinalIgnoreCase)).ToList() ?? new();
+
+        var reviewTasks = matchingVP
+            .Select(vp => vp.VendorID)
+            .Distinct()
+            .ToDictionary(
+                vId => vId,
+                vId => Api.GetVendorReviewsAsync(vId, productId)
+            );
+
+        await Task.WhenAll(reviewTasks.Values);
+
+        var productReviewsByVendor = new Dictionary<int, List<VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto>>();
+        foreach (var kvp in reviewTasks)
+        {
+            try
+            {
+                productReviewsByVendor[kvp.Key] = (await kvp.Value) ?? new();
+            }
+            catch
+            {
+                productReviewsByVendor[kvp.Key] = new();
+            }
+        }
+
+        var recs = new List<VendorRecommendationDto>();
+        decimal minPrice = matchingVP.Count > 0 ? matchingVP.Min(vp => vp.UnitPrice) : 0m;
+
+        foreach (var vp in matchingVP)
+        {
+            string vName = vendorDict.TryGetValue(vp.VendorID, out var name) ? name : $"Vendor #{vp.VendorID}";
+            var matchingContract = contracts?.FirstOrDefault(c =>
+                (c.VendorID == vp.VendorID || (c.Allocations != null && c.Allocations.Any(a => a.VendorID == vp.VendorID))) &&
+                c.ProductID == productId &&
+                c.OutletID == outletId &&
+                string.Equals(c.Status, "Active", StringComparison.OrdinalIgnoreCase));
+
+            bool hasContract = matchingContract != null;
+            decimal remainingQty = 0m;
+            if (matchingContract != null)
+            {
+                if (matchingContract.Allocations != null && matchingContract.Allocations.Count > 0)
+                {
+                    var alloc = matchingContract.Allocations.FirstOrDefault(a => a.VendorID == vp.VendorID);
+                    if (alloc != null)
+                    {
+                        remainingQty = Math.Max(0m, alloc.AllocatedQuantity - alloc.UsedQuantity);
+                    }
+                }
+                else
+                {
+                    remainingQty = Math.Max(0m, matchingContract.TotalQuantity - matchingContract.UsedQuantity);
+                }
+            }
+
+            bool hasUsableContract = hasContract && remainingQty > 0;
+
+            perfDict.TryGetValue(vp.VendorID, out var perf);
+            int perfFeedbackCount = perf?.TotalReviews ?? 0;
+            int completedDeliveries = perf?.CompletedDeliveries ?? 0;
+            decimal? spoilageRate = perf?.SpoilageRate;
+            decimal perfAvgQuality = (perf != null && perf.AverageQualityRating.HasValue) ? perf.AverageQualityRating.Value : 0m;
+            decimal perfAvgDelivery = (perf != null && perf.AverageDeliveryRating.HasValue) ? perf.AverageDeliveryRating.Value : 0m;
+
+            decimal qWeight = recSettings.QualityWeight / 100m;
+            decimal dWeight = recSettings.DeliveryWeight / 100m;
+            decimal pWeight = recSettings.PriceWeight / 100m;
+            decimal rMaxBonus = recSettings.ReliabilityWeight;
+            decimal rPtsPerReview = recSettings.ReliabilityPointsPerReview;
+            decimal neutralScore = recSettings.NeutralScoreForNewVendors;
+
+            decimal qualityScore = perfFeedbackCount > 0 ? (perfAvgQuality / 5.0m) * 100m : neutralScore;
+            decimal deliveryScore = perfFeedbackCount > 0 ? (perfAvgDelivery / 5.0m) * 100m : neutralScore;
+            decimal priceScore = (vp.UnitPrice > 0 && minPrice > 0)
+                ? Math.Round((minPrice / vp.UnitPrice) * 100m, 1)
+                : neutralScore;
+            decimal reliabilityBonus = Math.Min(rMaxBonus, perfFeedbackCount * rPtsPerReview);
+
+            decimal overallCompositeScore = Math.Round(
+                (qualityScore * qWeight) +
+                (deliveryScore * dWeight) +
+                (priceScore * pWeight) +
+                reliabilityBonus,
+                1
+            );
+
+            // Product-specific review calculations
+            productReviewsByVendor.TryGetValue(vp.VendorID, out var pReviews);
+            pReviews ??= new List<VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto>();
+
+            int productFeedbackCount = pReviews.Count;
+            decimal productAvgRating = productFeedbackCount > 0 ? Math.Round(pReviews.Average(r => r.Rating), 1) : 0m;
+            decimal productAvgQuality = productFeedbackCount > 0 ? Math.Round(pReviews.Average(r => r.ProductQualityRating), 1) : perfAvgQuality;
+            decimal productAvgDelivery = productFeedbackCount > 0 ? Math.Round(pReviews.Average(r => r.DeliveryRating), 1) : perfAvgDelivery;
+
+            var latestReview = pReviews.FirstOrDefault();
+            if (latestReview != null)
+            {
+                LatestReviewsByVendorDict[vp.VendorID] = latestReview;
+            }
+
+            recs.Add(new VendorRecommendationDto
+            {
+                VendorID = vp.VendorID,
+                VendorName = vName,
+                ProductID = productId,
+                ProductName = productName,
+                UnitPrice = vp.UnitPrice,
+                EstimatedDeliveryDays = vp.EstimatedDeliveryDays,
+                OverallScore = overallCompositeScore,
+                AverageRating = productAvgRating,
+                AverageQualityRating = productAvgQuality,
+                AverageDeliveryRating = productAvgDelivery,
+                TotalFeedbackCount = productFeedbackCount,
+                CompletedDeliveries = completedDeliveries,
+                SpoilageRate = spoilageRate,
+                HasActiveContract = hasUsableContract,
+                RemainingQuantity = remainingQty
+            });
+        }
+
+        var rankedRecs = recs.AsEnumerable();
+        if (recSettings.PrioritizeActiveContracts)
+        {
+            rankedRecs = rankedRecs.OrderByDescending(r => r.HasActiveContract && r.RemainingQuantity > 0)
+                .ThenByDescending(r => r.OverallScore)
+                .ThenBy(r => r.UnitPrice)
+                .ThenBy(r => r.EstimatedDeliveryDays)
+                .ThenBy(r => r.VendorID);
+        }
+        else
+        {
+            rankedRecs = rankedRecs.OrderByDescending(r => r.OverallScore)
+                .ThenBy(r => r.UnitPrice)
+                .ThenBy(r => r.EstimatedDeliveryDays)
+                .ThenBy(r => r.VendorID);
+        }
+        var sortedRecs = rankedRecs.ToList();
+
+        for (int i = 0; i < sortedRecs.Count; i++)
+        {
+            var rec = sortedRecs[i];
+            rec.Rank = i + 1;
+            if (i == 0)
+            {
+                rec.SmartBadge = "Top Recommended";
+            }
+            else if (rec.AverageQualityRating >= recSettings.BestQualityThreshold)
+            {
+                rec.SmartBadge = "Best Quality";
+            }
+            else if (rec.UnitPrice == minPrice)
+            {
+                rec.SmartBadge = "Best Price";
+            }
+            else if (rec.AverageDeliveryRating >= recSettings.FastestDeliveryThreshold)
+            {
+                rec.SmartBadge = "Fastest Delivery";
+            }
+
+            if (i == 0)
+            {
+                var competitors = sortedRecs.Where(r => r.VendorID != rec.VendorID).ToList();
+                string compNames = competitors.Count > 0
+                    ? string.Join(", ", competitors.Select(c => c.VendorName))
+                    : "other suppliers";
+
+                decimal minOtherPrice = competitors.Count > 0 ? competitors.Min(c => c.UnitPrice) : rec.UnitPrice;
+                decimal priceDiff = rec.UnitPrice - minOtherPrice;
+
+                string spoilageText = rec.SpoilageRate.HasValue
+                    ? $"{rec.SpoilageRate.Value:0.0}% spoilage"
+                    : "0% reported spoilage";
+
+                int deliveredCount = rec.CompletedDeliveries > 0 ? rec.CompletedDeliveries : Math.Max(1, rec.TotalFeedbackCount);
+
+                if (priceDiff > 0 && competitors.Count > 0)
+                {
+                    rec.Recommendation = $"{rec.VendorName} is recommended over other suppliers ({compNames}) with a verified {rec.AverageQualityRating:0.0}/5 Quality rating across {deliveredCount} delivered orders with {spoilageText}.";
+                }
+                else if (rec.HasActiveContract && rec.RemainingQuantity > 0)
+                {
+                    rec.Recommendation = $"{rec.VendorName} is recommended with priority active contract allocation ({rec.RemainingQuantity:N0} {unit} remaining) and a verified {rec.AverageQualityRating:0.0}/5 Quality rating.";
+                }
+                else
+                {
+                    rec.Recommendation = $"{rec.VendorName} is recommended with the highest overall performance score and verified {rec.AverageQualityRating:0.0}/5 Quality rating.";
+                }
+            }
+            else if (rec.HasActiveContract && rec.RemainingQuantity > 0)
+            {
+                rec.Recommendation = "Active Contract Allocation";
+            }
+            else if (rec.UnitPrice == minPrice)
+            {
+                rec.Recommendation = $"Lowest unit price (Rs. {rec.UnitPrice:N2}) with {rec.AverageRating:0.0} customer rating.";
+            }
+            else
+            {
+                rec.Recommendation = "Alternative supplier candidate.";
+            }
+        }
+
+        return sortedRecs;
+    }
+
     private async Task FetchVendorRecommendations()
     {
         if (SelectedProduct == null || SelectedOutletId <= 0) return;
@@ -726,220 +992,11 @@ public partial class Procurement : ComponentBase
 
         try
         {
-            var vendorProducts = await Api.GetVendorProductsAsync();
-            var vendors = await Api.GetVendorsAsync();
-            var contracts = await Api.GetContractsAsync();
-            var performances = await Api.GetVendorPerformanceSummariesAsync();
-
-            var matchingVP = vendorProducts?.Where(vp =>
-                vp.ProductID == SelectedProduct.ProductID &&
-                string.Equals(vp.Status, "Active", StringComparison.OrdinalIgnoreCase)).ToList() ?? new();
-
-            var vendorDict = vendors?.ToDictionary(v => v.VendorID, v => v.VendorName) ?? new();
-            var perfDict = performances?.ToDictionary(p => p.VendorID) ?? new();
-
-            // Concurrently fetch product-specific reviews for candidate vendors
-            var reviewTasks = matchingVP
-                .Select(vp => vp.VendorID)
-                .Distinct()
-                .ToDictionary(
-                    vId => vId,
-                    vId => Api.GetVendorReviewsAsync(vId, SelectedProduct.ProductID)
-                );
-
-            await Task.WhenAll(reviewTasks.Values);
-
-            var productReviewsByVendor = new Dictionary<int, List<VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto>>();
-            foreach (var kvp in reviewTasks)
-            {
-                try
-                {
-                    productReviewsByVendor[kvp.Key] = (await kvp.Value) ?? new();
-                }
-                catch
-                {
-                    productReviewsByVendor[kvp.Key] = new();
-                }
-            }
-
-            var recSettings = await Api.GetVendorRecommendationSettingsAsync() ?? new VenodorManagementFrontend.Models.VendorRecommendationSettings.VendorRecommendationSettingsDto();
-            var recs = new List<VendorRecommendationDto>();
-            decimal minPrice = matchingVP.Count > 0 ? matchingVP.Min(vp => vp.UnitPrice) : 0m;
-
-            foreach (var vp in matchingVP)
-            {
-                string vName = vendorDict.TryGetValue(vp.VendorID, out var name) ? name : $"Vendor #{vp.VendorID}";
-                var matchingContract = contracts?.FirstOrDefault(c =>
-                    (c.VendorID == vp.VendorID || (c.Allocations != null && c.Allocations.Any(a => a.VendorID == vp.VendorID))) &&
-                    c.ProductID == SelectedProduct.ProductID &&
-                    c.OutletID == SelectedOutletId &&
-                    string.Equals(c.Status, "Active", StringComparison.OrdinalIgnoreCase));
-
-                bool hasContract = matchingContract != null;
-                decimal remainingQty = 0m;
-                if (matchingContract != null)
-                {
-                    if (matchingContract.Allocations != null && matchingContract.Allocations.Count > 0)
-                    {
-                        var alloc = matchingContract.Allocations.FirstOrDefault(a => a.VendorID == vp.VendorID);
-                        if (alloc != null)
-                        {
-                            remainingQty = Math.Max(0m, alloc.AllocatedQuantity - alloc.UsedQuantity);
-                        }
-                    }
-                    else
-                    {
-                        remainingQty = Math.Max(0m, matchingContract.TotalQuantity - matchingContract.UsedQuantity);
-                    }
-                }
-
-                bool hasUsableContract = hasContract && remainingQty > 0;
-
-                perfDict.TryGetValue(vp.VendorID, out var perf);
-                int perfFeedbackCount = perf?.TotalReviews ?? 0;
-                int completedDeliveries = perf?.CompletedDeliveries ?? 0;
-                decimal? spoilageRate = perf?.SpoilageRate;
-                decimal perfAvgQuality = (perf != null && perf.AverageQualityRating.HasValue) ? perf.AverageQualityRating.Value : 0m;
-                decimal perfAvgDelivery = (perf != null && perf.AverageDeliveryRating.HasValue) ? perf.AverageDeliveryRating.Value : 0m;
-
-                decimal qWeight = recSettings.QualityWeight / 100m;
-                decimal dWeight = recSettings.DeliveryWeight / 100m;
-                decimal pWeight = recSettings.PriceWeight / 100m;
-                decimal rMaxBonus = recSettings.ReliabilityWeight;
-                decimal rPtsPerReview = recSettings.ReliabilityPointsPerReview;
-                decimal neutralScore = recSettings.NeutralScoreForNewVendors;
-
-                decimal qualityScore = perfFeedbackCount > 0 ? (perfAvgQuality / 5.0m) * 100m : neutralScore;
-                decimal deliveryScore = perfFeedbackCount > 0 ? (perfAvgDelivery / 5.0m) * 100m : neutralScore;
-                decimal priceScore = (vp.UnitPrice > 0 && minPrice > 0)
-                    ? Math.Round((minPrice / vp.UnitPrice) * 100m, 1)
-                    : neutralScore;
-                decimal reliabilityBonus = Math.Min(rMaxBonus, perfFeedbackCount * rPtsPerReview);
-
-                decimal overallCompositeScore = Math.Round(
-                    (qualityScore * qWeight) +
-                    (deliveryScore * dWeight) +
-                    (priceScore * pWeight) +
-                    reliabilityBonus,
-                    1
-                );
-
-                // Product-specific review calculations
-                productReviewsByVendor.TryGetValue(vp.VendorID, out var pReviews);
-                pReviews ??= new List<VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto>();
-
-                int productFeedbackCount = pReviews.Count;
-                decimal productAvgRating = productFeedbackCount > 0 ? Math.Round(pReviews.Average(r => r.Rating), 1) : 0m;
-                decimal productAvgQuality = productFeedbackCount > 0 ? Math.Round(pReviews.Average(r => r.ProductQualityRating), 1) : perfAvgQuality;
-                decimal productAvgDelivery = productFeedbackCount > 0 ? Math.Round(pReviews.Average(r => r.DeliveryRating), 1) : perfAvgDelivery;
-
-                var latestReview = pReviews.FirstOrDefault();
-                if (latestReview != null)
-                {
-                    LatestReviewsByVendorDict[vp.VendorID] = latestReview;
-                }
-
-                recs.Add(new VendorRecommendationDto
-                {
-                    VendorID = vp.VendorID,
-                    VendorName = vName,
-                    ProductID = SelectedProduct.ProductID,
-                    ProductName = SelectedProduct.ProductName,
-                    UnitPrice = vp.UnitPrice,
-                    EstimatedDeliveryDays = vp.EstimatedDeliveryDays,
-                    OverallScore = overallCompositeScore,
-                    AverageRating = productAvgRating,
-                    AverageQualityRating = productAvgQuality,
-                    AverageDeliveryRating = productAvgDelivery,
-                    TotalFeedbackCount = productFeedbackCount,
-                    CompletedDeliveries = completedDeliveries,
-                    SpoilageRate = spoilageRate,
-                    HasActiveContract = hasUsableContract,
-                    RemainingQuantity = remainingQty
-                });
-            }
-
-            var rankedRecs = recs.AsEnumerable();
-            if (recSettings.PrioritizeActiveContracts)
-            {
-                rankedRecs = rankedRecs.OrderByDescending(r => r.HasActiveContract && r.RemainingQuantity > 0)
-                    .ThenByDescending(r => r.OverallScore)
-                    .ThenBy(r => r.UnitPrice)
-                    .ThenBy(r => r.EstimatedDeliveryDays)
-                    .ThenBy(r => r.VendorID);
-            }
-            else
-            {
-                rankedRecs = rankedRecs.OrderByDescending(r => r.OverallScore)
-                    .ThenBy(r => r.UnitPrice)
-                    .ThenBy(r => r.EstimatedDeliveryDays)
-                    .ThenBy(r => r.VendorID);
-            }
-            VendorRecommendations = rankedRecs.ToList();
-
-            for (int i = 0; i < VendorRecommendations.Count; i++)
-            {
-                var rec = VendorRecommendations[i];
-                rec.Rank = i + 1;
-                if (i == 0)
-                {
-                    rec.SmartBadge = "Top Recommended";
-                }
-                else if (rec.AverageQualityRating >= recSettings.BestQualityThreshold)
-                {
-                    rec.SmartBadge = "Best Quality";
-                }
-                else if (rec.UnitPrice == minPrice)
-                {
-                    rec.SmartBadge = "Best Price";
-                }
-                else if (rec.AverageDeliveryRating >= recSettings.FastestDeliveryThreshold)
-                {
-                    rec.SmartBadge = "Fastest Delivery";
-                }
-
-                if (i == 0)
-                {
-                    var competitors = VendorRecommendations.Where(r => r.VendorID != rec.VendorID).ToList();
-                    string compNames = competitors.Count > 0
-                        ? string.Join(", ", competitors.Select(c => c.VendorName))
-                        : "other suppliers";
-
-                    decimal minOtherPrice = competitors.Count > 0 ? competitors.Min(c => c.UnitPrice) : rec.UnitPrice;
-                    decimal priceDiff = rec.UnitPrice - minOtherPrice;
-
-                    string spoilageText = rec.SpoilageRate.HasValue
-                        ? $"{rec.SpoilageRate.Value:0.0}% spoilage"
-                        : "0% reported spoilage";
-
-                    int deliveredCount = rec.CompletedDeliveries > 0 ? rec.CompletedDeliveries : Math.Max(1, rec.TotalFeedbackCount);
-
-                    if (priceDiff > 0 && competitors.Count > 0)
-                    {
-                        rec.Recommendation = $"{rec.VendorName} is recommended over other suppliers ({compNames}) with a verified {rec.AverageQualityRating:0.0}/5 Quality rating across {deliveredCount} delivered orders with {spoilageText}.";
-                    }
-                    else if (rec.HasActiveContract && rec.RemainingQuantity > 0)
-                    {
-                        rec.Recommendation = $"{rec.VendorName} is recommended with priority active contract allocation ({rec.RemainingQuantity:N0} {SelectedProduct.Unit} remaining) and a verified {rec.AverageQualityRating:0.0}/5 Quality rating.";
-                    }
-                    else
-                    {
-                        rec.Recommendation = $"{rec.VendorName} is recommended with the highest overall performance score and verified {rec.AverageQualityRating:0.0}/5 Quality rating.";
-                    }
-                }
-                else if (rec.HasActiveContract && rec.RemainingQuantity > 0)
-                {
-                    rec.Recommendation = "Active Contract Allocation";
-                }
-                else if (rec.UnitPrice == minPrice)
-                {
-                    rec.Recommendation = $"Lowest unit price (Rs. {rec.UnitPrice:N2}) with {rec.AverageRating:0.0}★ customer rating.";
-                }
-                else
-                {
-                    rec.Recommendation = "Alternative supplier candidate.";
-                }
-            }
+            VendorRecommendations = await EvaluateVendorRecommendationsAsync(
+                SelectedProduct.ProductID,
+                SelectedProduct.ProductName,
+                SelectedProduct.Unit,
+                SelectedOutletId);
 
             if (VendorRecommendations.Count > 0 && SelectedVendorForProduct == null)
             {
@@ -958,6 +1015,361 @@ public partial class Procurement : ComponentBase
             IsFindingVendors = false;
             StateHasChanged();
         }
+    }
+
+    // --- AI PROCUREMENT ASSISTANT METHODS ---
+
+    private void SetInputMode(string mode)
+    {
+        ProcurementInputMode = mode;
+        StateHasChanged();
+    }
+
+    private void ResetAiInput()
+    {
+        AiPromptInput = string.Empty;
+        IsAiParsing = false;
+        AiErrorMessage = null;
+        AiResponse = null;
+        AiItemRecommendations.Clear();
+        AiItemLoadingStates.Clear();
+        AiItemErrorStates.Clear();
+        AiSelectedVendors.Clear();
+        AiItemAddedToCartKeys.Clear();
+        IsVoiceListening = false;
+        VoiceMessage = null;
+    }
+
+    private async Task SubmitAiRequestAsync()
+    {
+        if (string.IsNullOrWhiteSpace(AiPromptInput)) return;
+
+        IsAiParsing = true;
+        AiErrorMessage = null;
+        AiResponse = null;
+        AiItemRecommendations.Clear();
+        AiItemLoadingStates.Clear();
+        AiItemErrorStates.Clear();
+        AiSelectedVendors.Clear();
+        AiItemAddedToCartKeys.Clear();
+        StateHasChanged();
+
+        try
+        {
+            AiResponse = await Api.ParseVoiceProcurementOrderAsync(AiPromptInput.Trim());
+
+            if (AiResponse == null)
+            {
+                AiErrorMessage = "Unable to connect to AI parsing service. Please try again or use manual product search.";
+                return;
+            }
+
+            if (!AiResponse.Success && string.IsNullOrWhiteSpace(AiResponse.OutletResolutionStatus))
+            {
+                AiErrorMessage = !string.IsNullOrWhiteSpace(AiResponse.Message)
+                    ? AiResponse.Message
+                    : "Unable to parse request. Please describe the items and quantity clearly.";
+                return;
+            }
+
+            // Check Outlet Resolution
+            bool isOutletValid = string.Equals(AiResponse.OutletResolutionStatus, "Resolved", StringComparison.OrdinalIgnoreCase) ||
+                                 (string.Equals(AiResponse.OutletResolutionStatus, "NotSpecified", StringComparison.OrdinalIgnoreCase) && SelectedOutletId > 0);
+
+            if (!isOutletValid)
+            {
+                // As required: Unauthorized, NotFound, Ambiguous outlets show a clear message and do not fetch recommendations
+                return;
+            }
+
+            int targetOutletId = AiResponse.OutletID.HasValue && AiResponse.OutletID.Value > 0
+                ? AiResponse.OutletID.Value
+                : SelectedOutletId;
+
+            if (AllProducts.Count == 0)
+            {
+                await LoadProductsAsync();
+            }
+
+            // Preload shared recommendation datasets once for multiple products
+            var vp = await Api.GetVendorProductsAsync();
+            var vendors = await Api.GetVendorsAsync();
+            var contracts = await Api.GetContractsAsync();
+            var perfs = await Api.GetVendorPerformanceSummariesAsync();
+            var settings = await Api.GetVendorRecommendationSettingsAsync();
+
+            var vendorDict = vendors?.ToDictionary(v => v.VendorID, v => v.VendorName) ?? new();
+            var perfDict = perfs?.ToDictionary(p => p.VendorID) ?? new();
+
+            // Evaluate each resolved item
+            for (int i = 0; i < AiResponse.Items.Count; i++)
+            {
+                var item = AiResponse.Items[i];
+                int itemIdx = i;
+
+                // CRITICAL: NEVER PRESELECT A VENDOR!
+                AiSelectedVendors[itemIdx] = null;
+
+                if (string.Equals(item.ResolutionStatus, "Resolved", StringComparison.OrdinalIgnoreCase) && item.ProductID.HasValue)
+                {
+                    AiItemLoadingStates[itemIdx] = true;
+                    StateHasChanged();
+
+                    try
+                    {
+                        var recs = await EvaluateVendorRecommendationsAsync(
+                            item.ProductID.Value,
+                            item.ProductName ?? item.SpokenProductName,
+                            item.Unit,
+                            targetOutletId,
+                            vp, vendorDict, perfDict, contracts, settings);
+
+                        AiItemRecommendations[itemIdx] = recs;
+                        AiItemErrorStates[itemIdx] = null;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[Procurement] Error loading AI recs for item {item.ProductID}: {ex.Message}");
+                        AiItemRecommendations[itemIdx] = new();
+                        AiItemErrorStates[itemIdx] = "Unable to load vendor recommendations for this product.";
+                    }
+                    finally
+                    {
+                        AiItemLoadingStates[itemIdx] = false;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Procurement] AI submit error: {ex.Message}");
+            AiErrorMessage = "An unexpected error occurred while processing your request.";
+        }
+        finally
+        {
+            IsAiParsing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadRecommendationsForAiItemAsync(int itemIndex, ParsedProcurementItemDto item)
+    {
+        if (!item.ProductID.HasValue || item.ProductID.Value <= 0) return;
+
+        int targetOutletId = (AiResponse?.OutletID.HasValue == true && AiResponse.OutletID.Value > 0)
+            ? AiResponse.OutletID.Value
+            : SelectedOutletId;
+
+        AiItemLoadingStates[itemIndex] = true;
+        AiSelectedVendors[itemIndex] = null; // CRITICAL: NEVER PRESELECT!
+        StateHasChanged();
+
+        try
+        {
+            var recs = await EvaluateVendorRecommendationsAsync(
+                item.ProductID.Value,
+                item.ProductName ?? item.SpokenProductName,
+                item.Unit,
+                targetOutletId);
+
+            AiItemRecommendations[itemIndex] = recs;
+            AiItemErrorStates[itemIndex] = null;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Procurement] Error loading recommendations for item {item.ProductID}: {ex.Message}");
+            AiItemRecommendations[itemIndex] = new();
+            AiItemErrorStates[itemIndex] = "Unable to load vendor recommendations for this product.";
+        }
+        finally
+        {
+            AiItemLoadingStates[itemIndex] = false;
+            StateHasChanged();
+        }
+    }
+
+    private void SelectVendorForAiItem(int itemIndex, VendorRecommendationDto vendor)
+    {
+        // Purchase Manager explicitly chooses this vendor
+        AiSelectedVendors[itemIndex] = vendor;
+        StateHasChanged();
+    }
+
+    private void AddAiItemToCart(int itemIndex, ParsedProcurementItemDto item)
+    {
+        if (!item.ProductID.HasValue || item.ProductID.Value <= 0) return;
+        if (!AiSelectedVendors.TryGetValue(itemIndex, out var selectedVendor) || selectedVendor == null) return;
+        if (item.Quantity <= 0) return;
+
+        var existing = CartItems.FirstOrDefault(i =>
+            i.ProductID == item.ProductID.Value);
+
+        if (existing != null)
+        {
+            existing.Quantity = item.Quantity;
+            existing.Unit = item.Unit;
+            existing.VendorID = selectedVendor.VendorID;
+            existing.VendorName = selectedVendor.VendorName;
+            existing.UnitPrice = selectedVendor.UnitPrice;
+            existing.EstimatedDeliveryDays = selectedVendor.EstimatedDeliveryDays;
+            existing.AverageRating = selectedVendor.AverageRating;
+            existing.TotalFeedbackCount = selectedVendor.TotalFeedbackCount;
+            existing.AverageQualityRating = selectedVendor.AverageQualityRating;
+            existing.SmartBadge = selectedVendor.SmartBadge;
+            existing.HasActiveContract = selectedVendor.HasActiveContract;
+            existing.RemainingQuantity = selectedVendor.RemainingQuantity;
+        }
+        else
+        {
+            string category = "General";
+            var prod = AllProducts.FirstOrDefault(p => p.ProductID == item.ProductID.Value);
+            if (prod != null && !string.IsNullOrWhiteSpace(prod.Category))
+            {
+                category = prod.Category;
+            }
+
+            CartItems.Add(new ProcurementItem
+            {
+                ProductID = item.ProductID.Value,
+                ProductName = item.ProductName ?? item.SpokenProductName,
+                Category = category,
+                Quantity = item.Quantity,
+                Unit = item.Unit,
+                VendorID = selectedVendor.VendorID,
+                VendorName = selectedVendor.VendorName,
+                UnitPrice = selectedVendor.UnitPrice,
+                EstimatedDeliveryDays = selectedVendor.EstimatedDeliveryDays,
+                AverageRating = selectedVendor.AverageRating,
+                TotalFeedbackCount = selectedVendor.TotalFeedbackCount,
+                AverageQualityRating = selectedVendor.AverageQualityRating,
+                SmartBadge = selectedVendor.SmartBadge,
+                HasActiveContract = selectedVendor.HasActiveContract,
+                RemainingQuantity = selectedVendor.RemainingQuantity
+            });
+        }
+
+        AiItemAddedToCartKeys.Add(itemIndex);
+        StateHasChanged();
+    }
+
+    private async Task SelectAmbiguousMatchAsync(int itemIndex, ParsedProcurementItemDto item, string chosenMatchName)
+    {
+        if (AllProducts.Count == 0)
+        {
+            await LoadProductsAsync();
+        }
+
+        var matched = AllProducts.FirstOrDefault(p =>
+            string.Equals(p.ProductName.Trim(), chosenMatchName.Trim(), StringComparison.OrdinalIgnoreCase));
+
+        if (matched == null)
+        {
+            matched = AllProducts.FirstOrDefault(p =>
+                p.ProductName.Contains(chosenMatchName.Trim(), StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (matched != null)
+        {
+            item.ProductID = matched.ProductID;
+            item.ProductName = matched.ProductName;
+            item.Unit = matched.Unit;
+            item.ResolutionStatus = "Resolved";
+
+            await LoadRecommendationsForAiItemAsync(itemIndex, item);
+        }
+        else
+        {
+            item.ResolutionStatus = "NotFound";
+            item.Message = $"Product '{chosenMatchName}' not found in active catalog.";
+            StateHasChanged();
+        }
+    }
+
+    private async Task UpdateAiItemQuantity(int itemIndex, ParsedProcurementItemDto item, decimal newQty)
+    {
+        if (newQty > 0)
+        {
+            item.Quantity = newQty;
+            if (item.ResolutionStatus == "InvalidQuantity" && item.ProductID.HasValue)
+            {
+                item.ResolutionStatus = "Resolved";
+                await LoadRecommendationsForAiItemAsync(itemIndex, item);
+            }
+            StateHasChanged();
+        }
+    }
+
+    // --- VOICE INPUT METHODS ---
+
+    private async Task StartVoiceInput()
+    {
+        try
+        {
+            _dotNetRef ??= DotNetObjectReference.Create(this);
+            VoiceMessage = null;
+            await JS.InvokeVoidAsync("voiceRecognition.start", _dotNetRef);
+        }
+        catch (Exception)
+        {
+            VoiceMessage = "Voice input is not supported in this browser. Please type your requirement.";
+            IsVoiceListening = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task StopVoiceInput()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("voiceRecognition.stop");
+        }
+        catch { }
+        finally
+        {
+            IsVoiceListening = false;
+            StateHasChanged();
+        }
+    }
+
+    [JSInvokable]
+    public void OnVoiceStarted()
+    {
+        IsVoiceListening = true;
+        VoiceMessage = "Listening for procurement requirement...";
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public void OnVoiceResult(string transcript)
+    {
+        IsVoiceListening = false;
+        VoiceMessage = null;
+        if (!string.IsNullOrWhiteSpace(transcript))
+        {
+            // Set text into input field without auto-submitting
+            AiPromptInput = transcript;
+        }
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public void OnVoiceError(string error)
+    {
+        IsVoiceListening = false;
+        VoiceMessage = $"Voice notice: {error}";
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public void OnVoiceEnded()
+    {
+        IsVoiceListening = false;
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        _dotNetRef?.Dispose();
     }
 
     private async Task CreateAndDispatchPurchaseRequest()
@@ -1189,7 +1601,7 @@ public partial class Procurement : ComponentBase
         {
             "approved" or "accepted" or "completed" or "delivered" or "dispatched" => "status-badge-green",
             "pending" or "submitted" or "created" => "status-badge-green",
-            "rejected" or "declined" or "cancelled" => "status-badge-neutral",
+            "rejected" or "declined" or "cancelled" => "status-badge-rejected",
             _ => "status-badge-neutral"
         };
     }

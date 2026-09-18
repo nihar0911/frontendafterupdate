@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace VenodorManagementFrontend.Models;
@@ -12,6 +12,7 @@ public class PurchaseRequestDto
         public string CreatedByName { get; set; } = string.Empty;
         public DateTime RequestDate { get; set; }
         public string VendorName { get; set; } = string.Empty;
+        public string? RejectionReason { get; set; }
         public string Status { get; set; } = string.Empty;
         public List<PurchaseRequestItemDto> Items { get; set; } = new();
     }

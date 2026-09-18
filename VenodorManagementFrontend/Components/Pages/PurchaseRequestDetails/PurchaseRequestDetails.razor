@@ -1,4 +1,4 @@
-﻿@page "/purchase-request/{requestId:int}"
+@page "/purchase-request/{requestId:int}"
 @page "/purchase-request"
 @rendermode InteractiveServer
 @inject ApiService Api
@@ -412,7 +412,32 @@ else
                             <div class="pm-panel p-3 px-4">
                                 <h4 class="panel-title mb-2.5 pb-2 border-bottom">Vendor &amp; Quotation Status</h4>
 
-                                @if (AssociatedQuotation == null)
+                                @if (string.Equals(PurchaseRequest.Status, "Rejected", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <div class="p-3 rounded-2 mb-2 bg-light border border-danger-subtle" style="background-color: #FFF5F5 !important;">
+                                        <div class="d-flex align-items-center justify-content-between mb-1">
+                                            <span class="fw-bold text-danger small">Request Rejected by Vendor</span>
+                                            <span class="status-badge-rejected">Rejected</span>
+                                        </div>
+                                        <p class="small text-muted mb-2" style="font-size: 0.82rem; line-height: 1.45;">The candidate supplier has rejected this procurement request.</p>
+                                        @if (!string.IsNullOrWhiteSpace(RejectionReason))
+                                        {
+                                            <div class="p-2 rounded-1 bg-white border border-danger-subtle small mb-2">
+                                                <span class="fw-semibold text-danger">Reason:</span>
+                                                <span class="text-dark">@RejectionReason</span>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    @if (!string.IsNullOrWhiteSpace(VendorName))
+                                    {
+                                        <div class="d-flex justify-content-between py-1.5 border-top">
+                                            <span class="text-muted small fw-semibold">Declined By Vendor</span>
+                                            <span class="fw-bold text-dark small">@VendorName</span>
+                                        </div>
+                                    }
+                                }
+                                else if (AssociatedQuotation == null)
                                 {
                                     <div class="p-3 rounded-2 mb-2 bg-light border">
                                         <div class="d-flex align-items-center justify-content-between mb-1">

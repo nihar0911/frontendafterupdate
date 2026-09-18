@@ -667,6 +667,18 @@
     border: 1px solid #E2E8F0;
 }
 
+.status-badge-rejected {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    background-color: #FEE2E2;
+    color: #991B1B;
+    border: 1px solid #FCA5A5;
+}
+
 /* ==========================================================================
    MODAL DIALOGS
    ========================================================================== */
