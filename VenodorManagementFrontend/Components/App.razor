@@ -44,7 +44,8 @@
             },
             start: function (dotNetHelper) {
                 const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-                if (!SpeechRec) {
+                if (!SpeechRec) 
+                {
                     dotNetHelper.invokeMethodAsync('OnVoiceError', 'Speech recognition is not supported in this browser.');
                     return;
                 }
@@ -60,12 +61,14 @@
                         dotNetHelper.invokeMethodAsync('OnVoiceStarted');
                     };
                     rec.onresult = function (event) {
-                        if (event.results && event.results.length > 0 && event.results[0].length > 0) {
+                        if (event.results && event.results.length > 0 && event.results[0].length > 0) 
+                        {
                             const transcript = event.results[0][0].transcript;
                             dotNetHelper.invokeMethodAsync('OnVoiceResult', transcript);
                         }
                     };
-                    rec.onerror = function (event) {
+                    rec.onerror = function (event)
+                    {
                         const err = event.error || 'Speech recognition error.';
                         dotNetHelper.invokeMethodAsync('OnVoiceError', err);
                     };

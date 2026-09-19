@@ -714,6 +714,98 @@ a:hover, .btn-link:hover {
 }
 
 /* ==========================================================================
+   10B. DASHBOARD FIXED SIDEBAR & INDEPENDENT MAIN CONTENT SCROLLING
+   Ensures the sidebar remains fixed/stationary at full viewport height (100vh)
+   while the main content area is the only vertically scrolling region across
+   all dashboards (Purchase Manager, Organization Manager, Admin, Outlet Manager,
+   and Vendor Manager), preserving mobile/responsive layouts.
+   ========================================================================== */
+@media (min-width: 769px) {
+    /* Prevent window/body level vertical scrolling when a dashboard layout is active */
+    html:has(.pm-app-layout),
+    html:has(.org-app-layout),
+    html:has(.admin-app-layout),
+    html:has(.om-layout),
+    html:has(.vd-layout),
+    body:has(.pm-app-layout),
+    body:has(.org-app-layout),
+    body:has(.admin-app-layout),
+    body:has(.om-layout),
+    body:has(.vd-layout) {
+        height: 100vh !important;
+        height: 100dvh !important;
+        overflow: hidden !important;
+    }
+
+    .main-content:has(.pm-app-layout),
+    .main-content:has(.org-app-layout),
+    .main-content:has(.admin-app-layout),
+    .main-content:has(.om-layout),
+    .main-content:has(.vd-layout) {
+        height: 100vh !important;
+        height: 100dvh !important;
+        overflow: hidden !important;
+    }
+
+    /* Constrain full dashboard layout containers to exactly viewport height */
+    .pm-app-layout,
+    .org-app-layout,
+    .admin-app-layout,
+    .om-layout,
+    .vd-layout {
+        height: 100vh !important;
+        height: 100dvh !important;
+        max-height: 100vh !important;
+        max-height: 100dvh !important;
+        overflow: hidden !important;
+    }
+
+    /* Fixed, stationary sidebars from top to bottom of viewport without vertical displacement */
+    .pm-sidebar,
+    .org-sidebar,
+    .admin-sidebar,
+    .om-sidebar,
+    .vd-sidebar {
+        height: 100vh !important;
+        height: 100dvh !important;
+        max-height: 100vh !important;
+        max-height: 100dvh !important;
+        flex-shrink: 0 !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        scrollbar-width: none !important; /* Firefox */
+        -ms-overflow-style: none !important; /* IE/Edge */
+    }
+
+    /* Hide sidebar scrollbars so no scrollbar appears on the sidebar under normal conditions */
+    .pm-sidebar::-webkit-scrollbar,
+    .org-sidebar::-webkit-scrollbar,
+    .admin-sidebar::-webkit-scrollbar,
+    .om-sidebar::-webkit-scrollbar,
+    .vd-sidebar::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+    }
+
+    /* The only vertically scrolling region: main content area */
+    .pm-main-wrapper,
+    .org-main-wrapper,
+    .admin-main-wrapper,
+    .om-main-canvas,
+    .vd-main-canvas {
+        height: 100vh !important;
+        height: 100dvh !important;
+        max-height: 100vh !important;
+        max-height: 100dvh !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        flex: 1 !important;
+        min-width: 0 !important;
+    }
+}
+
+/* ==========================================================================
    11. BLAZOR ERROR UI
    ========================================================================== */
 #blazor-error-ui {

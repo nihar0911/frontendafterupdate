@@ -1299,7 +1299,7 @@ public partial class Procurement : ComponentBase, IDisposable
         }
     }
 
-    // --- VOICE INPUT METHODS ---
+    //  VOICE INPUT METHODS 
 
     private async Task StartVoiceInput()
     {
@@ -1356,7 +1356,7 @@ public partial class Procurement : ComponentBase, IDisposable
     public void OnVoiceError(string error)
     {
         IsVoiceListening = false;
-        VoiceMessage = $"Voice notice: {error}";
+        VoiceMessage = $"Voice notice:{error}";
         StateHasChanged();
     }
 
