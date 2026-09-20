@@ -1,4 +1,4 @@
-/* =============================================================================
+﻿/* =============================================================================
    ORGANIZATION CONTRACTS PAGE — SCOPED STYLES (OrgContracts.razor.css)
    Clean, Professional, Enterprise Design
    ============================================================================= */
@@ -1181,4 +1181,43 @@
 .btn-cancel-reset:disabled {
     opacity: 0.65;
     cursor: not-allowed;
+}
+
+/* -----------------------------------------------------------------------------
+   END CONTRACT STYLES
+   ----------------------------------------------------------------------------- */
+.status-ended {
+    background-color: #F3F4F6;
+    color: #4B5563;
+    border: 1px solid #D1D5DB;
+    font-weight: 600;
+}
+
+.btn-end-contract {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.5rem 0.95rem;
+    background-color: #FEF2F2;
+    border: 1.5px solid #F87171;
+    border-radius: 4px;
+    color: #DC2626;
+    font-size: 0.84rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-end-contract:hover {
+    background-color: #DC2626;
+    color: #FFFFFF;
+    box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25);
+}
+
+
+.status-expired {
+    background-color: #FEF3C7;
+    color: #92400E;
+    border: 1px solid #FDE68A;
+    font-weight: 600;
 }

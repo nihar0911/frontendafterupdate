@@ -1,4 +1,4 @@
-@page "/org/contracts"
+﻿@page "/org/contracts"
 @page "/organization/contracts"
 @rendermode InteractiveServer
 @inject ApiService Api
@@ -490,6 +490,14 @@ else
                                                         <span>Capacity Reached</span>
                                                     </span>
                                                 }
+                                                else if (string.Equals(currentContract.Status, "Ended", StringComparison.OrdinalIgnoreCase))
+                                                {
+                                                    <span class="status-pill status-ended">Ended</span>
+                                                }
+                                                else if (string.Equals(currentContract.Status, "Expired", StringComparison.OrdinalIgnoreCase))
+                                                {
+                                                    <span class="status-pill status-expired">Expired</span>
+                                                }
                                                 else
                                                 {
                                                     <span class="status-pill status-other">@currentContract.Status</span>
@@ -546,7 +554,7 @@ else
 
                                         <!-- Card Action Footer -->
                                         <div class="contract-card-footer d-flex justify-content-between align-items-center">
-                                            <div>
+                                            <div class="d-flex align-items-center gap-2">
                                                 @if (string.Equals(currentContract.Status, "Reached", StringComparison.OrdinalIgnoreCase))
                                                 {
                                                     <button type="button" class="btn-reset-contract" @onclick="() => PromptResetContract(currentContract)">
@@ -555,6 +563,12 @@ else
                                                             <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
                                                         </svg>
                                                         <span>Renew Contract</span>
+                                                    </button>
+                                                }
+                                                @if (string.Equals(currentContract.Status, "Active", StringComparison.OrdinalIgnoreCase) && (Auth.IsOrgManager || Auth.IsAdmin))
+                                                {
+                                                    <button type="button" class="btn-end-contract" @onclick="() => PromptEndContract(currentContract)">
+                                                        <span>End Contract</span>
                                                     </button>
                                                 }
                                             </div>
@@ -707,3 +721,78 @@ else
         </div>
     </div>
 }
+
+@if (IsEndModalOpen && ContractToEnd != null)
+{
+    <div class="reset-modal-backdrop" @onclick="CancelEndContract">
+        <div class="reset-modal-content" @onclick:stopPropagation="true">
+            <div class="reset-modal-header">
+                <div class="reset-header-icon" style="background-color: #FEE2E2; color: #DC2626;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="15" y1="9" x2="9" y2="15"></line>
+                        <line x1="9" y1="9" x2="15" y2="15"></line>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="reset-modal-title">End Contract</h3>
+                    <p class="reset-modal-sub">Contract #@ContractToEnd.ContractID &bull; @ContractToEnd.OutletName</p>
+                </div>
+                <button type="button" class="btn-close-reset" @onclick="CancelEndContract" aria-label="Close">&times;</button>
+            </div>
+
+            <div class="reset-modal-body">
+                <div class="reset-info-box">
+                    @if (!string.IsNullOrWhiteSpace(ContractToEnd.ProductName))
+                    {
+                        <div class="reset-info-row">
+                            <span class="info-label">Product:</span>
+                            <span class="info-val fw-bold">@ContractToEnd.ProductName</span>
+                        </div>
+                    }
+                    <div class="reset-info-row">
+                        <span class="info-label">Vendor:</span>
+                        <span class="info-val fw-bold">@ContractToEnd.VendorName</span>
+                    </div>
+                    <div class="reset-info-row">
+                        <span class="info-label">Contract Quantity:</span>
+                        <span class="info-val fw-bold">@FormatQuantity(ContractToEnd.TotalQuantity) @ContractToEnd.Unit</span>
+                    </div>
+                    <div class="reset-info-row">
+                        <span class="info-label">Status:</span>
+                        <span class="info-val fw-bold">@ContractToEnd.Status</span>
+                    </div>
+                </div>
+
+                <div class="reset-alert-box" style="background-color: #FEF2F2; border-color: #FECACA; color: #991B1B;">
+                    <span>
+                        Are you sure you want to end this contract? The contract will remain in history but will no longer be treated as active.
+                    </span>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(EndErrorMessage))
+                {
+                    <div class="alert alert-danger mt-3 py-2 small" role="alert">
+                        @EndErrorMessage
+                    </div>
+                }
+            </div>
+
+            <div class="reset-modal-footer">
+                <button type="button" class="btn-cancel-reset" @onclick="CancelEndContract" disabled="@IsEnding">Cancel</button>
+                <button type="button" class="btn-confirm-reset" style="background-color: #DC2626;" @onclick="ExecuteEndContractAsync" disabled="@IsEnding">
+                    @if (IsEnding)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        <span>Ending Contract...</span>
+                    }
+                    else
+                    {
+                        <span>Confirm End Contract</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+}
+

@@ -279,4 +279,56 @@ public partial class ContractDetails : ComponentBase
             StateHasChanged();
         }
     }
+
+    // ==========================================
+    // END CONTRACT LOGIC
+    // ==========================================
+    private bool IsEndModalOpen { get; set; } = false;
+    private bool IsEnding { get; set; } = false;
+    private string? EndErrorMessage { get; set; }
+
+    private void PromptEndContract()
+    {
+        EndErrorMessage = null;
+        IsEndModalOpen = true;
+    }
+
+    private void CancelEndContract()
+    {
+        IsEndModalOpen = false;
+        EndErrorMessage = null;
+        IsEnding = false;
+    }
+
+    private async Task ExecuteEndContractAsync()
+    {
+        if (Contract == null || IsEnding) return;
+
+        IsEnding = true;
+        EndErrorMessage = null;
+
+        try
+        {
+            var result = await Api.EndContractAsync(Contract.ContractID);
+            if (result != null && result.Success)
+            {
+                IsEndModalOpen = false;
+                // Reload contract details to reflect ended status
+                await LoadDetails(Contract.ContractID);
+            }
+            else
+            {
+                EndErrorMessage = result?.ErrorMessage ?? "Failed to end contract. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            EndErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsEnding = false;
+            StateHasChanged();
+        }
+    }
 }

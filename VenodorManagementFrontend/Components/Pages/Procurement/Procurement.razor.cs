@@ -25,6 +25,7 @@ public partial class Procurement : ComponentBase, IDisposable
     private string? AiErrorMessage { get; set; }
     private ParseVoiceProcurementOrderResponse? AiResponse { get; set; }
     private Dictionary<int, List<VendorRecommendationDto>> AiItemRecommendations { get; set; } = new();
+    private Dictionary<int, bool> AiItemHasActiveContracts { get; set; } = new();
     private Dictionary<int, bool> AiItemLoadingStates { get; set; } = new();
     private Dictionary<int, string?> AiItemErrorStates { get; set; } = new();
     private Dictionary<int, VendorRecommendationDto?> AiSelectedVendors { get; set; } = new();
@@ -67,6 +68,7 @@ public partial class Procurement : ComponentBase, IDisposable
     private decimal? QuantityInput { get; set; } = 10;
     private VendorRecommendationDto? SelectedVendorForProduct { get; set; }
     private List<VendorRecommendationDto>? VendorRecommendations { get; set; }
+    private bool HasActiveContractsForSelectedProduct { get; set; } = false;
     private Dictionary<int, VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto> LatestReviewsByVendorDict { get; set; } = new();
     private string VendorSortBy { get; set; } = "Reviews";
 
@@ -107,14 +109,14 @@ public partial class Procurement : ComponentBase, IDisposable
             {
                 "Price" => VendorRecommendations
                     .OrderBy(r => r.UnitPrice)
-                    .ThenByDescending(r => r.AverageRating)
+                    .ThenBy(r => r.Rank)
                     .ToList(),
                 "Reviews" => VendorRecommendations
-                    .OrderByDescending(r => r.AverageRating)
+                    .OrderBy(r => r.Rank)
+                    .ThenByDescending(r => r.AverageRating)
                     .ThenByDescending(r => r.TotalFeedbackCount)
-                    .ThenBy(r => r.UnitPrice)
                     .ToList(),
-                _ => VendorRecommendations
+                _ => VendorRecommendations.OrderBy(r => r.Rank).ToList()
             };
         }
     }
@@ -126,14 +128,14 @@ public partial class Procurement : ComponentBase, IDisposable
         {
             "Price" => recs
                 .OrderBy(r => r.UnitPrice)
-                .ThenByDescending(r => r.AverageRating)
+                .ThenBy(r => r.Rank)
                 .ToList(),
             "Reviews" => recs
-                .OrderByDescending(r => r.AverageRating)
+                .OrderBy(r => r.Rank)
+                .ThenByDescending(r => r.AverageRating)
                 .ThenByDescending(r => r.TotalFeedbackCount)
-                .ThenBy(r => r.UnitPrice)
                 .ToList(),
-            _ => recs
+            _ => recs.OrderBy(r => r.Rank).ToList()
         };
     }
 
@@ -442,6 +444,7 @@ public partial class Procurement : ComponentBase, IDisposable
         SelectedVendorForProduct = null;
         CreatedPurchaseRequest = null;
         VendorRecommendations = null;
+        HasActiveContractsForSelectedProduct = false;
         LatestReviewsByVendorDict.Clear();
         ValidationMessage = string.Empty;
         ItemValidationMessage = string.Empty;
@@ -464,6 +467,7 @@ public partial class Procurement : ComponentBase, IDisposable
         SelectedVendorForProduct = null;
         CreatedPurchaseRequest = null;
         VendorRecommendations = null;
+        HasActiveContractsForSelectedProduct = false;
         LatestReviewsByVendorDict.Clear();
         ValidationMessage = string.Empty;
         ItemValidationMessage = string.Empty;
@@ -709,6 +713,7 @@ public partial class Procurement : ComponentBase, IDisposable
         SelectedVendorForProduct = null;
         QuantityInput = 10;
         VendorRecommendations = null;
+        HasActiveContractsForSelectedProduct = false;
         SearchProductQuery = string.Empty;
         ItemValidationMessage = string.Empty;
         EditingCartItemKey = null;
@@ -757,229 +762,30 @@ public partial class Procurement : ComponentBase, IDisposable
         ItemValidationMessage = string.Empty;
     }
 
-    private async Task<List<VendorRecommendationDto>> EvaluateVendorRecommendationsAsync(
-        int productId,
-        string productName,
-        string unit,
-        int outletId,
-        List<VendorProductDto>? preloadedVp = null,
-        Dictionary<int, string>? preloadedVendorDict = null,
-        Dictionary<int, VendorPerformanceSummaryDto>? preloadedPerfDict = null,
-        List<ContractDto>? preloadedContracts = null,
-        VenodorManagementFrontend.Models.VendorRecommendationSettings.VendorRecommendationSettingsDto? preloadedSettings = null)
+    private async Task LoadLatestReviewsForVendorsAsync(List<VendorRecommendationDto> recs, int productId)
     {
-        var vendorProducts = preloadedVp ?? await Api.GetVendorProductsAsync();
-        var vendorDict = preloadedVendorDict ?? (await Api.GetVendorsAsync())?.ToDictionary(v => v.VendorID, v => v.VendorName) ?? new();
-        var contracts = preloadedContracts ?? await Api.GetContractsAsync();
-        var perfDict = preloadedPerfDict ?? (await Api.GetVendorPerformanceSummariesAsync())?.ToDictionary(p => p.VendorID) ?? new();
-        var recSettings = preloadedSettings ?? await Api.GetVendorRecommendationSettingsAsync() ?? new VenodorManagementFrontend.Models.VendorRecommendationSettings.VendorRecommendationSettingsDto();
-
-        var matchingVP = vendorProducts?.Where(vp =>
-            vp.ProductID == productId &&
-            string.Equals(vp.Status, "Active", StringComparison.OrdinalIgnoreCase)).ToList() ?? new();
-
-        var reviewTasks = matchingVP
-            .Select(vp => vp.VendorID)
-            .Distinct()
-            .ToDictionary(
-                vId => vId,
-                vId => Api.GetVendorReviewsAsync(vId, productId)
-            );
-
-        await Task.WhenAll(reviewTasks.Values);
-
-        var productReviewsByVendor = new Dictionary<int, List<VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto>>();
-        foreach (var kvp in reviewTasks)
+        if (recs == null || recs.Count == 0) return;
+        var distinctVendorIds = recs.Select(r => r.VendorID).Distinct().ToList();
+        var reviewTasks = distinctVendorIds.ToDictionary(
+            vId => vId,
+            vId => Api.GetVendorReviewsAsync(vId, productId)
+        );
+        try
         {
-            try
+            await Task.WhenAll(reviewTasks.Values);
+            foreach (var kvp in reviewTasks)
             {
-                productReviewsByVendor[kvp.Key] = (await kvp.Value) ?? new();
-            }
-            catch
-            {
-                productReviewsByVendor[kvp.Key] = new();
-            }
-        }
-
-        var recs = new List<VendorRecommendationDto>();
-        decimal minPrice = matchingVP.Count > 0 ? matchingVP.Min(vp => vp.UnitPrice) : 0m;
-
-        foreach (var vp in matchingVP)
-        {
-            string vName = vendorDict.TryGetValue(vp.VendorID, out var name) ? name : $"Vendor #{vp.VendorID}";
-            var matchingContract = contracts?.FirstOrDefault(c =>
-                (c.VendorID == vp.VendorID || (c.Allocations != null && c.Allocations.Any(a => a.VendorID == vp.VendorID))) &&
-                c.ProductID == productId &&
-                c.OutletID == outletId &&
-                string.Equals(c.Status, "Active", StringComparison.OrdinalIgnoreCase));
-
-            bool hasContract = matchingContract != null;
-            decimal remainingQty = 0m;
-            if (matchingContract != null)
-            {
-                if (matchingContract.Allocations != null && matchingContract.Allocations.Count > 0)
+                var list = await kvp.Value;
+                if (list != null && list.Count > 0)
                 {
-                    var alloc = matchingContract.Allocations.FirstOrDefault(a => a.VendorID == vp.VendorID);
-                    if (alloc != null)
-                    {
-                        remainingQty = Math.Max(0m, alloc.AllocatedQuantity - alloc.UsedQuantity);
-                    }
-                }
-                else
-                {
-                    remainingQty = Math.Max(0m, matchingContract.TotalQuantity - matchingContract.UsedQuantity);
+                    LatestReviewsByVendorDict[kvp.Key] = list[0];
                 }
             }
-
-            bool hasUsableContract = hasContract && remainingQty > 0;
-
-            perfDict.TryGetValue(vp.VendorID, out var perf);
-            int perfFeedbackCount = perf?.TotalReviews ?? 0;
-            int completedDeliveries = perf?.CompletedDeliveries ?? 0;
-            decimal? spoilageRate = perf?.SpoilageRate;
-            decimal perfAvgQuality = (perf != null && perf.AverageQualityRating.HasValue) ? perf.AverageQualityRating.Value : 0m;
-            decimal perfAvgDelivery = (perf != null && perf.AverageDeliveryRating.HasValue) ? perf.AverageDeliveryRating.Value : 0m;
-
-            decimal qWeight = recSettings.QualityWeight / 100m;
-            decimal dWeight = recSettings.DeliveryWeight / 100m;
-            decimal pWeight = recSettings.PriceWeight / 100m;
-            decimal rMaxBonus = recSettings.ReliabilityWeight;
-            decimal rPtsPerReview = recSettings.ReliabilityPointsPerReview;
-            decimal neutralScore = recSettings.NeutralScoreForNewVendors;
-
-            decimal qualityScore = perfFeedbackCount > 0 ? (perfAvgQuality / 5.0m) * 100m : neutralScore;
-            decimal deliveryScore = perfFeedbackCount > 0 ? (perfAvgDelivery / 5.0m) * 100m : neutralScore;
-            decimal priceScore = (vp.UnitPrice > 0 && minPrice > 0)
-                ? Math.Round((minPrice / vp.UnitPrice) * 100m, 1)
-                : neutralScore;
-            decimal reliabilityBonus = Math.Min(rMaxBonus, perfFeedbackCount * rPtsPerReview);
-
-            decimal overallCompositeScore = Math.Round(
-                (qualityScore * qWeight) +
-                (deliveryScore * dWeight) +
-                (priceScore * pWeight) +
-                reliabilityBonus,
-                1
-            );
-
-            // Product-specific review calculations
-            productReviewsByVendor.TryGetValue(vp.VendorID, out var pReviews);
-            pReviews ??= new List<VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto>();
-
-            int productFeedbackCount = pReviews.Count;
-            decimal productAvgRating = productFeedbackCount > 0 ? Math.Round(pReviews.Average(r => r.Rating), 1) : 0m;
-            decimal productAvgQuality = productFeedbackCount > 0 ? Math.Round(pReviews.Average(r => r.ProductQualityRating), 1) : perfAvgQuality;
-            decimal productAvgDelivery = productFeedbackCount > 0 ? Math.Round(pReviews.Average(r => r.DeliveryRating), 1) : perfAvgDelivery;
-
-            var latestReview = pReviews.FirstOrDefault();
-            if (latestReview != null)
-            {
-                LatestReviewsByVendorDict[vp.VendorID] = latestReview;
-            }
-
-            recs.Add(new VendorRecommendationDto
-            {
-                VendorID = vp.VendorID,
-                VendorName = vName,
-                ProductID = productId,
-                ProductName = productName,
-                UnitPrice = vp.UnitPrice,
-                EstimatedDeliveryDays = vp.EstimatedDeliveryDays,
-                OverallScore = overallCompositeScore,
-                AverageRating = productAvgRating,
-                AverageQualityRating = productAvgQuality,
-                AverageDeliveryRating = productAvgDelivery,
-                TotalFeedbackCount = productFeedbackCount,
-                CompletedDeliveries = completedDeliveries,
-                SpoilageRate = spoilageRate,
-                HasActiveContract = hasUsableContract,
-                RemainingQuantity = remainingQty
-            });
         }
-
-        var rankedRecs = recs.AsEnumerable();
-        if (recSettings.PrioritizeActiveContracts)
+        catch (Exception ex)
         {
-            rankedRecs = rankedRecs.OrderByDescending(r => r.HasActiveContract && r.RemainingQuantity > 0)
-                .ThenByDescending(r => r.OverallScore)
-                .ThenBy(r => r.UnitPrice)
-                .ThenBy(r => r.EstimatedDeliveryDays)
-                .ThenBy(r => r.VendorID);
+            Console.WriteLine($"[Procurement] Error preloading reviews: {ex.Message}");
         }
-        else
-        {
-            rankedRecs = rankedRecs.OrderByDescending(r => r.OverallScore)
-                .ThenBy(r => r.UnitPrice)
-                .ThenBy(r => r.EstimatedDeliveryDays)
-                .ThenBy(r => r.VendorID);
-        }
-        var sortedRecs = rankedRecs.ToList();
-
-        for (int i = 0; i < sortedRecs.Count; i++)
-        {
-            var rec = sortedRecs[i];
-            rec.Rank = i + 1;
-            if (i == 0)
-            {
-                rec.SmartBadge = "Top Recommended";
-            }
-            else if (rec.AverageQualityRating >= recSettings.BestQualityThreshold)
-            {
-                rec.SmartBadge = "Best Quality";
-            }
-            else if (rec.UnitPrice == minPrice)
-            {
-                rec.SmartBadge = "Best Price";
-            }
-            else if (rec.AverageDeliveryRating >= recSettings.FastestDeliveryThreshold)
-            {
-                rec.SmartBadge = "Fastest Delivery";
-            }
-
-            if (i == 0)
-            {
-                var competitors = sortedRecs.Where(r => r.VendorID != rec.VendorID).ToList();
-                string compNames = competitors.Count > 0
-                    ? string.Join(", ", competitors.Select(c => c.VendorName))
-                    : "other suppliers";
-
-                decimal minOtherPrice = competitors.Count > 0 ? competitors.Min(c => c.UnitPrice) : rec.UnitPrice;
-                decimal priceDiff = rec.UnitPrice - minOtherPrice;
-
-                string spoilageText = rec.SpoilageRate.HasValue
-                    ? $"{rec.SpoilageRate.Value:0.0}% spoilage"
-                    : "0% reported spoilage";
-
-                int deliveredCount = rec.CompletedDeliveries > 0 ? rec.CompletedDeliveries : Math.Max(1, rec.TotalFeedbackCount);
-
-                if (priceDiff > 0 && competitors.Count > 0)
-                {
-                    rec.Recommendation = $"{rec.VendorName} is recommended over other suppliers ({compNames}) with a verified {rec.AverageQualityRating:0.0}/5 Quality rating across {deliveredCount} delivered orders with {spoilageText}.";
-                }
-                else if (rec.HasActiveContract && rec.RemainingQuantity > 0)
-                {
-                    rec.Recommendation = $"{rec.VendorName} is recommended with priority active contract allocation ({rec.RemainingQuantity:N0} {unit} remaining) and a verified {rec.AverageQualityRating:0.0}/5 Quality rating.";
-                }
-                else
-                {
-                    rec.Recommendation = $"{rec.VendorName} is recommended with the highest overall performance score and verified {rec.AverageQualityRating:0.0}/5 Quality rating.";
-                }
-            }
-            else if (rec.HasActiveContract && rec.RemainingQuantity > 0)
-            {
-                rec.Recommendation = "Active Contract Allocation";
-            }
-            else if (rec.UnitPrice == minPrice)
-            {
-                rec.Recommendation = $"Lowest unit price (Rs. {rec.UnitPrice:N2}) with {rec.AverageRating:0.0} customer rating.";
-            }
-            else
-            {
-                rec.Recommendation = "Alternative supplier candidate.";
-            }
-        }
-
-        return sortedRecs;
     }
 
     private async Task FetchVendorRecommendations()
@@ -988,19 +794,28 @@ public partial class Procurement : ComponentBase, IDisposable
 
         IsFindingVendors = true;
         RecommendationsError = null;
+        HasActiveContractsForSelectedProduct = false;
         StateHasChanged();
 
         try
         {
-            VendorRecommendations = await EvaluateVendorRecommendationsAsync(
-                SelectedProduct.ProductID,
-                SelectedProduct.ProductName,
-                SelectedProduct.Unit,
-                SelectedOutletId);
+            var response = await Api.GetRecommendationsForProductAsync(SelectedProduct.ProductID, SelectedOutletId);
 
-            if (VendorRecommendations.Count > 0 && SelectedVendorForProduct == null)
+            if (response != null && response.Recommendations != null)
             {
-                SelectedVendorForProduct = VendorRecommendations[0];
+                HasActiveContractsForSelectedProduct = response.HasActiveContracts;
+                VendorRecommendations = response.Recommendations;
+
+                if (VendorRecommendations.Count > 0 && SelectedVendorForProduct == null)
+                {
+                    SelectedVendorForProduct = VendorRecommendations[0];
+                }
+
+                await LoadLatestReviewsForVendorsAsync(VendorRecommendations, SelectedProduct.ProductID);
+            }
+            else
+            {
+                VendorRecommendations = new List<VendorRecommendationDto>();
             }
             RecommendationsError = null;
         }
@@ -1032,6 +847,7 @@ public partial class Procurement : ComponentBase, IDisposable
         AiErrorMessage = null;
         AiResponse = null;
         AiItemRecommendations.Clear();
+        AiItemHasActiveContracts.Clear();
         AiItemLoadingStates.Clear();
         AiItemErrorStates.Clear();
         AiSelectedVendors.Clear();
@@ -1091,17 +907,7 @@ public partial class Procurement : ComponentBase, IDisposable
                 await LoadProductsAsync();
             }
 
-            // Preload shared recommendation datasets once for multiple products
-            var vp = await Api.GetVendorProductsAsync();
-            var vendors = await Api.GetVendorsAsync();
-            var contracts = await Api.GetContractsAsync();
-            var perfs = await Api.GetVendorPerformanceSummariesAsync();
-            var settings = await Api.GetVendorRecommendationSettingsAsync();
-
-            var vendorDict = vendors?.ToDictionary(v => v.VendorID, v => v.VendorName) ?? new();
-            var perfDict = perfs?.ToDictionary(p => p.VendorID) ?? new();
-
-            // Evaluate each resolved item
+            // Evaluate each resolved item using contract-aware backend endpoint
             for (int i = 0; i < AiResponse.Items.Count; i++)
             {
                 var item = AiResponse.Items[i];
@@ -1112,31 +918,7 @@ public partial class Procurement : ComponentBase, IDisposable
 
                 if (string.Equals(item.ResolutionStatus, "Resolved", StringComparison.OrdinalIgnoreCase) && item.ProductID.HasValue)
                 {
-                    AiItemLoadingStates[itemIdx] = true;
-                    StateHasChanged();
-
-                    try
-                    {
-                        var recs = await EvaluateVendorRecommendationsAsync(
-                            item.ProductID.Value,
-                            item.ProductName ?? item.SpokenProductName,
-                            item.Unit,
-                            targetOutletId,
-                            vp, vendorDict, perfDict, contracts, settings);
-
-                        AiItemRecommendations[itemIdx] = recs;
-                        AiItemErrorStates[itemIdx] = null;
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"[Procurement] Error loading AI recs for item {item.ProductID}: {ex.Message}");
-                        AiItemRecommendations[itemIdx] = new();
-                        AiItemErrorStates[itemIdx] = "Unable to load vendor recommendations for this product.";
-                    }
-                    finally
-                    {
-                        AiItemLoadingStates[itemIdx] = false;
-                    }
+                    await LoadRecommendationsForAiItemAsync(itemIdx, item);
                 }
             }
         }
@@ -1162,17 +944,22 @@ public partial class Procurement : ComponentBase, IDisposable
 
         AiItemLoadingStates[itemIndex] = true;
         AiSelectedVendors[itemIndex] = null; // CRITICAL: NEVER PRESELECT!
+        AiItemHasActiveContracts[itemIndex] = false;
         StateHasChanged();
 
         try
         {
-            var recs = await EvaluateVendorRecommendationsAsync(
-                item.ProductID.Value,
-                item.ProductName ?? item.SpokenProductName,
-                item.Unit,
-                targetOutletId);
-
-            AiItemRecommendations[itemIndex] = recs;
+            var response = await Api.GetRecommendationsForProductAsync(item.ProductID.Value, targetOutletId);
+            if (response != null && response.Recommendations != null)
+            {
+                AiItemHasActiveContracts[itemIndex] = response.HasActiveContracts;
+                AiItemRecommendations[itemIndex] = response.Recommendations;
+                await LoadLatestReviewsForVendorsAsync(response.Recommendations, item.ProductID.Value);
+            }
+            else
+            {
+                AiItemRecommendations[itemIndex] = new List<VendorRecommendationDto>();
+            }
             AiItemErrorStates[itemIndex] = null;
         }
         catch (Exception ex)

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -20,12 +20,12 @@ public partial class CreateContract : ComponentBase
 
     private bool IsLoading { get; set; } = true;
     private bool IsProcessing { get; set; } = false;
-    private bool IsLoadingVendors { get; set; } = false;
     private bool IsSidebarCollapsed { get; set; } = false;
     private bool IsProfileDropdownOpen { get; set; } = false;
 
     private string? ErrorMessage { get; set; }
     private string? ValidationMessage { get; set; }
+    private string? SuccessMessage { get; set; }
 
     // Mode determination
     public bool IsStandaloneMode => (QuotationId ?? QueryQuotationId ?? 0) <= 0;
@@ -34,56 +34,111 @@ public partial class CreateContract : ComponentBase
     private QuotationDto? Quotation { get; set; }
     private PurchaseRequestDto? PurchaseRequest { get; set; }
 
-    // Shared & Standalone Properties
+    // Specifications & Schedule
     private string OrganizationName { get; set; } = "Organization";
     private string OutletName { get; set; } = "Outlet";
-    private string ProductName { get; set; } = string.Empty;
-    private string ProductCategory { get; set; } = "Produce";
-    private string Unit { get; set; } = "Kg";
-    private decimal TotalContractQuantity { get; set; }
-    private decimal UnitPrice { get; set; }
-    private decimal TaxAmount { get; set; }
-    private decimal TotalContractValue { get; set; }
-
-    // Standalone Specific Selections & Collections
     private int SelectedOutletId { get; set; } = 0;
-    private int SelectedProductId { get; set; } = 0;
     private List<OutletDto> OrganizationOutlets { get; set; } = new();
     private List<ProductDto> AvailableProducts { get; set; } = new();
+    private List<OutletDto> AllSystemOutlets { get; set; } = new();
 
     private DateTime StartDate { get; set; } = DateTime.Today;
-    private DateTime EndDate { get; set; } = DateTime.Today.AddDays(7);
+    private DateTime EndDate { get; set; } = DateTime.Today.AddDays(30);
     private string PaymentMethod { get; set; } = "Bank Transfer";
 
-    // ALLOCATION MODELS
-    public class AllocationRowModel
+    // Caches for fast multi-product candidate discovery
+    private List<VendorProductDto> _cachedVendorProducts = new();
+    private List<VendorDto> _cachedAllVendors = new();
+
+    // =========================================================================
+    // MULTI-PRODUCT LINE ITEM MODEL
+    // =========================================================================
+    // MULTI-PRODUCT LINE ITEM MODEL
+    // =========================================================================
+    public class ProductContractLine
+    {
+        public int ProductID { get; set; }
+        public string ProductName { get; set; } = string.Empty;
+        public string ProductCategory { get; set; } = "Produce";
+        public string Unit { get; set; } = "Kg";
+        public decimal ContractQuantity { get; set; }
+        public int SelectedVendorID { get; set; } = 0;
+        public string SelectedVendorName { get; set; } = string.Empty;
+        public List<VendorRecommendationDto> EligibleVendors { get; set; } = new();
+        public bool IsLoadingVendors { get; set; } = false;
+        public bool HasActiveContracts { get; set; } = false;
+        public string SortBy { get; set; } = "Overall Reviews";
+        public Dictionary<int, VendorEvalMetrics> VendorMetrics { get; set; } = new();
+
+        public IEnumerable<VendorRecommendationDto> GetSortedVendors()
+        {
+            if (EligibleVendors == null || EligibleVendors.Count == 0)
+                return Enumerable.Empty<VendorRecommendationDto>();
+
+            if (string.Equals(SortBy, "Unit Price", StringComparison.OrdinalIgnoreCase))
+            {
+                return EligibleVendors
+                    .OrderBy(v => v.UnitPrice > 0 ? v.UnitPrice : decimal.MaxValue)
+                    .ThenBy(v => v.VendorName, StringComparer.OrdinalIgnoreCase);
+            }
+            else // Default: "Overall Reviews" (AverageRating DESC -> TotalFeedbackCount DESC -> VendorName ASC)
+            {
+                return EligibleVendors
+                    .OrderByDescending(v => v.AverageRating)
+                    .ThenByDescending(v => v.TotalFeedbackCount)
+                    .ThenBy(v => v.VendorName, StringComparer.OrdinalIgnoreCase);
+            }
+        }
+    }
+
+    public class VendorContractGroup
     {
         public int VendorID { get; set; }
         public string VendorName { get; set; } = string.Empty;
-        public decimal AllocationPercentage { get; set; } = 100m;
-        public decimal AllocatedQuantity { get; set; }
-        public bool IsWinner { get; set; } = false;
+        public List<ProductContractLine> Products { get; set; } = new();
+        public decimal TotalQuantity => Products.Sum(p => p.ContractQuantity);
     }
 
-    private List<AllocationRowModel> AllocationRows { get; set; } = new();
-    private List<VendorDto> AllEligibleVendors { get; set; } = new();
-    private int SelectedVendorToAddId { get; set; } = 0;
+    private List<ProductContractLine> ProductLines { get; set; } = new();
 
-    private decimal TotalAllocationPercentage => AllocationRows.Sum(r => r.AllocationPercentage);
-    private decimal TotalAllocatedQuantity => AllocationRows.Sum(r => r.AllocatedQuantity);
+    // New product line entry fields
+    private int NewProductId { get; set; } = 0;
+    private decimal NewProductQuantity { get; set; } = 0;
+    private string NewProductUnit =>
+        AvailableProducts.FirstOrDefault(p => p.ProductID == NewProductId)?.Unit ?? "Kg";
 
-    private List<VendorDto> UnallocatedEligibleVendors =>
-        AllEligibleVendors.Where(v => !AllocationRows.Any(r => r.VendorID == v.VendorID)).ToList();
+    // Computed grouping preview
+    public List<VendorContractGroup> GroupedContracts => ProductLines
+        .Where(p => p.SelectedVendorID > 0)
+        .GroupBy(p => p.SelectedVendorID)
+        .Select(g => new VendorContractGroup
+        {
+            VendorID = g.Key,
+            VendorName = g.First().EligibleVendors.FirstOrDefault(v => v.VendorID == g.Key)?.VendorName
+                         ?? (g.First().SelectedVendorName.Length > 0 ? g.First().SelectedVendorName : $"Vendor #{g.Key}"),
+            Products = g.ToList()
+        })
+        .ToList();
 
+    public int UnassignedProductsCount => ProductLines.Count(p => p.SelectedVendorID <= 0);
+
+    // Products available for addition (exclude already added products)
+    public List<ProductDto> SelectableProducts => AvailableProducts
+        .Where(p => !ProductLines.Any(pl => pl.ProductID == p.ProductID))
+        .OrderBy(p => p.ProductName)
+        .ToList();
+
+    // =========================================================================
     // VENDOR REVIEWS & EVALUATION METRICS
+    // =========================================================================
     private Dictionary<int, List<VendorReviewDto>> VendorReviewsDict { get; set; } = new();
-    private Dictionary<int, VendorProductDto> VendorProductsDict { get; set; } = new();
-    private List<OutletDto> AllSystemOutlets { get; set; } = new();
 
-    // REVIEW MODAL STATE
+    // Review Modal State
     private bool IsReviewsModalOpen { get; set; } = false;
     private bool IsLoadingVendorReviews { get; set; } = false;
-    private VendorDto? SelectedVendorForReviews { get; set; }
+    private VendorRecommendationDto? SelectedVendorForReviews { get; set; }
+    private string SelectedProductForReviewsName { get; set; } = string.Empty;
+    private int SelectedProductForReviewsId { get; set; } = 0;
     private List<VendorReviewDto> CurrentVendorReviews { get; set; } = new();
 
     private decimal CurrentVendorAvgRating => CurrentVendorReviews.Count > 0 ? (decimal)Math.Round(CurrentVendorReviews.Average(r => r.Rating), 1) : 0m;
@@ -102,8 +157,16 @@ public partial class CreateContract : ComponentBase
         public VendorReviewDto? LatestReview { get; set; }
     }
 
-    private bool CanSubmit => !IsProcessing && TotalAllocationPercentage == 100m &&
-        (!IsStandaloneMode || (SelectedOutletId > 0 && SelectedProductId > 0 && TotalContractQuantity > 0 && AllocationRows.Count > 0 && EndDate > StartDate && !string.IsNullOrWhiteSpace(PaymentMethod)));
+    // =========================================================================
+    // VALIDATION & SUBMISSION CRITERIA
+    // =========================================================================
+    private bool CanSubmit =>
+        !IsProcessing &&
+        SelectedOutletId > 0 &&
+        ProductLines.Count > 0 &&
+        ProductLines.All(p => p.ContractQuantity > 0 && p.SelectedVendorID > 0) &&
+        EndDate > StartDate &&
+        !string.IsNullOrWhiteSpace(PaymentMethod);
 
     private void ToggleSidebar()
     {
@@ -151,13 +214,13 @@ public partial class CreateContract : ComponentBase
 
         try
         {
-            // Load organization details
+            // 1. Load organization details
             var orgs = await Api.GetOrganizationsAsync();
             int orgId = Auth.OrganizationID ?? 0;
             var org = orgs?.FirstOrDefault(og => og.OrganizationID == orgId);
             OrganizationName = org?.OrganizationName ?? "Organization";
 
-            // Load outlets belonging to this organization
+            // 2. Load outlets belonging to this organization
             var allOutlets = await Api.GetOutletsAsync();
             AllSystemOutlets = allOutlets ?? new();
             if (orgId > 0)
@@ -191,23 +254,20 @@ public partial class CreateContract : ComponentBase
                 OutletName = string.Empty;
             }
 
-            // Load active products
+            // 3. Load active products
             var products = await Api.GetProductsAsync();
             AvailableProducts = (products ?? new List<ProductDto>())
                 .Where(p => string.IsNullOrWhiteSpace(p.Status) || string.Equals(p.Status, "Active", StringComparison.OrdinalIgnoreCase))
                 .OrderBy(p => p.ProductName)
                 .ToList();
 
-            SelectedProductId = 0;
-            ProductName = string.Empty;
-            ProductCategory = string.Empty;
-            Unit = "Kg";
-            TotalContractQuantity = 0;
-            AllocationRows.Clear();
-            AllEligibleVendors.Clear();
-            VendorReviewsDict.Clear();
-            VendorProductsDict.Clear();
-            SelectedVendorToAddId = 0;
+            // 4. Pre-cache vendor product relationships and vendors
+            _cachedVendorProducts = await Api.GetVendorProductsAsync() ?? new();
+            _cachedAllVendors = await Api.GetVendorsAsync() ?? new();
+
+            ProductLines.Clear();
+            NewProductId = 0;
+            NewProductQuantity = 0;
             StartDate = DateTime.Today;
             EndDate = DateTime.Today.AddDays(30);
             PaymentMethod = "Bank Transfer";
@@ -228,93 +288,221 @@ public partial class CreateContract : ComponentBase
     {
         var outlet = OrganizationOutlets.FirstOrDefault(o => o.OutletID == SelectedOutletId);
         OutletName = outlet?.OutletName ?? string.Empty;
-        await CheckAndLoadEligibleVendors();
-    }
 
-    private async Task OnProductSelected()
-    {
-        var prod = AvailableProducts.FirstOrDefault(p => p.ProductID == SelectedProductId);
-        if (prod != null)
+        // Re-evaluate eligible vendors for all added product lines
+        if (ProductLines.Count > 0)
         {
-            ProductName = prod.ProductName;
-            ProductCategory = !string.IsNullOrWhiteSpace(prod.Category) ? prod.Category : "Produce";
-            Unit = !string.IsNullOrWhiteSpace(prod.Unit) ? prod.Unit : "Kg";
-        }
-        else
-        {
-            ProductName = string.Empty;
-            ProductCategory = string.Empty;
-            Unit = "Kg";
-        }
-
-        // Reset existing vendor allocations when product changes
-        AllocationRows.Clear();
-        SelectedVendorToAddId = 0;
-
-        await CheckAndLoadEligibleVendors();
-    }
-
-    private async Task CheckAndLoadEligibleVendors()
-    {
-        if (SelectedOutletId > 0 && SelectedProductId > 0)
-        {
-            await LoadEligibleVendorsAsync();
-        }
-        else
-        {
-            AllEligibleVendors.Clear();
-            AllocationRows.Clear();
-            VendorReviewsDict.Clear();
-            VendorProductsDict.Clear();
-            SelectedVendorToAddId = 0;
+            foreach (var line in ProductLines)
+            {
+                await LoadEligibleVendorsForProductLineAsync(line);
+            }
         }
         StateHasChanged();
     }
 
-    private async Task LoadEligibleVendorsAsync()
+    // =========================================================================
+    // MULTI-PRODUCT LINE ACTIONS
+    // =========================================================================
+    private async Task AddProductLine()
     {
+        ValidationMessage = null;
+
+        if (NewProductId <= 0)
+        {
+            ValidationMessage = "Please choose a product to add.";
+            return;
+        }
+
+        if (NewProductQuantity <= 0)
+        {
+            ValidationMessage = "Planning quantity must be greater than zero.";
+            return;
+        }
+
+        var prod = AvailableProducts.FirstOrDefault(p => p.ProductID == NewProductId);
+        if (prod == null) return;
+
+        if (ProductLines.Any(p => p.ProductID == prod.ProductID))
+        {
+            ValidationMessage = $"{prod.ProductName} has already been added to the contract preparation list.";
+            return;
+        }
+
+        var line = new ProductContractLine
+        {
+            ProductID = prod.ProductID,
+            ProductName = prod.ProductName,
+            ProductCategory = !string.IsNullOrWhiteSpace(prod.Category) ? prod.Category : "Produce",
+            Unit = !string.IsNullOrWhiteSpace(prod.Unit) ? prod.Unit : "Kg",
+            ContractQuantity = NewProductQuantity,
+            SelectedVendorID = 0
+        };
+
+        ProductLines.Add(line);
+
+        // Reset input fields
+        NewProductId = 0;
+        NewProductQuantity = 0;
+
+        // Discover eligible vendors for this specific product
+        await LoadEligibleVendorsForProductLineAsync(line);
+    }
+
+    private void RemoveProductLine(int productId)
+    {
+        ProductLines.RemoveAll(p => p.ProductID == productId);
+        ValidationMessage = null;
+        StateHasChanged();
+    }
+
+    private void OnProductQuantityChanged(ProductContractLine line, decimal newQuantity)
+    {
+        if (newQuantity < 0) newQuantity = 0;
+        line.ContractQuantity = newQuantity;
+        StateHasChanged();
+    }
+
+    private void SelectVendorForProductLine(ProductContractLine line, VendorRecommendationDto vendor)
+    {
+        if (line.SelectedVendorID == vendor.VendorID)
+        {
+            line.SelectedVendorID = 0;
+            line.SelectedVendorName = string.Empty;
+        }
+        else
+        {
+            line.SelectedVendorID = vendor.VendorID;
+            line.SelectedVendorName = vendor.VendorName;
+        }
+        StateHasChanged();
+    }
+
+    private void OnSortByChanged(ProductContractLine line, string? newSort)
+    {
+        line.SortBy = string.IsNullOrWhiteSpace(newSort) ? "Overall Reviews" : newSort;
+        StateHasChanged();
+    }
+
+    private void OnProductVendorChanged(ProductContractLine line, ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int vId))
+        {
+            line.SelectedVendorID = vId;
+            var vendor = line.EligibleVendors.FirstOrDefault(v => v.VendorID == vId);
+            line.SelectedVendorName = vendor?.VendorName ?? string.Empty;
+        }
+        else
+        {
+            line.SelectedVendorID = 0;
+            line.SelectedVendorName = string.Empty;
+        }
+        StateHasChanged();
+    }
+
+    private async Task LoadEligibleVendorsForProductLineAsync(ProductContractLine line)
+    {
+        line.IsLoadingVendors = true;
+        StateHasChanged();
+
         try
         {
-            IsLoadingVendors = true;
-            StateHasChanged();
+            List<VendorRecommendationDto> vendors = new();
+            bool hasActiveContracts = false;
 
-            var vendorProducts = await Api.GetVendorProductsAsync();
-            var activeVP = (vendorProducts ?? new List<VendorProductDto>())
-                .Where(vp => vp.ProductID == SelectedProductId && string.Equals(vp.Status, "Active", StringComparison.OrdinalIgnoreCase))
-                .ToList();
+            if (SelectedOutletId > 0)
+            {
+                var vendorResponse = await Api.GetContractEligibleVendorsAsync(line.ProductID, SelectedOutletId);
+                if (vendorResponse != null)
+                {
+                    hasActiveContracts = vendorResponse.HasActiveContracts;
+                    vendors = vendorResponse.Vendors ?? new();
+                }
+            }
 
-            var activeProductVendorIds = activeVP
-                .Select(vp => vp.VendorID)
-                .ToHashSet();
+            // Fallback if no recommendation endpoint results or SelectedOutletId == 0
+            if (vendors.Count == 0 && SelectedOutletId <= 0)
+            {
+                if (_cachedVendorProducts.Count == 0)
+                {
+                    _cachedVendorProducts = await Api.GetVendorProductsAsync() ?? new();
+                }
+                if (_cachedAllVendors.Count == 0)
+                {
+                    _cachedAllVendors = await Api.GetVendorsAsync() ?? new();
+                }
 
-            VendorProductsDict = activeVP
-                .GroupBy(vp => vp.VendorID)
-                .ToDictionary(g => g.Key, g => g.First());
+                var activeVP = _cachedVendorProducts
+                    .Where(vp => vp.ProductID == line.ProductID && string.Equals(vp.Status, "Active", StringComparison.OrdinalIgnoreCase))
+                    .ToList();
 
-            var allVendors = await Api.GetVendorsAsync();
-            AllEligibleVendors = (allVendors ?? new List<VendorDto>())
-                .Where(v => string.Equals(v.Status, "Active", StringComparison.OrdinalIgnoreCase) && activeProductVendorIds.Contains(v.VendorID))
-                .OrderBy(v => v.VendorName)
-                .ToList();
+                var activeVendorIds = activeVP.Select(vp => vp.VendorID).ToHashSet();
 
-            // Prune any previously allocated vendors that are no longer eligible
-            AllocationRows.RemoveAll(r => !AllEligibleVendors.Any(v => v.VendorID == r.VendorID));
-            OnAllocationPercentageChanged();
+                var matchedVendors = _cachedAllVendors
+                    .Where(v => string.Equals(v.Status, "Active", StringComparison.OrdinalIgnoreCase) && activeVendorIds.Contains(v.VendorID))
+                    .OrderBy(v => v.VendorName)
+                    .ToList();
 
-            // Concurrently fetch reviews for all eligible vendors
-            await LoadReviewsForEligibleVendorsAsync();
+                vendors = matchedVendors.Select(v =>
+                {
+                    var vp = activeVP.FirstOrDefault(p => p.VendorID == v.VendorID);
+                    return new VendorRecommendationDto
+                    {
+                        VendorID = v.VendorID,
+                        VendorName = v.VendorName,
+                        ProductID = line.ProductID,
+                        ProductName = line.ProductName,
+                        UnitPrice = vp?.UnitPrice ?? 0m,
+                        EstimatedDeliveryDays = vp?.EstimatedDeliveryDays ?? 0,
+                        AverageRating = 0m,
+                        TotalFeedbackCount = 0
+                    };
+                }).ToList();
+            }
+
+            line.EligibleVendors = vendors;
+            line.HasActiveContracts = hasActiveContracts;
+
+            line.VendorMetrics.Clear();
+            foreach (var v in vendors)
+            {
+                line.VendorMetrics[v.VendorID] = new VendorEvalMetrics
+                {
+                    UnitRate = v.UnitPrice,
+                    EstimatedDeliveryDays = v.EstimatedDeliveryDays,
+                    ReviewCount = v.TotalFeedbackCount,
+                    AverageRating = v.AverageRating,
+                    AverageQualityRating = v.AverageQualityRating,
+                    AverageDeliveryRating = v.AverageDeliveryRating
+                };
+            }
+
+            // Auto-select if exactly 1 eligible vendor exists
+            if (line.EligibleVendors.Count == 1)
+            {
+                line.SelectedVendorID = line.EligibleVendors[0].VendorID;
+                line.SelectedVendorName = line.EligibleVendors[0].VendorName;
+            }
+            else if (line.SelectedVendorID > 0 && !line.EligibleVendors.Any(v => v.VendorID == line.SelectedVendorID))
+            {
+                // Previously selected vendor is no longer eligible (e.g. outlet changed)
+                line.SelectedVendorID = 0;
+                line.SelectedVendorName = string.Empty;
+            }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[CreateContract] LoadEligibleVendorsAsync error: {ex.Message}");
+            Console.WriteLine($"[CreateContract] Error loading vendors for product {line.ProductID}: {ex.Message}");
         }
         finally
         {
-            IsLoadingVendors = false;
+            line.IsLoadingVendors = false;
             StateHasChanged();
         }
     }
 
+    // =========================================================================
+    // QUOTATION MODE HANDLING
+    // =========================================================================
     private async Task LoadQuotationData(int qId)
     {
         IsLoading = true;
@@ -328,26 +516,6 @@ public partial class CreateContract : ComponentBase
                 return;
             }
 
-            int currentProductId = 0;
-            if (Quotation.Items != null && Quotation.Items.Count > 0)
-            {
-                var qItem = Quotation.Items.First();
-                currentProductId = qItem.ProductID;
-                UnitPrice = qItem.UnitPrice;
-                TaxAmount = qItem.TaxAmount;
-                TotalContractQuantity = qItem.Quantity;
-                TotalContractValue = Quotation.Items.Sum(i => i.TotalAmount > 0 ? i.TotalAmount : (i.Quantity * i.UnitPrice + i.TaxAmount));
-
-                var products = await Api.GetProductsAsync();
-                var p = products?.FirstOrDefault(pr => pr.ProductID == qItem.ProductID);
-                if (p != null)
-                {
-                    ProductName = p.ProductName;
-                    ProductCategory = !string.IsNullOrWhiteSpace(p.Category) ? p.Category : "Produce";
-                    Unit = !string.IsNullOrWhiteSpace(p.Unit) ? p.Unit : "Kg";
-                }
-            }
-
             var requests = await Api.GetPurchaseRequestsAsync();
             PurchaseRequest = requests?.FirstOrDefault(pr => pr.RequestID == Quotation.RequestID);
 
@@ -357,8 +525,8 @@ public partial class CreateContract : ComponentBase
             if (targetOutletId > 0)
             {
                 var o = outlets?.FirstOrDefault(outl => outl.OutletID == targetOutletId);
-                OutletName = !string.IsNullOrWhiteSpace(o?.OutletName) 
-                    ? o.OutletName 
+                OutletName = !string.IsNullOrWhiteSpace(o?.OutletName)
+                    ? o.OutletName
                     : (!string.IsNullOrWhiteSpace(o?.Address) ? $"{o.Address.Split(',')[0].Trim()} Outlet" : $"Outlet #{targetOutletId}");
                 SelectedOutletId = targetOutletId;
             }
@@ -377,63 +545,62 @@ public partial class CreateContract : ComponentBase
             var org = orgs?.FirstOrDefault(og => og.OrganizationID == orgId);
             OrganizationName = org?.OrganizationName ?? "Organization";
 
-            if (PurchaseRequest != null && PurchaseRequest.Items != null && PurchaseRequest.Items.Count > 0)
-            {
-                var prItem = PurchaseRequest.Items.First();
-                if (TotalContractQuantity == 0) TotalContractQuantity = prItem.Quantity;
-                if (string.IsNullOrEmpty(Unit) || Unit == "Units") Unit = prItem.Unit ?? "Kg";
-                if (currentProductId == 0) currentProductId = prItem.ProductID;
-                if (string.IsNullOrEmpty(ProductName)) ProductName = prItem.ProductName;
-            }
-
             if (Quotation.ValidUntil > StartDate)
             {
                 EndDate = Quotation.ValidUntil;
             }
 
-            var allVendors = await Api.GetVendorsAsync();
-            var primaryVendor = allVendors?.FirstOrDefault(v => v.VendorID == Quotation.VendorID);
+            // Pre-cache vendors and vendor products
+            _cachedVendorProducts = await Api.GetVendorProductsAsync() ?? new();
+            _cachedAllVendors = await Api.GetVendorsAsync() ?? new();
+
+            var products = await Api.GetProductsAsync();
+            AvailableProducts = products ?? new();
+
+            var primaryVendor = _cachedAllVendors.FirstOrDefault(v => v.VendorID == Quotation.VendorID);
             string primaryVendorName = primaryVendor?.VendorName ?? $"Vendor #{Quotation.VendorID}";
 
-            // Discover eligible vendors dynamically for this product
-            var vendorProducts = await Api.GetVendorProductsAsync();
-            var activeVP = (vendorProducts ?? new List<VendorProductDto>())
-                .Where(vp => vp.ProductID == currentProductId && string.Equals(vp.Status, "Active", StringComparison.OrdinalIgnoreCase))
-                .ToList();
+            ProductLines.Clear();
 
-            var activeProductVendorIds = activeVP
-                .Select(vp => vp.VendorID)
-                .ToHashSet();
-
-            VendorProductsDict = activeVP
-                .GroupBy(vp => vp.VendorID)
-                .ToDictionary(g => g.Key, g => g.First());
-
-            AllEligibleVendors = (allVendors ?? new List<VendorDto>())
-                .Where(v => string.Equals(v.Status, "Active", StringComparison.OrdinalIgnoreCase) &&
-                           (v.VendorID == Quotation.VendorID || activeProductVendorIds.Contains(v.VendorID)))
-                .ToList();
-
-            SelectedProductId = currentProductId;
-            await LoadReviewsForEligibleVendorsAsync();
-
-            // Initialize allocation with 100% to accepted quotation winner
-            AllocationRows = new List<AllocationRowModel>
+            // Populate product lines from quotation items
+            if (Quotation.Items != null && Quotation.Items.Count > 0)
             {
-                new AllocationRowModel
+                foreach (var qItem in Quotation.Items)
                 {
-                    VendorID = Quotation.VendorID,
-                    VendorName = primaryVendorName,
-                    AllocationPercentage = 100m,
-                    AllocatedQuantity = TotalContractQuantity,
-                    IsWinner = true
+                    var p = AvailableProducts.FirstOrDefault(pr => pr.ProductID == qItem.ProductID);
+                    var line = new ProductContractLine
+                    {
+                        ProductID = qItem.ProductID,
+                        ProductName = p?.ProductName ?? $"Product #{qItem.ProductID}",
+                        ProductCategory = !string.IsNullOrWhiteSpace(p?.Category) ? p.Category : "Produce",
+                        Unit = !string.IsNullOrWhiteSpace(p?.Unit) ? p.Unit : "Kg",
+                        ContractQuantity = qItem.Quantity,
+                        SelectedVendorID = Quotation.VendorID,
+                        SelectedVendorName = primaryVendorName
+                    };
+
+                    ProductLines.Add(line);
+                    await LoadEligibleVendorsForProductLineAsync(line);
+
+                    // Ensure quotation winner vendor is included in eligible vendors
+                    if (!line.EligibleVendors.Any(v => v.VendorID == Quotation.VendorID) && primaryVendor != null)
+                    {
+                        line.EligibleVendors.Insert(0, new VendorRecommendationDto
+                        {
+                            VendorID = primaryVendor.VendorID,
+                            VendorName = primaryVendor.VendorName,
+                            ProductID = line.ProductID,
+                            ProductName = line.ProductName,
+                            UnitPrice = 0m
+                        });
+                    }
                 }
-            };
+            }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"[CreateContract] LoadQuotationData error: {ex.Message}");
-            ErrorMessage = "An error occurred while loading contract specifications.";
+            ErrorMessage = "An error occurred while loading contract specifications from quotation.";
         }
         finally
         {
@@ -442,241 +609,121 @@ public partial class CreateContract : ComponentBase
         }
     }
 
-    private void OnTotalQuantityChanged()
+    // =========================================================================
+    // SUBMISSION LOGIC (MULTI-PRODUCT ASSIGNMENTS)
+    // =========================================================================
+    private async Task SubmitContractCreation()
     {
-        if (TotalContractQuantity < 0) TotalContractQuantity = 0;
-        OnAllocationPercentageChanged();
-    }
-
-    private void OnAllocationPercentageChanged()
-    {
-        foreach (var row in AllocationRows)
+        if (SelectedOutletId <= 0)
         {
-            if (row.AllocationPercentage < 0) row.AllocationPercentage = 0;
-            if (row.AllocationPercentage > 100) row.AllocationPercentage = 100;
-            row.AllocatedQuantity = Math.Round(TotalContractQuantity * row.AllocationPercentage / 100m, 2, MidpointRounding.AwayFromZero);
+            ValidationMessage = "Please select an outlet.";
+            return;
         }
-        StateHasChanged();
-    }
 
-    private void AddSelectedVendor()
-    {
-        if (SelectedVendorToAddId <= 0) return;
-        var vendor = AllEligibleVendors.FirstOrDefault(v => v.VendorID == SelectedVendorToAddId);
-        if (vendor == null) return;
-
-        if (!AllocationRows.Any(r => r.VendorID == vendor.VendorID))
+        if (ProductLines.Count == 0)
         {
-            decimal defaultPercent;
-            if (AllocationRows.Count == 0)
+            ValidationMessage = "Please add at least one product line to the contract.";
+            return;
+        }
+
+        var unassigned = ProductLines.FirstOrDefault(p => p.SelectedVendorID <= 0);
+        if (unassigned != null)
+        {
+            ValidationMessage = $"Please assign an eligible vendor for '{unassigned.ProductName}'.";
+            return;
+        }
+
+        var zeroQty = ProductLines.FirstOrDefault(p => p.ContractQuantity <= 0);
+        if (zeroQty != null)
+        {
+            ValidationMessage = $"Planning quantity for '{zeroQty.ProductName}' must be greater than zero.";
+            return;
+        }
+
+        if (EndDate <= StartDate)
+        {
+            ValidationMessage = "End date must be after the start date.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(PaymentMethod))
+        {
+            ValidationMessage = "Please select a payment method.";
+            return;
+        }
+
+        IsProcessing = true;
+        ValidationMessage = null;
+        ErrorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            // Build multi-product assignments for Phase 2 backend
+            var assignments = ProductLines.Select(p => new ContractProductAssignmentDto
             {
-                defaultPercent = 100m;
+                ProductID = p.ProductID,
+                VendorID = p.SelectedVendorID,
+                ContractQuantity = p.ContractQuantity
+            }).ToList();
+
+            // Assemble CreateContractCommand with assignments and legacy backward-compatibility fields
+            var command = new CreateContractCommand
+            {
+                QuotationID = Quotation?.QuotationID,
+                OutletID = SelectedOutletId,
+                StartDate = StartDate,
+                EndDate = EndDate,
+                PaymentMethod = PaymentMethod,
+                Assignments = assignments,
+                // Legacy fields preserved for backward compatibility
+                ProductID = assignments.FirstOrDefault()?.ProductID ?? 0,
+                TotalQuantity = assignments.Sum(a => a.ContractQuantity),
+                Allocations = assignments.Select(a => new CreateContractVendorAllocationDto
+                {
+                    VendorID = a.VendorID,
+                    AllocationPercentage = 100m
+                }).ToList()
+            };
+
+            var response = await Api.CreateContractFullAsync(command);
+            var createdContract = response?.Contract ?? response?.Contracts?.FirstOrDefault();
+
+            if (createdContract != null && createdContract.ContractID > 0)
+            {
+                // Multi-contract vs single-contract navigation
+                if (response?.Contracts != null && response.Contracts.Count > 1)
+                {
+                    Nav.NavigateTo("/organization/contracts");
+                }
+                else
+                {
+                    Nav.NavigateTo($"/contract/{createdContract.ContractID}");
+                }
             }
             else
             {
-                decimal remainingPercent = 100m - TotalAllocationPercentage;
-                defaultPercent = remainingPercent > 0 ? remainingPercent : 0m;
-            }
-
-            AllocationRows.Add(new AllocationRowModel
-            {
-                VendorID = vendor.VendorID,
-                VendorName = vendor.VendorName,
-                AllocationPercentage = defaultPercent,
-                AllocatedQuantity = Math.Round(TotalContractQuantity * defaultPercent / 100m, 2, MidpointRounding.AwayFromZero),
-                IsWinner = false
-            });
-
-            SelectedVendorToAddId = 0;
-            OnAllocationPercentageChanged();
-        }
-    }
-
-    private void RemoveVendorAllocation(int vendorId)
-    {
-        // In quotation mode, prevent removing if 1 row remains or if winner
-        if (!IsStandaloneMode && AllocationRows.Count <= 1) return;
-
-        AllocationRows.RemoveAll(r => r.VendorID == vendorId);
-        if (!IsStandaloneMode && AllocationRows.Count == 1)
-        {
-            AllocationRows[0].AllocationPercentage = 100m;
-        }
-        OnAllocationPercentageChanged();
-    }
-
-    private async Task SubmitContractCreation()
-    {
-        if (IsStandaloneMode)
-        {
-            if (SelectedOutletId <= 0)
-            {
-                ValidationMessage = "Please select an outlet.";
-                return;
-            }
-
-            if (SelectedProductId <= 0)
-            {
-                ValidationMessage = "Please select a product.";
-                return;
-            }
-
-            if (TotalContractQuantity <= 0)
-            {
-                ValidationMessage = "Total contract quantity must be greater than zero.";
-                return;
-            }
-
-            if (AllocationRows.Count == 0)
-            {
-                ValidationMessage = "Please add at least one vendor to the contract allocation.";
-                return;
-            }
-
-            if (TotalAllocationPercentage != 100m)
-            {
-                ValidationMessage = $"Total allocation must equal exactly 100%. Current total: {TotalAllocationPercentage:0.##}%.";
-                return;
-            }
-
-            if (EndDate <= StartDate)
-            {
-                ValidationMessage = "End date must be after the start date.";
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(PaymentMethod))
-            {
-                ValidationMessage = "Please select a payment method.";
-                return;
-            }
-
-            var positiveAllocations = AllocationRows.Where(r => r.AllocationPercentage > 0).ToList();
-            if (positiveAllocations.Count == 0)
-            {
-                ValidationMessage = "At least one vendor must have a positive allocation percentage.";
-                return;
-            }
-
-            IsProcessing = true;
-            ValidationMessage = null;
-            ErrorMessage = null;
-            StateHasChanged();
-
-            try
-            {
-                var allocationsPayload = positiveAllocations.Select(r => new CreateContractVendorAllocationDto
+                // Fallback attempt via standard Api.CreateContractAsync
+                var fallbackContract = await Api.CreateContractAsync(command);
+                if (fallbackContract != null && fallbackContract.ContractID > 0)
                 {
-                    VendorID = r.VendorID,
-                    AllocationPercentage = r.AllocationPercentage
-                }).ToList();
-
-                var command = new CreateContractCommand
-                {
-                    QuotationID = null,
-                    OutletID = SelectedOutletId,
-                    ProductID = SelectedProductId,
-                    TotalQuantity = TotalContractQuantity,
-                    StartDate = StartDate,
-                    EndDate = EndDate,
-                    PaymentMethod = PaymentMethod,
-                    Allocations = allocationsPayload
-                };
-
-                var contract = await Api.CreateContractAsync(command);
-                if (contract != null && contract.ContractID > 0)
-                {
-                    Nav.NavigateTo($"/contract/{contract.ContractID}");
+                    Nav.NavigateTo($"/contract/{fallbackContract.ContractID}");
                 }
                 else
                 {
-                    ErrorMessage = "Failed to create contract. Ensure allocation percentages total exactly 100% and selected vendors actively supply this product.";
+                    ErrorMessage = "Failed to create contracts. Please ensure selected vendors actively supply the assigned products and try again.";
                 }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[CreateContract] Standalone submit error: {ex.Message}");
-                ErrorMessage = "An error occurred while communicating with the server to create the contract.";
-            }
-            finally
-            {
-                IsProcessing = false;
-                StateHasChanged();
             }
         }
-        else
+        catch (Exception ex)
         {
-            if (Quotation == null || Quotation.QuotationID <= 0) return;
-
-            if (TotalAllocationPercentage != 100m)
-            {
-                ValidationMessage = $"Allocation must total 100%. Current total: {TotalAllocationPercentage:0.##}%.";
-                return;
-            }
-
-            var positiveAllocations = AllocationRows.Where(r => r.AllocationPercentage > 0).ToList();
-            if (positiveAllocations.Count == 0)
-            {
-                ValidationMessage = "At least one vendor must have a positive allocation percentage.";
-                return;
-            }
-
-            IsProcessing = true;
-            ValidationMessage = null;
-            ErrorMessage = null;
+            Console.WriteLine($"[CreateContract] Submit error: {ex.Message}");
+            ErrorMessage = "An error occurred while communicating with the server to create the contract.";
+        }
+        finally
+        {
+            IsProcessing = false;
             StateHasChanged();
-
-            try
-            {
-                var allocationsPayload = positiveAllocations.Select(r => new CreateContractVendorAllocationDto
-                {
-                    VendorID = r.VendorID,
-                    AllocationPercentage = r.AllocationPercentage
-                }).ToList();
-
-                var contract = await Api.CreateContractFromQuotationAsync(Quotation.QuotationID, allocationsPayload);
-                if (contract == null || contract.ContractID <= 0)
-                {
-                    // Direct fallback via CreateContractCommand
-                    var qItem = Quotation.Items?.FirstOrDefault();
-                    int prodId = qItem?.ProductID ?? 0;
-                    decimal qty = qItem?.Quantity ?? TotalContractQuantity;
-                    int outletId = PurchaseRequest?.OutletID ?? 0;
-                    if (outletId == 0 && Auth.OutletID.HasValue) outletId = Auth.OutletID.Value;
-
-                    var cmd = new CreateContractCommand
-                    {
-                        QuotationID = Quotation.QuotationID,
-                        OutletID = outletId,
-                        ProductID = prodId,
-                        TotalQuantity = qty,
-                        StartDate = StartDate,
-                        EndDate = EndDate,
-                        PaymentMethod = PaymentMethod,
-                        Allocations = allocationsPayload
-                    };
-                    contract = await Api.CreateContractAsync(cmd);
-                }
-
-                if (contract != null && contract.ContractID > 0)
-                {
-                    Nav.NavigateTo($"/contract/{contract.ContractID}");
-                }
-                else
-                {
-                    ErrorMessage = "Failed to create contract. Ensure allocation percentages total exactly 100% and selected vendors actively supply this product.";
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[CreateContract] Submit error: {ex.Message}");
-                ErrorMessage = "An error occurred while communicating with the server to create the contract.";
-            }
-            finally
-            {
-                IsProcessing = false;
-                StateHasChanged();
-            }
         }
     }
 
@@ -685,73 +732,14 @@ public partial class CreateContract : ComponentBase
         Nav.NavigateTo("/organization/contracts");
     }
 
-    // --- VENDOR REVIEWS LOADING & EVALUATION SUPPORT ---
-    private async Task LoadReviewsForEligibleVendorsAsync()
-    {
-        if (SelectedProductId <= 0 || AllEligibleVendors.Count == 0)
-        {
-            VendorReviewsDict.Clear();
-            return;
-        }
-
-        try
-        {
-            var reviewTasks = AllEligibleVendors
-                .Select(v => v.VendorID)
-                .Distinct()
-                .ToDictionary(
-                    vId => vId,
-                    vId => Api.GetVendorReviewsAsync(vId, SelectedProductId)
-                );
-
-            await Task.WhenAll(reviewTasks.Values);
-
-            foreach (var kvp in reviewTasks)
-            {
-                try
-                {
-                    VendorReviewsDict[kvp.Key] = (await kvp.Value) ?? new();
-                }
-                catch
-                {
-                    VendorReviewsDict[kvp.Key] = new();
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[CreateContract] Error fetching vendor reviews: {ex.Message}");
-        }
-    }
-
-    private VendorEvalMetrics GetVendorMetrics(int vendorId)
-    {
-        var metrics = new VendorEvalMetrics();
-        if (VendorProductsDict.TryGetValue(vendorId, out var vp))
-        {
-            metrics.UnitRate = vp.UnitPrice;
-            metrics.EstimatedDeliveryDays = vp.EstimatedDeliveryDays;
-        }
-        else if (UnitPrice > 0)
-        {
-            metrics.UnitRate = UnitPrice;
-        }
-
-        if (VendorReviewsDict.TryGetValue(vendorId, out var reviews) && reviews.Count > 0)
-        {
-            metrics.ReviewCount = reviews.Count;
-            metrics.AverageRating = Math.Round(reviews.Average(r => r.Rating), 1);
-            metrics.AverageQualityRating = Math.Round(reviews.Average(r => r.ProductQualityRating), 1);
-            metrics.AverageDeliveryRating = Math.Round(reviews.Average(r => r.DeliveryRating), 1);
-            metrics.LatestReview = reviews.FirstOrDefault();
-        }
-
-        return metrics;
-    }
-
-    private async Task OpenVendorReviewsModal(VendorDto vendor)
+    // =========================================================================
+    // VENDOR EVALUATION & REVIEWS MODAL SUPPORT
+    // =========================================================================
+    private async Task OpenVendorReviewsModal(VendorRecommendationDto vendor, int productId, string productName)
     {
         SelectedVendorForReviews = vendor;
+        SelectedProductForReviewsId = productId;
+        SelectedProductForReviewsName = productName;
         IsReviewsModalOpen = true;
 
         if (VendorReviewsDict.TryGetValue(vendor.VendorID, out var cachedReviews) && cachedReviews != null)
@@ -766,7 +754,7 @@ public partial class CreateContract : ComponentBase
             StateHasChanged();
             try
             {
-                var reviews = await Api.GetVendorReviewsAsync(vendor.VendorID, SelectedProductId);
+                var reviews = await Api.GetVendorReviewsAsync(vendor.VendorID, productId);
                 CurrentVendorReviews = reviews ?? new();
                 VendorReviewsDict[vendor.VendorID] = CurrentVendorReviews;
             }
@@ -781,15 +769,6 @@ public partial class CreateContract : ComponentBase
             }
         }
         StateHasChanged();
-    }
-
-    private async Task OpenVendorReviewsModalById(int vendorId)
-    {
-        var vendor = AllEligibleVendors.FirstOrDefault(v => v.VendorID == vendorId);
-        if (vendor != null)
-        {
-            await OpenVendorReviewsModal(vendor);
-        }
     }
 
     private void CloseVendorReviewsModal()

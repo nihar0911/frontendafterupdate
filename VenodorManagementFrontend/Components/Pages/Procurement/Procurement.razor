@@ -965,6 +965,14 @@ else
                                                             }
                                                         </div>
 
+                                                        @if (HasActiveContractsForSelectedProduct)
+                                                        {
+                                                            <div class="alert alert-success py-2 px-3 mb-2.5 small d-flex align-items-center justify-content-between border border-success-subtle bg-success-subtle text-success-emphasis rounded">
+                                                                <span class="fw-semibold">Active contract applies &mdash; showing contracted vendors</span>
+                                                                <span class="badge bg-success text-white">Active Contract</span>
+                                                            </div>
+                                                        }
+
                                                         @if (IsFindingVendors)
                                                         {
                                                             <div class="text-center py-3 text-muted bg-white rounded border">
@@ -993,9 +1001,9 @@ else
                                                                                     {
                                                                                         <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.7rem;">@rec.SmartBadge</span>
                                                                                     }
-                                                                                    @if (rec.HasActiveContract && rec.RemainingQuantity > 0)
+                                                                                    @if (rec.HasActiveContract)
                                                                                     {
-                                                                                        <span class="badge bg-light text-dark border" style="font-size: 0.7rem;">Active Contract (@rec.RemainingQuantity @SelectedProduct.Unit remaining)</span>
+                                                                                        <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.7rem;">Active Contract</span>
                                                                                     }
                                                                                 </div>
 
@@ -1004,12 +1012,12 @@ else
                                                                                         @if (rec.TotalFeedbackCount > 0)
                                                                                         {
                                                                                             <button type="button" class="btn p-0 text-success fw-bold text-decoration-underline border-0 bg-transparent" style="font-size: 0.78rem;" @onclick="() => OpenVendorReviewsModal(rec)" @onclick:stopPropagation="true">
-                                                                                                ★ @rec.AverageRating.ToString("0.0") (@rec.TotalFeedbackCount @(rec.TotalFeedbackCount == 1 ? "review" : "reviews"))
+                                                                                                Rating: @rec.AverageRating.ToString("0.0") (@rec.TotalFeedbackCount @(rec.TotalFeedbackCount == 1 ? "review" : "reviews"))
                                                                                             </button>
                                                                                         }
                                                                                         else
                                                                                         {
-                                                                                            <span class="text-secondary" style="font-size: 0.78rem;">★ No Reviews Yet</span>
+                                                                                            <span class="text-secondary" style="font-size: 0.78rem;">No Reviews Yet</span>
                                                                                         }
                                                                                     </div>
                                                                                     <div>&bull;</div>
@@ -1031,6 +1039,40 @@ else
                                                                                 </button>
                                                                             </div>
                                                                         </div>
+
+                                                                        @if (rec.HasActiveContract)
+                                                                        {
+                                                                            <div class="mt-2.5 p-2.5 rounded bg-light border border-light-subtle small text-dark">
+                                                                                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 pb-1.5 mb-1.5 border-bottom border-light-subtle">
+                                                                                    <span class="fw-bold text-dark">
+                                                                                        Contract: @(rec.ContractID.HasValue ? $"#{rec.ContractID.Value}" : "Active")
+                                                                                        <span class="badge bg-secondary-subtle text-dark border ms-1">@(rec.ContractStatus ?? "Active")</span>
+                                                                                    </span>
+                                                                                    @if (rec.ContractStartDate.HasValue && rec.ContractEndDate.HasValue)
+                                                                                    {
+                                                                                        <span class="text-muted" style="font-size: 0.72rem;">
+                                                                                            Validity: @rec.ContractStartDate.Value.ToString("dd MMM yyyy") &ndash; @rec.ContractEndDate.Value.ToString("dd MMM yyyy")
+                                                                                        </span>
+                                                                                    }
+                                                                                </div>
+                                                                                <div class="d-flex align-items-center gap-3 flex-wrap text-muted" style="font-size: 0.75rem;">
+                                                                                    <div>Contract Quantity: <strong class="text-dark">@((rec.ContractQuantity ?? rec.AllocatedQuantity).ToString("N0")) @SelectedProduct.Unit</strong></div>
+                                                                                    <div>&bull;</div>
+                                                                                    <div>Purchased Quantity: <strong class="text-dark">@((rec.PurchasedQuantity ?? rec.UsedQuantity).ToString("N0")) @SelectedProduct.Unit</strong></div>
+                                                                                    <div>&bull;</div>
+                                                                                    <div>
+                                                                                        @if (rec.VarianceQuantity.HasValue && rec.VarianceQuantity.Value > 0)
+                                                                                        {
+                                                                                            <span class="text-warning-emphasis fw-bold">Variance: +@rec.VarianceQuantity.Value.ToString("N0") @SelectedProduct.Unit (Purchased Exceeds Contract)</span>
+                                                                                        }
+                                                                                        else
+                                                                                        {
+                                                                                            <span>Remaining: <strong class="text-dark">@rec.RemainingQuantity.ToString("N0") @SelectedProduct.Unit</strong></span>
+                                                                                        }
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        }
 
                                                                         @if (LatestReviewsByVendorDict.TryGetValue(rec.VendorID, out var latestRev) && !string.IsNullOrWhiteSpace(latestRev.Review))
                                                                         {
@@ -1363,6 +1405,13 @@ else
                                                                 else
                                                                 {
                                                                     var sortedRecList = GetSortedAiRecommendations(recList);
+                                                                    @if (AiItemHasActiveContracts.TryGetValue(currentIdx, out bool itemHasContracts) && itemHasContracts)
+                                                                    {
+                                                                        <div class="alert alert-success py-1.5 px-3 mb-2 small d-flex align-items-center justify-content-between border border-success-subtle bg-success-subtle text-success-emphasis rounded">
+                                                                            <span class="fw-semibold">Active contract applies &mdash; showing contracted vendors</span>
+                                                                            <span class="badge bg-success text-white">Active Contract</span>
+                                                                        </div>
+                                                                    }
                                                                     <!-- Candidate Suppliers List Header & Sort Controls -->
                                                                     <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
                                                                         <label class="form-label fw-bold text-dark mb-0 small">Candidate Suppliers (@sortedRecList.Count available)</label>
@@ -1394,9 +1443,9 @@ else
                                                                                             {
                                                                                                 <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.7rem;">@vendorRec.SmartBadge</span>
                                                                                             }
-                                                                                            @if (vendorRec.HasActiveContract && vendorRec.RemainingQuantity > 0)
+                                                                                            @if (vendorRec.HasActiveContract)
                                                                                             {
-                                                                                                <span class="badge bg-light text-dark border" style="font-size: 0.7rem;">Active Contract (@vendorRec.RemainingQuantity @currentItem.Unit remaining)</span>
+                                                                                                <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.7rem;">Active Contract</span>
                                                                                             }
                                                                                         </div>
 
@@ -1432,6 +1481,40 @@ else
                                                                                         </button>
                                                                                     </div>
                                                                                 </div>
+
+                                                                                @if (vendorRec.HasActiveContract)
+                                                                                {
+                                                                                    <div class="mt-2.5 p-2.5 rounded bg-light border border-light-subtle small text-dark">
+                                                                                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 pb-1.5 mb-1.5 border-bottom border-light-subtle">
+                                                                                            <span class="fw-bold text-dark">
+                                                                                                Contract: @(vendorRec.ContractID.HasValue ? $"#{vendorRec.ContractID.Value}" : "Active")
+                                                                                                <span class="badge bg-secondary-subtle text-dark border ms-1">@(vendorRec.ContractStatus ?? "Active")</span>
+                                                                                            </span>
+                                                                                            @if (vendorRec.ContractStartDate.HasValue && vendorRec.ContractEndDate.HasValue)
+                                                                                            {
+                                                                                                <span class="text-muted" style="font-size: 0.72rem;">
+                                                                                                    Validity: @vendorRec.ContractStartDate.Value.ToString("dd MMM yyyy") &ndash; @vendorRec.ContractEndDate.Value.ToString("dd MMM yyyy")
+                                                                                                </span>
+                                                                                            }
+                                                                                        </div>
+                                                                                        <div class="d-flex align-items-center gap-3 flex-wrap text-muted" style="font-size: 0.75rem;">
+                                                                                            <div>Contract Quantity: <strong class="text-dark">@((vendorRec.ContractQuantity ?? vendorRec.AllocatedQuantity).ToString("N0")) @currentItem.Unit</strong></div>
+                                                                                            <div>&bull;</div>
+                                                                                            <div>Purchased Quantity: <strong class="text-dark">@((vendorRec.PurchasedQuantity ?? vendorRec.UsedQuantity).ToString("N0")) @currentItem.Unit</strong></div>
+                                                                                            <div>&bull;</div>
+                                                                                            <div>
+                                                                                                @if (vendorRec.VarianceQuantity.HasValue && vendorRec.VarianceQuantity.Value > 0)
+                                                                                                {
+                                                                                                    <span class="text-warning-emphasis fw-bold">Variance: +@vendorRec.VarianceQuantity.Value.ToString("N0") @currentItem.Unit (Purchased Exceeds Contract)</span>
+                                                                                                }
+                                                                                                else
+                                                                                                {
+                                                                                                    <span>Remaining: <strong class="text-dark">@vendorRec.RemainingQuantity.ToString("N0") @currentItem.Unit</strong></span>
+                                                                                                }
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                }
                                                                             </div>
                                                                         }
                                                                     </div>

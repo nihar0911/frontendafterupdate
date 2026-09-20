@@ -417,6 +417,66 @@ public partial class OrgContracts : ComponentBase
             StateHasChanged();
         }
     }
+
+    // ==========================================
+    // END CONTRACT LOGIC
+    // ==========================================
+    private ContractDto? ContractToEnd { get; set; }
+    private bool IsEndModalOpen { get; set; } = false;
+    private bool IsEnding { get; set; } = false;
+    private string? EndErrorMessage { get; set; }
+
+    private void PromptEndContract(ContractDto contract)
+    {
+        ContractToEnd = contract;
+        EndErrorMessage = null;
+        IsEndModalOpen = true;
+    }
+
+    private void CancelEndContract()
+    {
+        IsEndModalOpen = false;
+        ContractToEnd = null;
+        EndErrorMessage = null;
+        IsEnding = false;
+    }
+
+    private async Task ExecuteEndContractAsync()
+    {
+        if (ContractToEnd == null || IsEnding) return;
+
+        IsEnding = true;
+        EndErrorMessage = null;
+
+        try
+        {
+            var result = await Api.EndContractAsync(ContractToEnd.ContractID);
+            if (result != null && result.Success)
+            {
+                int endedContractId = ContractToEnd.ContractID;
+                IsEndModalOpen = false;
+                ContractToEnd = null;
+
+                // Reload contracts to reflect the ended status
+                await LoadData();
+
+                SuccessMessage = $"Contract #{endedContractId} has been ended successfully and moved to inactive status.";
+            }
+            else
+            {
+                EndErrorMessage = result?.ErrorMessage ?? "Failed to end contract. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            EndErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsEnding = false;
+            StateHasChanged();
+        }
+    }
 }
 
 public class VendorAllocationPreviewItem

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -707,6 +707,42 @@ namespace VenodorManagementFrontend.Services
             return null;
         }
 
+        public async Task<GetRecommendationsForProductResponse?> GetRecommendationsForProductAsync(int productId, int outletId)
+        {
+            SetAuthHeader();
+            try
+            {
+                var response = await _httpClient.GetAsync($"api/VendorRecommendations/product/{productId}?outletID={outletId}");
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadFromJsonAsync<GetRecommendationsForProductResponse>();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ApiService] GetRecommendationsForProductAsync error: {ex.Message}");
+            }
+            return null;
+        }
+
+        public async Task<GetContractEligibleVendorsResponse?> GetContractEligibleVendorsAsync(int productId, int outletId)
+        {
+            SetAuthHeader();
+            try
+            {
+                var response = await _httpClient.GetAsync($"api/contract/eligible-vendors/{outletId}/{productId}");
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadFromJsonAsync<GetContractEligibleVendorsResponse>();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ApiService] GetContractEligibleVendorsAsync error: {ex.Message}");
+            }
+            return null;
+        }
+
         public async Task<List<QuotationDto>> GetQuotationsAsync()
         {
             SetAuthHeader();
@@ -902,7 +938,25 @@ namespace VenodorManagementFrontend.Services
             if (response.IsSuccessStatusCode)
             {
                 var result = await response.Content.ReadFromJsonAsync<CreateContractResponse>();
-                return result?.Contract;
+                return result?.Contract ?? result?.Contracts?.FirstOrDefault();
+            }
+            return null;
+        }
+
+        public async Task<CreateContractResponse?> CreateContractFullAsync(CreateContractCommand command)
+        {
+            SetAuthHeader();
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("api/contract", command);
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadFromJsonAsync<CreateContractResponse>();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ApiService] CreateContractFullAsync error: {ex.Message}");
             }
             return null;
         }
@@ -1370,6 +1424,55 @@ namespace VenodorManagementFrontend.Services
             catch (Exception ex)
             {
                 Console.WriteLine($"[ApiService] Error resetting contract: {ex.Message}");
+                return new ApiResult<ContractDto>
+                {
+                    Success = false,
+                    ErrorMessage = ex.Message
+                };
+            }
+        }
+
+        public async Task<ApiResult<ContractDto>> EndContractAsync(int contractId)
+        {
+            SetAuthHeader();
+            try
+            {
+                var payload = new { contractID = contractId };
+                var response = await _httpClient.PostAsJsonAsync($"api/contract/{contractId}/end", payload);
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<VenodorManagementFrontend.Models.EndContractResponse>();
+                    return new ApiResult<ContractDto>
+                    {
+                        Success = true,
+                        Data = result?.Contract
+                    };
+                }
+
+                string errorText = "Unable to end contract.";
+                try
+                {
+                    var errObj = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>();
+                    if (errObj != null && errObj.TryGetValue("message", out var msg))
+                    {
+                        errorText = msg?.ToString() ?? errorText;
+                    }
+                }
+                catch
+                {
+                    var raw = await response.Content.ReadAsStringAsync();
+                    if (!string.IsNullOrWhiteSpace(raw)) errorText = raw;
+                }
+
+                return new ApiResult<ContractDto>
+                {
+                    Success = false,
+                    ErrorMessage = errorText
+                };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ApiService] Error ending contract: {ex.Message}");
                 return new ApiResult<ContractDto>
                 {
                     Success = false,

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace VenodorManagementFrontend.Models;
@@ -13,4 +13,5 @@ public class CreateContractCommand
         public DateTime EndDate { get; set; } = DateTime.Now.AddDays(365);
         public string PaymentMethod { get; set; } = "Net30";
         public List<CreateContractVendorAllocationDto> Allocations { get; set; } = new();
+        public List<ContractProductAssignmentDto> Assignments { get; set; } = new();
     }

@@ -29,4 +29,14 @@ public class VendorRecommendationDto
         public decimal AllocatedQuantity { get; set; }
         public decimal UsedQuantity { get; set; }
         public decimal RemainingQuantity { get; set; }
+        public decimal ContractTotalQuantity { get; set; }
+        public DateTime? ContractStartDate { get; set; }
+        public DateTime? ContractEndDate { get; set; }
+        public string? ContractStatus { get; set; }
+        public decimal? ContractQuantity { get; set; }
+        public decimal? PurchasedQuantity { get; set; }
+        public decimal? VarianceQuantity => PurchasedQuantity.HasValue && ContractQuantity.HasValue
+            ? PurchasedQuantity.Value - ContractQuantity.Value
+            : null;
+        public decimal AverageSpoilagePercentage { get; set; }
     }
