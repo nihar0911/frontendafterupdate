@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -51,10 +51,16 @@ public partial class CreateContract : ComponentBase
     private List<VendorDto> _cachedAllVendors = new();
 
     // =========================================================================
-    // MULTI-PRODUCT LINE ITEM MODEL
+    // MULTI-PRODUCT & MULTI-VENDOR SPLIT ALLOCATION MODELS
     // =========================================================================
-    // MULTI-PRODUCT LINE ITEM MODEL
-    // =========================================================================
+    public class VendorSplitAllocation
+    {
+        public int VendorID { get; set; }
+        public string VendorName { get; set; } = string.Empty;
+        public decimal AllocatedQuantity { get; set; }
+        public decimal UnitPrice { get; set; }
+    }
+
     public class ProductContractLine
     {
         public int ProductID { get; set; }
@@ -69,6 +75,43 @@ public partial class CreateContract : ComponentBase
         public bool HasActiveContracts { get; set; } = false;
         public string SortBy { get; set; } = "Overall Reviews";
         public Dictionary<int, VendorEvalMetrics> VendorMetrics { get; set; } = new();
+
+        // Multi-vendor split allocation state
+        public bool IsSplitMode { get; set; } = false;
+        public List<VendorSplitAllocation> SplitAllocations { get; set; } = new();
+
+        public decimal TotalAllocatedQuantity => IsSplitMode
+            ? SplitAllocations.Sum(a => a.AllocatedQuantity)
+            : (SelectedVendorID > 0 ? ContractQuantity : 0);
+
+        public decimal RemainingQuantity => ContractQuantity - TotalAllocatedQuantity;
+
+        public bool IsAllocationValid
+        {
+            get
+            {
+                if (ContractQuantity <= 0) return false;
+                if (IsSplitMode)
+                {
+                    return SplitAllocations.Count > 0 &&
+                           SplitAllocations.All(a => a.AllocatedQuantity > 0 && a.VendorID > 0) &&
+                           TotalAllocatedQuantity == ContractQuantity;
+                }
+                else
+                {
+                    return SelectedVendorID > 0;
+                }
+            }
+        }
+
+        public bool IsVendorSelected(int vendorId)
+        {
+            if (IsSplitMode)
+            {
+                return SplitAllocations.Any(a => a.VendorID == vendorId);
+            }
+            return SelectedVendorID == vendorId;
+        }
 
         public IEnumerable<VendorRecommendationDto> GetSortedVendors()
         {
@@ -91,12 +134,20 @@ public partial class CreateContract : ComponentBase
         }
     }
 
+    public class VendorContractGroupItem
+    {
+        public int ProductID { get; set; }
+        public string ProductName { get; set; } = string.Empty;
+        public string Unit { get; set; } = "Kg";
+        public decimal Quantity { get; set; }
+    }
+
     public class VendorContractGroup
     {
         public int VendorID { get; set; }
         public string VendorName { get; set; } = string.Empty;
-        public List<ProductContractLine> Products { get; set; } = new();
-        public decimal TotalQuantity => Products.Sum(p => p.ContractQuantity);
+        public List<VendorContractGroupItem> Products { get; set; } = new();
+        public decimal TotalQuantity => Products.Sum(p => p.Quantity);
     }
 
     private List<ProductContractLine> ProductLines { get; set; } = new();
@@ -107,20 +158,47 @@ public partial class CreateContract : ComponentBase
     private string NewProductUnit =>
         AvailableProducts.FirstOrDefault(p => p.ProductID == NewProductId)?.Unit ?? "Kg";
 
-    // Computed grouping preview
-    public List<VendorContractGroup> GroupedContracts => ProductLines
-        .Where(p => p.SelectedVendorID > 0)
-        .GroupBy(p => p.SelectedVendorID)
-        .Select(g => new VendorContractGroup
+    // Computed grouping preview supporting split assignments across vendors
+    public List<VendorContractGroup> GroupedContracts
+    {
+        get
         {
-            VendorID = g.Key,
-            VendorName = g.First().EligibleVendors.FirstOrDefault(v => v.VendorID == g.Key)?.VendorName
-                         ?? (g.First().SelectedVendorName.Length > 0 ? g.First().SelectedVendorName : $"Vendor #{g.Key}"),
-            Products = g.ToList()
-        })
-        .ToList();
+            var assignments = new List<(int VendorID, string VendorName, int ProductID, string ProductName, string Unit, decimal Quantity)>();
 
-    public int UnassignedProductsCount => ProductLines.Count(p => p.SelectedVendorID <= 0);
+            foreach (var line in ProductLines)
+            {
+                if (line.IsSplitMode)
+                {
+                    foreach (var alloc in line.SplitAllocations.Where(a => a.VendorID > 0 && a.AllocatedQuantity > 0))
+                    {
+                        assignments.Add((alloc.VendorID, alloc.VendorName, line.ProductID, line.ProductName, line.Unit, alloc.AllocatedQuantity));
+                    }
+                }
+                else if (line.SelectedVendorID > 0 && line.ContractQuantity > 0)
+                {
+                    assignments.Add((line.SelectedVendorID, line.SelectedVendorName, line.ProductID, line.ProductName, line.Unit, line.ContractQuantity));
+                }
+            }
+
+            return assignments
+                .GroupBy(a => a.VendorID)
+                .Select(g => new VendorContractGroup
+                {
+                    VendorID = g.Key,
+                    VendorName = g.First().VendorName,
+                    Products = g.Select(x => new VendorContractGroupItem
+                    {
+                        ProductID = x.ProductID,
+                        ProductName = x.ProductName,
+                        Unit = x.Unit,
+                        Quantity = x.Quantity
+                    }).ToList()
+                })
+                .ToList();
+        }
+    }
+
+    public int UnassignedProductsCount => ProductLines.Count(p => !p.IsAllocationValid);
 
     // Products available for addition (exclude already added products)
     public List<ProductDto> SelectableProducts => AvailableProducts
@@ -164,7 +242,7 @@ public partial class CreateContract : ComponentBase
         !IsProcessing &&
         SelectedOutletId > 0 &&
         ProductLines.Count > 0 &&
-        ProductLines.All(p => p.ContractQuantity > 0 && p.SelectedVendorID > 0) &&
+        ProductLines.All(p => p.IsAllocationValid) &&
         EndDate > StartDate &&
         !string.IsNullOrWhiteSpace(PaymentMethod);
 
@@ -359,20 +437,129 @@ public partial class CreateContract : ComponentBase
     {
         if (newQuantity < 0) newQuantity = 0;
         line.ContractQuantity = newQuantity;
+        if (line.IsSplitMode && line.SplitAllocations.Count == 1)
+        {
+            line.SplitAllocations[0].AllocatedQuantity = newQuantity;
+        }
+        StateHasChanged();
+    }
+
+    private void ToggleSplitMode(ProductContractLine line)
+    {
+        line.IsSplitMode = !line.IsSplitMode;
+        if (line.IsSplitMode)
+        {
+            // Transitioning from Single to Split mode
+            // If single vendor is already selected, initialize that vendor as a split allocation
+            if (line.SelectedVendorID > 0)
+            {
+                var vendor = line.EligibleVendors.FirstOrDefault(v => v.VendorID == line.SelectedVendorID);
+                line.SplitAllocations = new List<VendorSplitAllocation>
+                {
+                    new VendorSplitAllocation
+                    {
+                        VendorID = line.SelectedVendorID,
+                        VendorName = !string.IsNullOrWhiteSpace(line.SelectedVendorName) ? line.SelectedVendorName : (vendor?.VendorName ?? $"Vendor #{line.SelectedVendorID}"),
+                        AllocatedQuantity = line.ContractQuantity,
+                        UnitPrice = vendor?.UnitPrice ?? 0m
+                    }
+                };
+            }
+            else
+            {
+                line.SplitAllocations = new List<VendorSplitAllocation>();
+            }
+        }
+        else
+        {
+            // Transitioning from Split to Single mode
+            // If vendor allocations exist, restore primary/single vendor as normal SelectedVendor
+            if (line.SplitAllocations.Count > 0)
+            {
+                var target = line.SplitAllocations.Count == 1
+                    ? line.SplitAllocations[0]
+                    : (line.SplitAllocations.FirstOrDefault(a => a.VendorID == line.SelectedVendorID) ?? line.SplitAllocations[0]);
+
+                line.SelectedVendorID = target.VendorID;
+                line.SelectedVendorName = target.VendorName;
+            }
+        }
         StateHasChanged();
     }
 
     private void SelectVendorForProductLine(ProductContractLine line, VendorRecommendationDto vendor)
     {
-        if (line.SelectedVendorID == vendor.VendorID)
+        if (line.IsSplitMode)
         {
-            line.SelectedVendorID = 0;
-            line.SelectedVendorName = string.Empty;
+            var existing = line.SplitAllocations.FirstOrDefault(a => a.VendorID == vendor.VendorID);
+            if (existing != null)
+            {
+                // Remove vendor from split allocations
+                line.SplitAllocations.Remove(existing);
+            }
+            else
+            {
+                // Add vendor to split allocations
+                decimal remaining = line.RemainingQuantity;
+                decimal initialQty = remaining > 0 ? remaining : 0m;
+                line.SplitAllocations.Add(new VendorSplitAllocation
+                {
+                    VendorID = vendor.VendorID,
+                    VendorName = vendor.VendorName,
+                    AllocatedQuantity = initialQty,
+                    UnitPrice = vendor.UnitPrice
+                });
+            }
         }
         else
         {
-            line.SelectedVendorID = vendor.VendorID;
-            line.SelectedVendorName = vendor.VendorName;
+            if (line.SelectedVendorID == vendor.VendorID)
+            {
+                line.SelectedVendorID = 0;
+                line.SelectedVendorName = string.Empty;
+            }
+            else
+            {
+                line.SelectedVendorID = vendor.VendorID;
+                line.SelectedVendorName = vendor.VendorName;
+            }
+        }
+        StateHasChanged();
+    }
+
+    private void OnSplitQuantityChanged(ProductContractLine line, VendorSplitAllocation alloc, decimal newQuantity)
+    {
+        if (newQuantity < 0) newQuantity = 0;
+        alloc.AllocatedQuantity = newQuantity;
+        StateHasChanged();
+    }
+
+    private void RemoveSplitAllocation(ProductContractLine line, VendorSplitAllocation alloc)
+    {
+        line.SplitAllocations.Remove(alloc);
+        StateHasChanged();
+    }
+
+    private void SplitEqually(ProductContractLine line)
+    {
+        if (line.SplitAllocations.Count == 0 || line.ContractQuantity <= 0) return;
+
+        int count = line.SplitAllocations.Count;
+        decimal total = line.ContractQuantity;
+        decimal baseShare = Math.Round(total / count, 2, MidpointRounding.AwayFromZero);
+        decimal runningSum = 0;
+
+        for (int i = 0; i < count; i++)
+        {
+            if (i == count - 1)
+            {
+                line.SplitAllocations[i].AllocatedQuantity = Math.Max(0, total - runningSum);
+            }
+            else
+            {
+                line.SplitAllocations[i].AllocatedQuantity = baseShare;
+                runningSum += baseShare;
+            }
         }
         StateHasChanged();
     }
@@ -476,17 +663,25 @@ public partial class CreateContract : ComponentBase
                 };
             }
 
-            // Auto-select if exactly 1 eligible vendor exists
-            if (line.EligibleVendors.Count == 1)
+            // Auto-select if exactly 1 eligible vendor exists and in single-vendor mode
+            if (!line.IsSplitMode)
             {
-                line.SelectedVendorID = line.EligibleVendors[0].VendorID;
-                line.SelectedVendorName = line.EligibleVendors[0].VendorName;
+                if (line.EligibleVendors.Count == 1)
+                {
+                    line.SelectedVendorID = line.EligibleVendors[0].VendorID;
+                    line.SelectedVendorName = line.EligibleVendors[0].VendorName;
+                }
+                else if (line.SelectedVendorID > 0 && !line.EligibleVendors.Any(v => v.VendorID == line.SelectedVendorID))
+                {
+                    // Previously selected vendor is no longer eligible (e.g. outlet changed)
+                    line.SelectedVendorID = 0;
+                    line.SelectedVendorName = string.Empty;
+                }
             }
-            else if (line.SelectedVendorID > 0 && !line.EligibleVendors.Any(v => v.VendorID == line.SelectedVendorID))
+            else
             {
-                // Previously selected vendor is no longer eligible (e.g. outlet changed)
-                line.SelectedVendorID = 0;
-                line.SelectedVendorName = string.Empty;
+                // In split mode, remove any vendors that are no longer in eligible vendors list
+                line.SplitAllocations.RemoveAll(a => !line.EligibleVendors.Any(v => v.VendorID == a.VendorID));
             }
         }
         catch (Exception ex)
@@ -610,7 +805,7 @@ public partial class CreateContract : ComponentBase
     }
 
     // =========================================================================
-    // SUBMISSION LOGIC (MULTI-PRODUCT ASSIGNMENTS)
+    // SUBMISSION LOGIC (MULTI-PRODUCT & MULTI-VENDOR SPLIT ASSIGNMENTS)
     // =========================================================================
     private async Task SubmitContractCreation()
     {
@@ -626,17 +821,38 @@ public partial class CreateContract : ComponentBase
             return;
         }
 
-        var unassigned = ProductLines.FirstOrDefault(p => p.SelectedVendorID <= 0);
-        if (unassigned != null)
+        var invalidLine = ProductLines.FirstOrDefault(p => !p.IsAllocationValid);
+        if (invalidLine != null)
         {
-            ValidationMessage = $"Please assign an eligible vendor for '{unassigned.ProductName}'.";
-            return;
-        }
-
-        var zeroQty = ProductLines.FirstOrDefault(p => p.ContractQuantity <= 0);
-        if (zeroQty != null)
-        {
-            ValidationMessage = $"Planning quantity for '{zeroQty.ProductName}' must be greater than zero.";
+            if (invalidLine.ContractQuantity <= 0)
+            {
+                ValidationMessage = $"Planning quantity for '{invalidLine.ProductName}' must be greater than zero.";
+            }
+            else if (!invalidLine.IsSplitMode && invalidLine.SelectedVendorID <= 0)
+            {
+                ValidationMessage = $"Please assign an eligible vendor for '{invalidLine.ProductName}'.";
+            }
+            else if (invalidLine.IsSplitMode)
+            {
+                if (invalidLine.SplitAllocations.Count == 0)
+                {
+                    ValidationMessage = $"Please select at least one vendor for '{invalidLine.ProductName}'.";
+                }
+                else if (invalidLine.SplitAllocations.Any(a => a.AllocatedQuantity <= 0))
+                {
+                    ValidationMessage = $"All selected vendors for '{invalidLine.ProductName}' must have an allocated quantity greater than zero.";
+                }
+                else if (invalidLine.TotalAllocatedQuantity < invalidLine.ContractQuantity)
+                {
+                    decimal diff = invalidLine.ContractQuantity - invalidLine.TotalAllocatedQuantity;
+                    ValidationMessage = $"Allocated quantity for '{invalidLine.ProductName}' is less than planning quantity ({diff.ToString("G29")} {invalidLine.Unit} remaining unallocated).";
+                }
+                else if (invalidLine.TotalAllocatedQuantity > invalidLine.ContractQuantity)
+                {
+                    decimal diff = invalidLine.TotalAllocatedQuantity - invalidLine.ContractQuantity;
+                    ValidationMessage = $"Allocated quantity for '{invalidLine.ProductName}' exceeds planning quantity by {diff.ToString("G29")} {invalidLine.Unit}.";
+                }
+            }
             return;
         }
 
@@ -659,13 +875,32 @@ public partial class CreateContract : ComponentBase
 
         try
         {
-            // Build multi-product assignments for Phase 2 backend
-            var assignments = ProductLines.Select(p => new ContractProductAssignmentDto
+            // Build multi-product & multi-vendor assignments for backend
+            var assignments = new List<ContractProductAssignmentDto>();
+            foreach (var p in ProductLines)
             {
-                ProductID = p.ProductID,
-                VendorID = p.SelectedVendorID,
-                ContractQuantity = p.ContractQuantity
-            }).ToList();
+                if (p.IsSplitMode)
+                {
+                    foreach (var alloc in p.SplitAllocations.Where(a => a.AllocatedQuantity > 0))
+                    {
+                        assignments.Add(new ContractProductAssignmentDto
+                        {
+                            ProductID = p.ProductID,
+                            VendorID = alloc.VendorID,
+                            ContractQuantity = alloc.AllocatedQuantity
+                        });
+                    }
+                }
+                else
+                {
+                    assignments.Add(new ContractProductAssignmentDto
+                    {
+                        ProductID = p.ProductID,
+                        VendorID = p.SelectedVendorID,
+                        ContractQuantity = p.ContractQuantity
+                    });
+                }
+            }
 
             // Assemble CreateContractCommand with assignments and legacy backward-compatibility fields
             var command = new CreateContractCommand

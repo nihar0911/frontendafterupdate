@@ -1,0 +1,687 @@
+@page "/contract/{contractId:int}/renew"
+@rendermode InteractiveServer
+
+<PageTitle>Renew Contract #@contractId - Smart Vendor Management System</PageTitle>
+
+@if (!Auth.IsAuthenticated)
+{
+    <div class="unauth-container">
+        <div class="unauth-card">
+            <h4 class="unauth-title">Authentication Required</h4>
+            <p class="unauth-desc">Please log in as an Organization Manager to renew contracts.</p>
+            <button class="btn-login-redirect" @onclick='() => Nav.NavigateTo("/login")'>Go to Login</button>
+        </div>
+    </div>
+}
+else if (!Auth.IsOrgManager && !Auth.IsAdmin)
+{
+    <div class="unauth-container">
+        <div class="unauth-card">
+            <h4 class="unauth-title text-danger">Access Denied</h4>
+            <p class="unauth-desc">You do not have Organization Manager privileges to renew contracts.</p>
+            <button class="btn-login-redirect" @onclick='() => Nav.NavigateTo("/")'>Return to Home</button>
+        </div>
+    </div>
+}
+else
+{
+    <div class="org-app-layout @(IsSidebarCollapsed ? "sidebar-collapsed" : "")">
+
+        <!-- =======================================================================
+             LEFT SIDEBAR NAVIGATION
+             ======================================================================= -->
+        <aside class="org-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-branding" @onclick='() => Nav.NavigateTo("/org-dashboard")'>
+                    <div class="brand-emblem">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="brand-text">
+                        <span class="brand-name">Smart Vendor</span>
+                        <span class="brand-sub">Management</span>
+                    </div>
+                </div>
+                <button class="sidebar-collapse-btn" @onclick="ToggleSidebar" title="Toggle Sidebar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        @if (IsSidebarCollapsed)
+                        {
+                            <polyline points="13 17 18 12 13 7"></polyline>
+                            <polyline points="6 17 11 12 6 7"></polyline>
+                        }
+                        else
+                        {
+                            <polyline points="11 17 6 12 11 7"></polyline>
+                            <polyline points="18 17 13 12 18 7"></polyline>
+                        }
+                    </svg>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/org-dashboard")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Dashboard</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/organization/outlets")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                    <path d="M9 22V12h6v10"></path>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Outlets</span>
+                        </button>
+                    </li>
+
+                    @if (Auth.IsPurchaseManager || Auth.IsAdmin)
+                    {
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/procurement")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Purchase Requests</span>
+                        </button>
+                    </li>
+                    }
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/quotations")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="12" y1="18" x2="12" y2="12"></line>
+                                    <line x1="9" y1="15" x2="15" y2="15"></line>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Quotations</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link active" @onclick='() => Nav.NavigateTo("/organization/contracts")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <path d="M9 12l2 2 4-4"></path>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Contracts</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/organization/purchase-orders")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="1" y="3" width="15" height="13"></rect>
+                                    <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                                    <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                    <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Purchase Orders</span>
+                        </button>
+                    </li>
+                </ul>
+
+                <ul class="nav-list nav-list-bottom">
+                    <li class="nav-item">
+                        <button class="nav-link nav-logout" @onclick="HandleLogout">
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                    <polyline points="16 17 21 12 16 7"></polyline>
+                                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Logout</span>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- =======================================================================
+             MAIN BODY WRAPPER
+             ======================================================================= -->
+        <div class="org-main-wrapper">
+
+            <!-- TOP HEADER -->
+            <header class="org-top-header">
+                <button class="menu-toggle-btn" @onclick="ToggleSidebar" title="Toggle Menu">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+
+                <div class="header-right">
+                    <div class="profile-capsule-wrapper">
+                        <div class="profile-capsule" @onclick="ToggleProfileDropdown">
+                            <div class="profile-avatar">@GetUserInitial()</div>
+                            <div class="profile-meta">
+                                <span class="profile-name">@(string.IsNullOrWhiteSpace(Auth.UserName) ? (Auth.CurrentUser?.Name ?? "Organization Manager") : Auth.UserName)</span>
+                                <span class="profile-role">Organization Manager</span>
+                            </div>
+                            <svg class="dropdown-arrow @(IsProfileDropdownOpen ? "open" : "")" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <button class="header-logout-btn" @onclick="HandleLogout" title="Sign out">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        <span>Logout</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- MAIN CONTENT CANVAS -->
+            <main class="org-main-content">
+                <div class="content-container">
+
+                    <!-- BREADCRUMBS -->
+                    <div class="top-breadcrumb-row">
+                        <div class="breadcrumb-links">
+                            <a href="/org-dashboard" class="bc-link">Dashboard</a>
+                            <span class="bc-sep">&rsaquo;</span>
+                            <a href="/organization/contracts" class="bc-link">Contracts</a>
+                            <span class="bc-sep">&rsaquo;</span>
+                            <a href="/contract/@contractId" class="bc-link">Contract #@contractId</a>
+                            <span class="bc-sep">&rsaquo;</span>
+                            <span class="bc-current">Renew Contract</span>
+                        </div>
+
+                        <button type="button" class="btn-back-dashboard" @onclick="NavigateBack">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="19" y1="12" x2="5" y2="12"></line>
+                                <polyline points="12 19 5 12 12 5"></polyline>
+                            </svg>
+                            <span>Back to Contract Details</span>
+                        </button>
+                    </div>
+
+                    <!-- PAGE MAIN HEADING -->
+                    <div class="page-title-section">
+                        <h1 class="page-main-heading">Renew Contract #@contractId</h1>
+                        <p class="page-sub-heading">Establish a new active procurement contract based on expired contract terms.</p>
+                    </div>
+
+                    @if (IsLoading)
+                    {
+                        <div class="loading-state">
+                            <div class="loading-spinner"></div>
+                            <h4 class="loading-text">Loading expired contract details...</h4>
+                            <p class="loading-sub">Fetching historical vendor allocations, products, and specifications</p>
+                        </div>
+                    }
+                    else if (HasError || IsNotExpired || ExpiredContract == null)
+                    {
+                        <div class="error-banner">
+                            <div class="error-banner-content">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                </svg>
+                                <span>@(ErrorMessage ?? "Unable to load contract for renewal.")</span>
+                            </div>
+                            <button type="button" class="btn-back-dashboard" @onclick="NavigateToContractsList">Return to Contracts</button>
+                        </div>
+                    }
+                    else
+                    {
+                        @if (!string.IsNullOrWhiteSpace(SuccessMessage))
+                        {
+                            <div class="alert alert-success d-flex align-items-center justify-content-between mb-4 shadow-sm" role="alert" style="border-radius: 4px; border: 1px solid #BBF7D0; background-color: #F0FDF4; color: #166534;">
+                                <div class="d-flex align-items-center">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2 flex-shrink-0" style="color: #16A34A;">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                    <span class="fw-semibold" style="font-size: 0.9rem;">@SuccessMessage</span>
+                                </div>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+                        {
+                            <div class="alert alert-danger d-flex align-items-center justify-content-between mb-4 shadow-sm" role="alert" style="border-radius: 4px; border: 1px solid #FECACA; background-color: #FEF2F2; color: #991B1B;">
+                                <div class="d-flex align-items-center">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2 flex-shrink-0" style="color: #DC2626;">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                    </svg>
+                                    <span class="fw-semibold" style="font-size: 0.9rem;">@ErrorMessage</span>
+                                </div>
+                                <button type="button" class="btn-close" @onclick="() => ErrorMessage = null" aria-label="Close"></button>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(ValidationMessage))
+                        {
+                            <div class="alert alert-warning d-flex align-items-center justify-content-between mb-4 shadow-sm" role="alert" style="border-radius: 4px; border: 1px solid #FDE68A; background-color: #FFFBEB; color: #92400E;">
+                                <div class="d-flex align-items-center">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2 flex-shrink-0" style="color: #D97706;">
+                                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                    </svg>
+                                    <span class="fw-semibold" style="font-size: 0.9rem;">@ValidationMessage</span>
+                                </div>
+                                <button type="button" class="btn-close" @onclick="() => ValidationMessage = null" aria-label="Close"></button>
+                            </div>
+                        }
+
+                        <!-- =======================================================
+                             1. TOP HERO CARD (EXPIRED CONTRACT AUDIT CONTEXT)
+                             ======================================================= -->
+                        <div class="contract-hero-card mb-4">
+                            <div class="hero-left">
+                                <div class="hero-icon-box">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="1 4 1 10 7 10"></polyline>
+                                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                                    </svg>
+                                </div>
+                                <div class="hero-info">
+                                    <div class="hero-title-row">
+                                        <h2 class="hero-contract-title">Renewing Contract #@ExpiredContract.ContractID</h2>
+                                        <span class="hero-effective-dates">
+                                            Expired on: @ExpiredContract.EndDate.ToIst("dd MMM yyyy")
+                                        </span>
+                                    </div>
+                                    <div class="hero-meta-row">
+                                        <span>Organization: <strong>@OrganizationName</strong></span>
+                                        <span class="meta-bullet">&bull;</span>
+                                        <span>Outlet: <strong>@OutletName</strong></span>
+                                        <span class="meta-bullet">&bull;</span>
+                                        <span>Primary Vendor: <strong>@VendorName</strong></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="hero-right">
+                                <span class="status-pill status-expired">Expired</span>
+                            </div>
+                        </div>
+
+                        <!-- =======================================================
+                             2. RENEWAL SPECIFICATIONS GRID (TWO COLUMNS)
+                             ======================================================= -->
+                        <div class="renewal-form-grid mb-4">
+
+                            <!-- LEFT CARD: READ-ONLY CONTEXT -->
+                            <div class="content-card">
+                                <div class="card-header-row">
+                                    <div class="card-icon-box">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect x="4" y="2" width="16" height="20" rx="2"></rect>
+                                            <line x1="8" y1="6" x2="16" y2="6"></line>
+                                            <line x1="8" y1="10" x2="16" y2="10"></line>
+                                            <line x1="8" y1="14" x2="12" y2="14"></line>
+                                        </svg>
+                                    </div>
+                                    <h3 class="card-section-title">Contract Context (Read-Only)</h3>
+                                </div>
+
+                                <div class="readonly-context-list">
+                                    <div class="context-item">
+                                        <span class="context-label">Contract Reference</span>
+                                        <span class="context-value fw-bold">@ContractNumberDisplay</span>
+                                    </div>
+                                    <div class="context-item">
+                                        <span class="context-label">Organization</span>
+                                        <span class="context-value">@OrganizationName</span>
+                                    </div>
+                                    <div class="context-item">
+                                        <span class="context-label">Assigned Outlet</span>
+                                        <span class="context-value fw-semibold text-dark">@OutletName</span>
+                                    </div>
+                                    <div class="context-item">
+                                        <span class="context-label">Contracted Vendor</span>
+                                        <span class="context-value fw-semibold text-success">@VendorName</span>
+                                    </div>
+                                    <div class="context-item">
+                                        <span class="context-label">Original Contract Term</span>
+                                        <span class="context-value">@ExpiredContract.StartDate.ToIst("dd MMM yyyy") &ndash; @ExpiredContract.EndDate.ToIst("dd MMM yyyy")</span>
+                                    </div>
+                                    <div class="context-item">
+                                        <span class="context-label">Current Status</span>
+                                        <span class="context-value text-danger fw-bold">Expired</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- RIGHT CARD: EDITABLE RENEWAL SCHEDULE & PAYMENT -->
+                            <div class="content-card">
+                                <div class="card-header-row">
+                                    <div class="card-icon-box">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                                        </svg>
+                                    </div>
+                                    <h3 class="card-section-title">Renewal Schedule &amp; Terms</h3>
+                                </div>
+
+                                <div class="editable-terms-form">
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold text-dark mb-1" style="font-size: 0.86rem;">
+                                                New Start Date <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="date" class="form-control" @bind="StartDate" disabled="@IsProcessing" />
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold text-dark mb-1" style="font-size: 0.86rem;">
+                                                New End Date <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="date" class="form-control @(EndDate <= StartDate ? "is-invalid" : "")" @bind="EndDate" disabled="@IsProcessing" />
+                                            @if (EndDate <= StartDate)
+                                            {
+                                                <div class="text-danger small mt-1">End date must be after start date.</div>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold text-dark mb-1" style="font-size: 0.86rem;">
+                                            Payment Method <span class="text-danger">*</span>
+                                        </label>
+                                        <select class="form-select" @bind="PaymentMethod" disabled="@IsProcessing">
+                                            <option value="Bank Transfer">Bank Transfer</option>
+                                            <option value="Net 30">Net 30</option>
+                                            <option value="Net 60">Net 60</option>
+                                            <option value="Cash on Delivery">Cash on Delivery</option>
+                                            <option value="Cheque">Cheque</option>
+                                            <option value="Credit Card">Credit Card</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="renewal-notice-box">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2 text-primary flex-shrink-0">
+                                            <circle cx="12" cy="12" r="10"></circle>
+                                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                        </svg>
+                                        <span>
+                                            Contract Quantity is a reference planning volume. The new active contract will initialize with <strong>0 Purchased Quantity</strong>.
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- =======================================================
+                             3. MULTI-PRODUCT PLANNING QUANTITIES TABLE
+                             ======================================================= -->
+                        <div class="content-card mb-4">
+                            <div class="card-header-row">
+                                <div class="card-icon-box">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line>
+                                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                                    </svg>
+                                </div>
+                                <div class="d-flex align-items-center justify-content-between flex-grow-1">
+                                    <div>
+                                        <h3 class="card-section-title mb-0">Product Reference Quantities</h3>
+                                        <p class="text-muted small mb-0">Adjust independent planning quantities for each contracted item.</p>
+                                    </div>
+                                    <span class="badge bg-light text-dark fw-bold border">
+                                        @ProductLines.Count @(ProductLines.Count == 1 ? "Product" : "Products")
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="alloc-table-wrap">
+                                <table class="alloc-table">
+                                    <thead>
+                                        <tr>
+                                            <th>PRODUCT</th>
+                                            <th class="text-center">OLD CONTRACT QTY</th>
+                                            <th class="text-center">HISTORICAL PURCHASED</th>
+                                            <th class="text-center">UNIT PRICE (READ-ONLY)</th>
+                                            <th class="text-center" style="min-width: 200px;">NEW REFERENCE QTY <span class="text-danger">*</span></th>
+                                            <th class="text-end">ESTIMATED LINE TOTAL</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var line in ProductLines)
+                                        {
+                                            var currentLine = line;
+                                            bool isInvalid = currentLine.NewQuantity <= 0;
+                                            <tr>
+                                                <td class="vendor-title-cell">
+                                                    <strong>@currentLine.ProductName</strong>
+                                                </td>
+                                                <td class="text-center text-muted">
+                                                    @currentLine.OldContractQuantity.ToString("N2") @currentLine.Unit
+                                                </td>
+                                                <td class="text-center text-muted">
+                                                    @currentLine.OldPurchasedQuantity.ToString("N2") @currentLine.Unit
+                                                </td>
+                                                <td class="text-center fw-semibold text-dark">
+                                                    @(currentLine.UnitPrice > 0 ? $"Rs. {currentLine.UnitPrice:N2} / {currentLine.Unit}" : "-")
+                                                </td>
+                                                <td class="text-center">
+                                                    <div class="input-group input-group-sm" style="max-width: 220px; margin: 0 auto;">
+                                                        <input type="number"
+                                                               step="any"
+                                                               min="0.01"
+                                                               class="form-control text-center fw-bold @(isInvalid ? "is-invalid" : "")"
+                                                               placeholder="Qty"
+                                                               value="@currentLine.QuantityInputString"
+                                                               @oninput="(e) => OnProductQuantityInput(currentLine, e)"
+                                                               disabled="@IsProcessing" />
+                                                        <span class="input-group-text bg-light text-muted fw-semibold">@currentLine.Unit</span>
+                                                    </div>
+                                                    @if (isInvalid)
+                                                    {
+                                                        <div class="text-danger small mt-1" style="font-size: 0.76rem;">Must be &gt; 0</div>
+                                                    }
+                                                </td>
+                                                <td class="text-end text-success fw-bold">
+                                                    Rs. @currentLine.EstimatedLineTotal.ToString("N2")
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- SUMMARY BAR -->
+                            <div class="contract-tracking-summary-bar mt-3 pt-3 border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div class="d-flex align-items-center gap-3 small flex-wrap">
+                                    <span>Total Expired Volume: <strong class="text-muted">@TotalOldQuantity.ToString("N2") Kg</strong></span>
+                                    <span class="text-muted">&bull;</span>
+                                    <span>Total New Reference Quantity: <strong class="text-success">@TotalReferenceQuantity.ToString("N2") Kg</strong></span>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="text-muted small">Total Estimated Contract Value:</span>
+                                    <span class="text-success fw-bold fs-6">Rs. @TotalEstimatedValue.ToString("N2")</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- =======================================================
+                             4. ACTION FOOTER
+                             ======================================================= -->
+                        <div class="d-flex justify-content-between align-items-center pt-2 pb-5">
+                            <button type="button" class="btn-cancel-renewal" @onclick="NavigateBack" disabled="@IsProcessing">
+                                Cancel &amp; Return
+                            </button>
+
+                            <button type="button" class="btn-proceed-review" @onclick="OpenReviewModal" disabled="@IsProcessing">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="me-1">
+                                    <polyline points="9 11 12 14 22 4"></polyline>
+                                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                                </svg>
+                                <span>Review Renewal Details</span>
+                            </button>
+                        </div>
+                    }
+
+                </div>
+            </main>
+
+        </div>
+
+    </div>
+}
+
+<!-- =======================================================================
+     REVIEW & SUBMISSION MODAL
+     ======================================================================= -->
+@if (IsReviewModalOpen && ExpiredContract != null)
+{
+    <div class="renewal-modal-backdrop" @onclick="CloseReviewModal">
+        <div class="renewal-modal-content" @onclick:stopPropagation="true">
+            <div class="renewal-modal-header">
+                <div class="renewal-header-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="1 4 1 10 7 10"></polyline>
+                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="renewal-modal-title">Review Contract Renewal</h3>
+                    <p class="renewal-modal-sub">Renewing Contract #@ExpiredContract.ContractID &bull; @OutletName</p>
+                </div>
+                <button type="button" class="btn-close-modal" @onclick="CloseReviewModal" aria-label="Close">&times;</button>
+            </div>
+
+            <div class="renewal-modal-body">
+                <div class="review-context-box mb-3">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <span class="review-label">Vendor:</span>
+                            <span class="review-val fw-bold text-success">@VendorName</span>
+                        </div>
+                        <div class="col-6">
+                            <span class="review-label">Outlet:</span>
+                            <span class="review-val fw-bold text-dark">@OutletName</span>
+                        </div>
+                        <div class="col-6">
+                            <span class="review-label">New Term:</span>
+                            <span class="review-val">@StartDate.ToIst("dd MMM yyyy") &ndash; @EndDate.ToIst("dd MMM yyyy")</span>
+                        </div>
+                        <div class="col-6">
+                            <span class="review-label">Payment Method:</span>
+                            <span class="review-val">@PaymentMethod</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PRODUCT COMPARISON TABLE -->
+                <div class="table-responsive mb-3" style="max-height: 260px; overflow-y: auto;">
+                    <table class="table table-sm table-bordered align-middle mb-0" style="font-size: 0.85rem;">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Product</th>
+                                <th class="text-center">Old Quantity</th>
+                                <th class="text-center">New Quantity</th>
+                                <th class="text-center">Unit Price</th>
+                                <th class="text-end">Estimated Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var p in ProductLines)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@p.ProductName</td>
+                                    <td class="text-center text-muted">@p.OldContractQuantity.ToString("N2") @p.Unit</td>
+                                    <td class="text-center fw-bold text-success">@p.NewQuantity.ToString("N2") @p.Unit</td>
+                                    <td class="text-center">Rs. @p.UnitPrice.ToString("N2")</td>
+                                    <td class="text-end fw-bold">Rs. @p.EstimatedLineTotal.ToString("N2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <th colspan="2" class="text-end">Totals:</th>
+                                <th class="text-center text-success fw-bold">@TotalReferenceQuantity.ToString("N2") Kg</th>
+                                <th></th>
+                                <th class="text-end text-success fw-bold">Rs. @TotalEstimatedValue.ToString("N2")</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="renewal-confirmation-callout">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2 text-warning flex-shrink-0">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    <span>
+                        The existing contract (#@ExpiredContract.ContractID) will remain <strong>Expired</strong> in audit history. A brand new <strong>Active</strong> contract will be created starting with <strong>0 Purchased Quantity</strong>.
+                    </span>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+                {
+                    <div class="alert alert-danger mt-3 py-2 small" role="alert">
+                        @ErrorMessage
+                    </div>
+                }
+            </div>
+
+            <div class="renewal-modal-footer">
+                <button type="button" class="btn-cancel-renewal" @onclick="CloseReviewModal" disabled="@IsProcessing">
+                    Edit Details
+                </button>
+                <button type="button" class="btn-confirm-renewal" @onclick="SubmitRenewalAsync" disabled="@IsProcessing">
+                    @if (IsProcessing)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        <span>Submitting Renewal...</span>
+                    }
+                    else
+                    {
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="me-1">
+                            <polyline points="1 4 1 10 7 10"></polyline>
+                            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                        </svg>
+                        <span>Confirm &amp; Renew Contract</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+}

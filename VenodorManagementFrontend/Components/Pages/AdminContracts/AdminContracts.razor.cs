@@ -108,6 +108,21 @@ public partial class AdminContracts : ComponentBase
         return VendorNames.TryGetValue(vendorId, out var name) ? name : $"Vendor #{vendorId}";
     }
 
+    private string GetContractProductsDisplay(ContractDto c)
+    {
+        if (c.ContractProducts != null && c.ContractProducts.Count > 1)
+        {
+            var names = c.ContractProducts
+                .Select(p => !string.IsNullOrWhiteSpace(p.ProductName) && !p.ProductName.StartsWith("Product #", StringComparison.OrdinalIgnoreCase)
+                    ? p.ProductName
+                    : GetProductName(p.ProductID))
+                .Where(n => !string.IsNullOrWhiteSpace(n))
+                .Distinct();
+            return string.Join(", ", names);
+        }
+        return GetProductName(c.ProductID);
+    }
+
     private string FormatDate(DateTime dt)
     {
         return dt.ToIst("yyyy-MM-dd HH:mm");

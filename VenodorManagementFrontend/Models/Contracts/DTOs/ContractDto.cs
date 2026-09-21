@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace VenodorManagementFrontend.Models;
 
@@ -19,6 +20,16 @@ public class ContractDto
     public string VendorName { get; set; } = string.Empty;
     public decimal TotalQuantity { get; set; }
     public decimal UsedQuantity { get; set; }
+    public decimal RemainingQuantity => Math.Max(TotalQuantity - UsedQuantity, 0m);
+    public decimal ExtraOrderQuantity => Math.Max(UsedQuantity - TotalQuantity, 0m);
+
+    public decimal? ContractQuantity { get; set; }
+    public decimal? PurchasedQuantity { get; set; }
+    public decimal? ContractTotalQuantity { get; set; }
+    public decimal? VarianceQuantity => PurchasedQuantity.HasValue && ContractQuantity.HasValue
+        ? PurchasedQuantity.Value - ContractQuantity.Value
+        : null;
+
     public decimal UnitPrice { get; set; }
     public decimal TaxAmount { get; set; }
     public decimal TotalAmount { get; set; }
@@ -42,5 +53,20 @@ public class ContractDto
     }
 
     public List<ContractVendorAllocationDto> Allocations { get; set; } = new();
-    public List<ContractProductDto> ContractProducts { get; set; } = new();
+
+    private List<ContractProductDto> _products = new();
+
+    [JsonPropertyName("products")]
+    public List<ContractProductDto> Products
+    {
+        get => _products;
+        set => _products = value ?? new();
+    }
+
+    [JsonPropertyName("contractProducts")]
+    public List<ContractProductDto> ContractProducts
+    {
+        get => _products;
+        set => _products = value ?? new();
+    }
 }

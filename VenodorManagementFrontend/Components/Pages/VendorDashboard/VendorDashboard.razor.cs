@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -797,6 +797,17 @@ public partial class VendorDashboard : ComponentBase
 
     private string GetContractProductName(ContractDto c)
     {
+        if (c.ContractProducts != null && c.ContractProducts.Count > 1)
+        {
+            var names = c.ContractProducts
+                .Select(p => !string.IsNullOrWhiteSpace(p.ProductName) && !p.ProductName.StartsWith("Product #", StringComparison.OrdinalIgnoreCase)
+                    ? p.ProductName
+                    : GetProductName(p.ProductID, c.RequestID ?? 0, c.QuotationID ?? 0))
+                .Where(n => !string.IsNullOrWhiteSpace(n))
+                .Distinct();
+            return string.Join(", ", names);
+        }
+
         if (!string.IsNullOrWhiteSpace(c.ProductName) && !c.ProductName.StartsWith("Product #", StringComparison.OrdinalIgnoreCase))
         {
             return c.ProductName;

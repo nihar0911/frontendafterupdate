@@ -1,0 +1,425 @@
+@rendermode InteractiveServer
+@implements IDisposable
+@inject AuthService Auth
+@inject ApiService Api
+@inject NavigationManager Nav
+
+<div class="profile-wrapper">
+    <button class="profile-pill-btn" @onclick="ToggleDropdown" type="button" aria-haspopup="true" aria-expanded="@IsOpen" title="Account Menu">
+        <div class="profile-avatar">@UserInitial</div>
+        <div class="profile-info">
+            <span class="profile-name">@DisplayName</span>
+            <span class="profile-role">@DisplayRole</span>
+        </div>
+        <svg class="profile-chevron @(IsOpen ? "open" : "")" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+    </button>
+
+    @if (IsOpen)
+    {
+        <div class="profile-dropdown-backdrop" @onclick="CloseDropdown"></div>
+        <div class="profile-dropdown-menu">
+            <button class="profile-menu-item" type="button" @onclick="HandleMyProfileClick">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                <span>My Profile</span>
+            </button>
+            <button class="profile-menu-item" type="button" @onclick="HandleEditProfileClick">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                <span>Edit Profile</span>
+            </button>
+            <button class="profile-menu-item logout" type="button" @onclick="HandleLogout">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                <span>Sign Out</span>
+            </button>
+        </div>
+    }
+</div>
+
+@* =========================================================================
+   BUILT-IN MY PROFILE MODAL
+   ========================================================================= *@
+@if (ShowProfileModal)
+{
+    <div class="profile-modal-backdrop" @onclick="CloseModals">
+        <div class="profile-modal-card" @onclick:stopPropagation="true">
+            <div class="profile-modal-header">
+                <h5 class="profile-modal-title">My Profile &mdash; @DisplayRole</h5>
+                <button type="button" class="profile-modal-close-btn" @onclick="CloseModals" title="Close">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="profile-modal-body">
+                <div class="text-center mb-4">
+                    <div class="profile-avatar-large mx-auto mb-2">@UserInitial</div>
+                    <h5 class="fw-bold mb-0 text-dark">@DisplayName</h5>
+                    <span class="text-muted small">@DisplayRole</span>
+                </div>
+
+                <div class="profile-meta-row">
+                    <span class="meta-label">Full Name</span>
+                    <span class="meta-val">@DisplayName</span>
+                </div>
+                <div class="profile-meta-row">
+                    <span class="meta-label">Email Address</span>
+                    <span class="meta-val">@(Auth.CurrentUser?.Email ?? Auth.Email)</span>
+                </div>
+                <div class="profile-meta-row">
+                    <span class="meta-label">Assigned Role</span>
+                    <span class="meta-val text-success fw-bold">@DisplayRole</span>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(OutletName))
+                {
+                    <div class="profile-meta-row">
+                        <span class="meta-label">Assigned Outlet</span>
+                        <span class="meta-val">@OutletName</span>
+                    </div>
+                }
+                @if (!string.IsNullOrWhiteSpace(OutletAddress))
+                {
+                    <div class="profile-meta-row">
+                        <span class="meta-label">Outlet Address</span>
+                        <span class="meta-val">@OutletAddress</span>
+                    </div>
+                }
+                @if (!string.IsNullOrWhiteSpace(OrganizationName))
+                {
+                    <div class="profile-meta-row">
+                        <span class="meta-label">Organization</span>
+                        <span class="meta-val">@OrganizationName</span>
+                    </div>
+                }
+                @if (!string.IsNullOrWhiteSpace(VendorName))
+                {
+                    <div class="profile-meta-row">
+                        <span class="meta-label">Assigned Vendor</span>
+                        <span class="meta-val">@VendorName</span>
+                    </div>
+                }
+            </div>
+            <div class="profile-modal-footer">
+                <button type="button" class="btn btn-outline-primary fw-semibold px-3 py-1.5" @onclick="OpenEditModal">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                    Edit Profile
+                </button>
+                <button type="button" class="btn btn-secondary fw-semibold px-4 py-1.5" @onclick="CloseModals">Close</button>
+            </div>
+        </div>
+    </div>
+}
+
+@* =========================================================================
+   BUILT-IN EDIT PROFILE MODAL
+   ========================================================================= *@
+@if (ShowEditProfileModal)
+{
+    <div class="profile-modal-backdrop" @onclick="CloseModals">
+        <div class="profile-modal-card" @onclick:stopPropagation="true">
+            <div class="profile-modal-header">
+                <h5 class="profile-modal-title">Edit Profile</h5>
+                <button type="button" class="profile-modal-close-btn" @onclick="CloseModals" title="Close" disabled="@IsSaving">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="profile-modal-body">
+                @if (!string.IsNullOrEmpty(FormError))
+                {
+                    <div class="alert alert-danger py-2 px-3 small mb-3">
+                        @FormError
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(FormSuccess))
+                {
+                    <div class="alert alert-success py-2 px-3 small mb-3">
+                        @FormSuccess
+                    </div>
+                }
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-dark">Full Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control form-control-sm" @bind="EditName" disabled="@IsSaving" placeholder="Enter your full name" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-dark">Email Address <span class="text-danger">*</span></label>
+                    <input type="email" class="form-control form-control-sm" @bind="EditEmail" disabled="@IsSaving" placeholder="Enter your email" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-dark">Role</label>
+                    <input type="text" class="form-control form-control-sm bg-light" value="@DisplayRole" readonly disabled />
+                    <div class="form-text small text-muted">Role permissions are system-assigned and read-only.</div>
+                </div>
+
+                <div class="border-top pt-3 mt-3">
+                    <span class="fw-bold small text-dark d-block mb-2">Change Password (Optional)</span>
+                    <div class="row g-2">
+                        <div class="col-sm-6">
+                            <label class="form-label small text-muted">New Password</label>
+                            <input type="password" class="form-control form-control-sm" @bind="EditPassword" disabled="@IsSaving" placeholder="Leave blank to keep" />
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label small text-muted">Confirm Password</label>
+                            <input type="password" class="form-control form-control-sm" @bind="EditConfirmPassword" disabled="@IsSaving" placeholder="Confirm new password" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="profile-modal-footer">
+                <button type="button" class="btn btn-outline-secondary fw-semibold px-3 py-1.5" @onclick="CloseModals" disabled="@IsSaving">
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-primary fw-semibold px-4 py-1.5 d-flex align-items-center gap-2" @onclick="SaveProfileChanges" disabled="@IsSaving">
+                    @if (IsSaving)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                        <span>Saving...</span>
+                    }
+                    else
+                    {
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                            <polyline points="7 3 7 8 15 8"></polyline>
+                        </svg>
+                        <span>Save Changes</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public EventCallback OnMyProfileClick { get; set; }
+    [Parameter] public EventCallback OnEditProfileClick { get; set; }
+    [Parameter] public string? OutletName { get; set; }
+    [Parameter] public string? OrganizationName { get; set; }
+    [Parameter] public string? VendorName { get; set; }
+    [Parameter] public string? OutletAddress { get; set; }
+
+    private bool IsOpen { get; set; }
+    private bool ShowProfileModal { get; set; }
+    private bool ShowEditProfileModal { get; set; }
+
+    // Edit form state
+    private string EditName { get; set; } = string.Empty;
+    private string EditEmail { get; set; } = string.Empty;
+    private string EditPassword { get; set; } = string.Empty;
+    private string EditConfirmPassword { get; set; } = string.Empty;
+    private bool IsSaving { get; set; }
+    private string? FormError { get; set; }
+    private string? FormSuccess { get; set; }
+
+    protected override void OnInitialized()
+    {
+        Auth.OnAuthStateChanged += HandleAuthStateChanged;
+    }
+
+    private void HandleAuthStateChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        Auth.OnAuthStateChanged -= HandleAuthStateChanged;
+    }
+
+    private string DisplayRole
+    {
+        get
+        {
+            if (Auth.IsAdmin) return "Admin";
+            if (Auth.IsOrgManager) return "Organization Manager";
+            if (Auth.IsOutletManager) return "Outlet Manager";
+            if (Auth.IsVendorManager) return "Vendor Manager";
+            if (Auth.IsPurchaseManager) return "Purchase Manager";
+            return !string.IsNullOrWhiteSpace(Auth.Role) ? Auth.Role : "User";
+        }
+    }
+
+    private string DisplayName
+    {
+        get
+        {
+            if (!string.IsNullOrWhiteSpace(Auth.UserName) && Auth.UserName != "Guest")
+                return Auth.UserName;
+            if (!string.IsNullOrWhiteSpace(Auth.CurrentUser?.Name))
+                return Auth.CurrentUser.Name;
+            return DisplayRole;
+        }
+    }
+
+    private string UserInitial
+    {
+        get
+        {
+            var name = DisplayName;
+            if (!string.IsNullOrWhiteSpace(name))
+                return name.Trim()[0].ToString().ToUpper();
+            return "U";
+        }
+    }
+
+    private void ToggleDropdown()
+    {
+        IsOpen = !IsOpen;
+    }
+
+    private void CloseDropdown()
+    {
+        IsOpen = false;
+    }
+
+    private async Task HandleMyProfileClick()
+    {
+        CloseDropdown();
+        if (OnMyProfileClick.HasDelegate)
+        {
+            await OnMyProfileClick.InvokeAsync();
+        }
+        else if (Auth.IsAdmin)
+        {
+            Nav.NavigateTo("/admin/profile");
+        }
+        else
+        {
+            ShowProfileModal = true;
+        }
+    }
+
+    private async Task HandleEditProfileClick()
+    {
+        CloseDropdown();
+        if (OnEditProfileClick.HasDelegate)
+        {
+            await OnEditProfileClick.InvokeAsync();
+        }
+        else if (Auth.IsAdmin)
+        {
+            Nav.NavigateTo("/admin/profile");
+        }
+        else
+        {
+            OpenEditModal();
+        }
+    }
+
+    private void OpenEditModal()
+    {
+        ShowProfileModal = false;
+        EditName = DisplayName;
+        EditEmail = Auth.CurrentUser?.Email ?? Auth.Email;
+        EditPassword = string.Empty;
+        EditConfirmPassword = string.Empty;
+        FormError = null;
+        FormSuccess = null;
+        ShowEditProfileModal = true;
+    }
+
+    private void CloseModals()
+    {
+        ShowProfileModal = false;
+        ShowEditProfileModal = false;
+        FormError = null;
+        FormSuccess = null;
+    }
+
+    private async Task SaveProfileChanges()
+    {
+        FormError = null;
+        FormSuccess = null;
+
+        if (string.IsNullOrWhiteSpace(EditName))
+        {
+            FormError = "Full name is required.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(EditEmail))
+        {
+            FormError = "Email address is required.";
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(EditPassword))
+        {
+            if (EditPassword.Length < 6)
+            {
+                FormError = "Password must be at least 6 characters long.";
+                return;
+            }
+
+            if (EditPassword != EditConfirmPassword)
+            {
+                FormError = "New passwords do not match.";
+                return;
+            }
+        }
+
+        IsSaving = true;
+        StateHasChanged();
+
+        try
+        {
+            var cmd = new UpdateMyProfileCommand
+            {
+                Name = EditName.Trim(),
+                Email = EditEmail.Trim(),
+                NewPassword = string.IsNullOrWhiteSpace(EditPassword) ? null : EditPassword
+            };
+
+            var result = await Api.UpdateMyProfileAsync(cmd);
+            if (result.Success && result.Data != null)
+            {
+                Auth.SetUser(result.Data);
+                FormSuccess = "Profile updated successfully!";
+                StateHasChanged();
+                await Task.Delay(800);
+                CloseModals();
+            }
+            else
+            {
+                FormError = !string.IsNullOrWhiteSpace(result.ErrorMessage)
+                    ? result.ErrorMessage
+                    : "Unable to update profile.";
+            }
+        }
+        catch (Exception ex)
+        {
+            FormError = $"An error occurred: {ex.Message}";
+        }
+        finally
+        {
+            IsSaving = false;
+            StateHasChanged();
+        }
+    }
+
+    private void HandleLogout()
+    {
+        CloseDropdown();
+        Auth.Logout();
+        Nav.NavigateTo("/login", true);
+    }
+}

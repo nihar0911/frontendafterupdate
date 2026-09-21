@@ -501,6 +501,7 @@ else
                                             <th class="th-address">ADDRESS</th>
                                             <th class="th-phone">PHONE</th>
                                             <th class="th-email">EMAIL</th>
+                                            <th class="th-status">STATUS</th>
                                             <th class="th-actions">ACTIONS</th>
                                         </tr>
                                     </thead>
@@ -517,12 +518,29 @@ else
                                                 <td class="td-address">@(string.IsNullOrWhiteSpace(currentOrg.Address) ? "—" : currentOrg.Address)</td>
                                                 <td class="td-phone">@(string.IsNullOrWhiteSpace(currentOrg.Phone) ? "—" : currentOrg.Phone)</td>
                                                 <td class="td-email">@(string.IsNullOrWhiteSpace(currentOrg.Email) ? "—" : currentOrg.Email)</td>
+                                                <td class="td-status">
+                                                    <span class="status-indicator">
+                                                        <span class="status-dot"></span>
+                                                        @(string.IsNullOrWhiteSpace(currentOrg.Status) ? "Active" : currentOrg.Status)
+                                                    </span>
+                                                </td>
                                                 <td class="td-actions">
                                                     <div class="action-btn-group">
                                                         <button type="button" class="btn-edit-action" @onclick="() => OpenEditModal(currentOrg)" disabled="@IsSubmitting" title="Edit Organization">
-                                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                                                            EDIT
+                                                            Edit
                                                         </button>
+                                                        @if (string.Equals(currentOrg.Status, "Inactive", StringComparison.OrdinalIgnoreCase))
+                                                        {
+                                                            <button type="button" class="btn-activate-action" @onclick="() => HandleActivateOrganization(currentOrg.OrganizationID)" disabled="@IsSubmitting" title="Activate Organization">
+                                                                Activate
+                                                            </button>
+                                                        }
+                                                        else
+                                                        {
+                                                            <button type="button" class="btn-deactivate-action" @onclick="() => HandleDeactivateOrganization(currentOrg.OrganizationID)" disabled="@IsSubmitting" title="Deactivate Organization">
+                                                                Deactivate
+                                                            </button>
+                                                        }
                                                         <button type="button" class="btn-more-action" @onclick="() => OpenDetailsDrawer(currentOrg)" title="View Organization Details">
                                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
                                                         </button>

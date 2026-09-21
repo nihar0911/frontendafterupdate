@@ -829,3 +829,70 @@ a:hover, .btn-link:hover {
     top: 0.65rem;
 }
 
+
+/* Master Data Action Buttons */
+.btn-edit-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.42rem 0.85rem;
+    background-color: transparent;
+    border: 1px solid #D1D5DB;
+    border-radius: 6px;
+    color: #134E48;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-transform: none;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+.btn-edit-action:hover:not(:disabled) {
+    background-color: #E8F5EE;
+    border-color: #134E48;
+    color: #0B2F2B;
+}
+
+.btn-activate-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.42rem 0.85rem;
+    background-color: transparent;
+    border: 1px solid #86EFAC;
+    border-radius: 6px;
+    color: #15803D;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-transform: none;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+.btn-activate-action:hover:not(:disabled) {
+    background-color: #DCFCE7;
+    border-color: #15803D;
+    color: #166534;
+}
+
+.btn-deactivate-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.42rem 0.85rem;
+    background-color: transparent;
+    border: 1px solid #FECACA;
+    border-radius: 6px;
+    color: #DC2626;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-transform: none;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+.btn-deactivate-action:hover:not(:disabled) {
+    background-color: #FEE2E2;
+    border-color: #DC2626;
+    color: #991B1B;
+}

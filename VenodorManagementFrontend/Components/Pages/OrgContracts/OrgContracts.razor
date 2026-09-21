@@ -1,4 +1,4 @@
-﻿@page "/org/contracts"
+@page "/org/contracts"
 @page "/organization/contracts"
 @rendermode InteractiveServer
 @inject ApiService Api
@@ -179,18 +179,6 @@ else
                 </ul>
 
                 <ul class="nav-list nav-list-bottom">
-                    <li class="nav-item">
-                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/org-dashboard")'>
-                            <span class="nav-icon">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                    <circle cx="12" cy="7" r="4"></circle>
-                                </svg>
-                            </span>
-                            <span class="nav-label">My Profile</span>
-                        </button>
-                    </li>
-
                     <li class="nav-item">
                         <button class="nav-link nav-logout" @onclick="HandleLogout">
                             <span class="nav-icon">
@@ -438,7 +426,8 @@ else
                                 @foreach (var contract in FilteredContracts)
                                 {
                                     var currentContract = contract;
-                                    decimal remaining = currentContract.TotalQuantity - currentContract.UsedQuantity;
+                                    decimal remaining = Math.Max(0m, currentContract.TotalQuantity - currentContract.UsedQuantity);
+                                    decimal extraOrder = Math.Max(0m, currentContract.UsedQuantity - currentContract.TotalQuantity);
                                     decimal totalVal = currentContract.TotalAmount > 0 
                                         ? currentContract.TotalAmount 
                                         : (currentContract.TotalQuantity * currentContract.UnitPrice + currentContract.TaxAmount);
@@ -510,7 +499,7 @@ else
                                             <div class="c-body-col">
                                                 <div class="c-field-group">
                                                     <span class="c-label">Product Contracted</span>
-                                                    <span class="c-val-product">@currentContract.ProductName</span>
+                                                    <span class="c-val-product">@GetContractProductsDisplay(currentContract)</span>
                                                 </div>
 
                                                 <div class="c-field-group">
@@ -555,6 +544,16 @@ else
                                         <!-- Card Action Footer -->
                                         <div class="contract-card-footer d-flex justify-content-between align-items-center">
                                             <div class="d-flex align-items-center gap-2">
+                                                @if (string.Equals(currentContract.Status, "Expired", StringComparison.OrdinalIgnoreCase) && (Auth.IsOrgManager || Auth.IsAdmin))
+                                                {
+                                                    <button type="button" class="btn-renew-contract" @onclick='() => Nav.NavigateTo($"/contract/{currentContract.ContractID}/renew")'>
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                            <polyline points="1 4 1 10 7 10"></polyline>
+                                                            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                                                        </svg>
+                                                        <span>Renew Contract</span>
+                                                    </button>
+                                                }
                                                 @if (string.Equals(currentContract.Status, "Reached", StringComparison.OrdinalIgnoreCase))
                                                 {
                                                     <button type="button" class="btn-reset-contract" @onclick="() => PromptResetContract(currentContract)">
@@ -562,7 +561,7 @@ else
                                                             <polyline points="1 4 1 10 7 10"></polyline>
                                                             <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
                                                         </svg>
-                                                        <span>Renew Contract</span>
+                                                        <span>Reset Allocation</span>
                                                     </button>
                                                 }
                                                 @if (string.Equals(currentContract.Status, "Active", StringComparison.OrdinalIgnoreCase) && (Auth.IsOrgManager || Auth.IsAdmin))

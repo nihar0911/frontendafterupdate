@@ -252,4 +252,78 @@ public partial class AdminUsers : ComponentBase
         }
         return string.Empty;
     }
+
+    private async Task HandleActivateUser(int userId)
+    {
+        IsSubmitting = true;
+        SuccessMessage = null;
+        ErrorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var result = await Api.ActivateUserAsync(userId);
+            if (result.Success)
+            {
+                SuccessMessage = "User activated successfully.";
+                await LoadData();
+            }
+            else
+            {
+                ErrorMessage = !string.IsNullOrWhiteSpace(result.ErrorMessage)
+                    ? result.ErrorMessage
+                    : "Unable to activate user.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[AdminUsers] Error activating user: {ex.Message}");
+            ErrorMessage = "An error occurred while activating the user.";
+        }
+        finally
+        {
+            IsSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleDeactivateUser(int userId)
+    {
+        if (Auth.UserID == userId)
+        {
+            ErrorMessage = "You cannot deactivate your own currently logged-in account.";
+            return;
+        }
+
+        IsSubmitting = true;
+        SuccessMessage = null;
+        ErrorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var result = await Api.DeactivateUserAsync(userId);
+            if (result.Success)
+            {
+                SuccessMessage = "User deactivated successfully.";
+                await LoadData();
+            }
+            else
+            {
+                ErrorMessage = !string.IsNullOrWhiteSpace(result.ErrorMessage)
+                    ? result.ErrorMessage
+                    : "Unable to deactivate user.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[AdminUsers] Error deactivating user: {ex.Message}");
+            ErrorMessage = "An error occurred while deactivating the user.";
+        }
+        finally
+        {
+            IsSubmitting = false;
+            StateHasChanged();
+        }
+    }
 }

@@ -251,4 +251,72 @@ public partial class AdminOrganizations : ComponentBase
             StateHasChanged();
         }
     }
+
+    private async Task HandleActivateOrganization(int orgId)
+    {
+        IsSubmitting = true;
+        SuccessMessage = null;
+        ErrorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var result = await Api.ActivateOrganizationAsync(orgId);
+            if (result.Success)
+            {
+                SuccessMessage = "Organization activated successfully.";
+                await LoadOrganizations();
+            }
+            else
+            {
+                ErrorMessage = !string.IsNullOrWhiteSpace(result.ErrorMessage)
+                    ? result.ErrorMessage
+                    : "Unable to activate organization.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[AdminOrganizations] Error activating organization: {ex.Message}");
+            ErrorMessage = "An error occurred while activating the organization.";
+        }
+        finally
+        {
+            IsSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleDeactivateOrganization(int orgId)
+    {
+        IsSubmitting = true;
+        SuccessMessage = null;
+        ErrorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var result = await Api.DeactivateOrganizationAsync(orgId);
+            if (result.Success)
+            {
+                SuccessMessage = "Organization deactivated successfully.";
+                await LoadOrganizations();
+            }
+            else
+            {
+                ErrorMessage = !string.IsNullOrWhiteSpace(result.ErrorMessage)
+                    ? result.ErrorMessage
+                    : "Unable to deactivate organization.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[AdminOrganizations] Error deactivating organization: {ex.Message}");
+            ErrorMessage = "An error occurred while deactivating the organization.";
+        }
+        finally
+        {
+            IsSubmitting = false;
+            StateHasChanged();
+        }
+    }
 }

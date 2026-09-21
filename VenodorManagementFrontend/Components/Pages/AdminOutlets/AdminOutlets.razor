@@ -393,6 +393,7 @@ else
                                             <th class="th-address">ADDRESS</th>
                                             <th class="th-approver">PO APPROVER</th>
                                             <th class="th-coords">COORDINATES (LAT / LONG)</th>
+                                            <th class="th-status">STATUS</th>
                                             <th class="th-actions">ACTIONS</th>
                                         </tr>
                                     </thead>
@@ -419,12 +420,29 @@ else
                                                 <td class="td-coords">
                                                     @(currentOutlet.Latitude.HasValue && currentOutlet.Longitude.HasValue ? $"{currentOutlet.Latitude.Value:F4}, {currentOutlet.Longitude.Value:F4}" : "N/A")
                                                 </td>
+                                                <td class="td-status">
+                                                    <span class="status-indicator">
+                                                        <span class="status-dot"></span>
+                                                        @(string.IsNullOrWhiteSpace(currentOutlet.Status) ? "Active" : currentOutlet.Status)
+                                                    </span>
+                                                </td>
                                                 <td class="td-actions">
                                                     <div class="action-btn-group">
                                                         <button type="button" class="btn-edit-action" @onclick="() => OpenEditModal(currentOutlet)" title="Edit outlet" disabled="@IsSubmitting">
-                                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                                             Edit
                                                         </button>
+                                                        @if (string.Equals(currentOutlet.Status, "Inactive", StringComparison.OrdinalIgnoreCase))
+                                                        {
+                                                            <button type="button" class="btn-activate-action" @onclick="() => HandleActivateOutlet(currentOutlet.OutletID)" title="Activate outlet" disabled="@IsSubmitting">
+                                                                Activate
+                                                            </button>
+                                                        }
+                                                        else
+                                                        {
+                                                            <button type="button" class="btn-deactivate-action" @onclick="() => HandleDeactivateOutlet(currentOutlet.OutletID)" title="Deactivate outlet" disabled="@IsSubmitting">
+                                                                Deactivate
+                                                            </button>
+                                                        }
                                                         <button type="button" class="btn-more-action" @onclick="() => OpenDetailsDrawer(currentOutlet)" title="View outlet details">
                                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
                                                         </button>

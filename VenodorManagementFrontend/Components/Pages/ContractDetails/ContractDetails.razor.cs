@@ -20,8 +20,30 @@ public partial class ContractDetails : ComponentBase
     private bool IsSidebarCollapsed { get; set; } = false;
     private bool IsProfileDropdownOpen { get; set; } = false;
 
-    private decimal RemainingQuantity => (Contract?.TotalQuantity ?? 0) - (Contract?.UsedQuantity ?? 0);
-    private decimal ComputedTotalValue => (Contract?.TotalAmount > 0) ? Contract.TotalAmount : ((Contract?.TotalQuantity ?? 0) * (Contract?.UnitPrice ?? 0) + (Contract?.TaxAmount ?? 0));
+    private decimal RemainingQuantity => Math.Max((Contract?.TotalQuantity ?? 0) - (Contract?.UsedQuantity ?? 0), 0m);
+    private decimal ExtraOrderQuantity => Math.Max((Contract?.UsedQuantity ?? 0) - (Contract?.TotalQuantity ?? 0), 0m);
+    private decimal ComputedTotalValue
+    {
+        get
+        {
+            if (Contract?.TotalAmount > 0) return Contract.TotalAmount;
+            if (Contract?.ContractProducts != null && Contract.ContractProducts.Count > 1)
+            {
+                decimal sum = Contract.ContractProducts.Sum(p => p.ContractQuantity * (p.UnitPrice ?? Contract.UnitPrice));
+                if (sum > 0) return sum + (Contract?.TaxAmount ?? 0m);
+            }
+            return ((Contract?.TotalQuantity ?? 0) * (Contract?.UnitPrice ?? 0) + (Contract?.TaxAmount ?? 0));
+        }
+    }
+
+    private string GetContractProductsSummary()
+    {
+        if (Contract?.ContractProducts != null && Contract.ContractProducts.Count > 1)
+        {
+            return string.Join(", ", Contract.ContractProducts.Select(p => p.ProductName));
+        }
+        return Contract?.ProductName ?? "Products";
+    }
 
     private void ToggleSidebar()
     {
@@ -156,6 +178,60 @@ public partial class ContractDetails : ComponentBase
                 Contract.ProductName = $"Product #{Contract.ProductID}";
             }
 
+            // Enrich all ContractProducts
+            if (Contract.ContractProducts != null && Contract.ContractProducts.Count > 0)
+            {
+                foreach (var cp in Contract.ContractProducts)
+                {
+                    var matchedP = products?.FirstOrDefault(p => p.ProductID == cp.ProductID);
+                    if (matchedP != null)
+                    {
+                        if (string.IsNullOrWhiteSpace(cp.ProductName) || cp.ProductName.StartsWith("Product #", StringComparison.OrdinalIgnoreCase))
+                        {
+                            cp.ProductName = matchedP.ProductName;
+                        }
+                        if (string.IsNullOrWhiteSpace(cp.Unit))
+                        {
+                            cp.Unit = matchedP.Unit ?? Contract.Unit ?? "Kg";
+                        }
+                    }
+                    else if (string.IsNullOrWhiteSpace(cp.ProductName))
+                    {
+                        cp.ProductName = $"Product #{cp.ProductID}";
+                    }
+
+                    if (string.IsNullOrWhiteSpace(cp.Unit))
+                    {
+                        cp.Unit = !string.IsNullOrWhiteSpace(Contract.Unit) ? Contract.Unit : "Kg";
+                    }
+
+                    if (!cp.UnitPrice.HasValue || cp.UnitPrice == 0)
+                    {
+                        if (Contract.UnitPrice > 0)
+                        {
+                            cp.UnitPrice = Contract.UnitPrice;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Fallback for single-product contracts if ContractProducts was empty in response
+                Contract.ContractProducts = new List<ContractProductDto>
+                {
+                    new ContractProductDto
+                    {
+                        ContractID = Contract.ContractID,
+                        ProductID = Contract.ProductID,
+                        ProductName = !string.IsNullOrWhiteSpace(Contract.ProductName) ? Contract.ProductName : $"Product #{Contract.ProductID}",
+                        Unit = !string.IsNullOrWhiteSpace(Contract.Unit) ? Contract.Unit : "Kg",
+                        ContractQuantity = Contract.TotalQuantity,
+                        PurchasedQuantity = Contract.UsedQuantity,
+                        UnitPrice = Contract.UnitPrice
+                    }
+                };
+            }
+
             var vendors = await vendorsTask;
             var firstAlloc = Contract.Allocations?.FirstOrDefault();
             int vendorId = Contract.VendorID ?? firstAlloc?.VendorID ?? 0;
@@ -169,16 +245,35 @@ public partial class ContractDetails : ComponentBase
                 Contract.VendorName = $"Vendor #{vendorId}";
             }
 
-            // If unit price / financials are 0 and QuotationID exists, enrich from quotation
-            if (Contract.UnitPrice == 0 && Contract.QuotationID.HasValue && Contract.QuotationID.Value > 0)
+            // If QuotationID exists, enrich financials and per-product unit prices from quotation
+            if (Contract.QuotationID.HasValue && Contract.QuotationID.Value > 0)
             {
                 var quote = await Api.GetQuotationByIdAsync(Contract.QuotationID.Value);
                 if (quote?.Items != null && quote.Items.Count > 0)
                 {
-                    var qItem = quote.Items.First();
-                    Contract.UnitPrice = qItem.UnitPrice;
-                    Contract.TaxAmount = qItem.TaxAmount;
-                    Contract.TotalAmount = quote.Items.Sum(i => i.TotalAmount > 0 ? i.TotalAmount : (i.Quantity * i.UnitPrice + i.TaxAmount));
+                    if (Contract.UnitPrice == 0)
+                    {
+                        var qItem = quote.Items.First();
+                        Contract.UnitPrice = qItem.UnitPrice;
+                        Contract.TaxAmount = qItem.TaxAmount;
+                        Contract.TotalAmount = quote.Items.Sum(i => i.TotalAmount > 0 ? i.TotalAmount : (i.Quantity * i.UnitPrice + i.TaxAmount));
+                    }
+
+                    foreach (var cp in Contract.ContractProducts)
+                    {
+                        if (!cp.UnitPrice.HasValue || cp.UnitPrice == 0)
+                        {
+                            var matchingQItem = quote.Items.FirstOrDefault(qi => qi.ProductID == cp.ProductID);
+                            if (matchingQItem != null && matchingQItem.UnitPrice > 0)
+                            {
+                                cp.UnitPrice = matchingQItem.UnitPrice;
+                            }
+                            else if (Contract.UnitPrice > 0)
+                            {
+                                cp.UnitPrice = Contract.UnitPrice;
+                            }
+                        }
+                    }
                 }
             }
 

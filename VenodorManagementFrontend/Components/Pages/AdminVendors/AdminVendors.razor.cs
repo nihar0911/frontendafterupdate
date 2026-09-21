@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -171,6 +171,74 @@ public partial class AdminVendors : ComponentBase
         {
             Console.WriteLine($"[AdminVendors] Error updating vendor: {ex.Message}");
             ErrorMessage = "An error occurred while updating the vendor.";
+        }
+        finally
+        {
+            IsSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleActivateVendor(int vendorId)
+    {
+        IsSubmitting = true;
+        SuccessMessage = null;
+        ErrorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var result = await Api.ActivateVendorAsync(vendorId);
+            if (result.Success)
+            {
+                SuccessMessage = "Vendor activated successfully.";
+                await LoadVendors();
+            }
+            else
+            {
+                ErrorMessage = !string.IsNullOrWhiteSpace(result.ErrorMessage)
+                    ? result.ErrorMessage
+                    : "Unable to activate vendor.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[AdminVendors] Error activating vendor: {ex.Message}");
+            ErrorMessage = "An error occurred while activating the vendor.";
+        }
+        finally
+        {
+            IsSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleDeactivateVendor(int vendorId)
+    {
+        IsSubmitting = true;
+        SuccessMessage = null;
+        ErrorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var result = await Api.DeactivateVendorAsync(vendorId);
+            if (result.Success)
+            {
+                SuccessMessage = "Vendor deactivated successfully.";
+                await LoadVendors();
+            }
+            else
+            {
+                ErrorMessage = !string.IsNullOrWhiteSpace(result.ErrorMessage)
+                    ? result.ErrorMessage
+                    : "Unable to deactivate vendor.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[AdminVendors] Error deactivating vendor: {ex.Message}");
+            ErrorMessage = "An error occurred while deactivating the vendor.";
         }
         finally
         {

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -203,5 +203,73 @@ public partial class AdminProducts : ComponentBase
     private TaxRateDto? GetTaxRate(int taxRateId)
     {
         return TaxRateMap.TryGetValue(taxRateId, out var tr) ? tr : null;
+    }
+
+    private async Task HandleActivateProduct(int productId)
+    {
+        IsSubmitting = true;
+        SuccessMessage = null;
+        ErrorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var result = await Api.ActivateProductAsync(productId);
+            if (result.Success)
+            {
+                SuccessMessage = "Product activated successfully.";
+                await LoadData();
+            }
+            else
+            {
+                ErrorMessage = !string.IsNullOrWhiteSpace(result.ErrorMessage)
+                    ? result.ErrorMessage
+                    : "Unable to activate product.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[AdminProducts] Error activating product: {ex.Message}");
+            ErrorMessage = "An error occurred while activating the product.";
+        }
+        finally
+        {
+            IsSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleDeactivateProduct(int productId)
+    {
+        IsSubmitting = true;
+        SuccessMessage = null;
+        ErrorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var result = await Api.DeactivateProductAsync(productId);
+            if (result.Success)
+            {
+                SuccessMessage = "Product deactivated successfully.";
+                await LoadData();
+            }
+            else
+            {
+                ErrorMessage = !string.IsNullOrWhiteSpace(result.ErrorMessage)
+                    ? result.ErrorMessage
+                    : "Unable to deactivate product.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[AdminProducts] Error deactivating product: {ex.Message}");
+            ErrorMessage = "An error occurred while deactivating the product.";
+        }
+        finally
+        {
+            IsSubmitting = false;
+            StateHasChanged();
+        }
     }
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
@@ -52,10 +52,10 @@ public partial class LoginForm : ComponentBase
         IsLoading = true;
         try
         {
-            var res = await Api.LoginAsync(Email, Password);
-            if (res != null && res.Login != null)
+            var res = await Api.LoginWithDetailsAsync(Email, Password);
+            if (res.Success && res.Data?.Login != null)
             {
-                var authenticatedRole = res.Login.Role ?? string.Empty;
+                var authenticatedRole = res.Data.Login.Role ?? string.Empty;
 
                 // Validate that the authenticated role matches the selected portal
                 if (!string.IsNullOrEmpty(ExpectedRole))
@@ -100,7 +100,7 @@ public partial class LoginForm : ComponentBase
                     }
                 }
 
-                Auth.SetUser(res.Login);
+                Auth.SetUser(res.Data.Login);
                 if (Auth.IsAdmin)
                 {
                     Nav.NavigateTo("/admin");
@@ -124,7 +124,7 @@ public partial class LoginForm : ComponentBase
             }
             else
             {
-                ErrorMessage = "Invalid email or password.";
+                ErrorMessage = !string.IsNullOrWhiteSpace(res.ErrorMessage) ? res.ErrorMessage : "Invalid email or password.";
             }
         }
         catch (HttpRequestException)

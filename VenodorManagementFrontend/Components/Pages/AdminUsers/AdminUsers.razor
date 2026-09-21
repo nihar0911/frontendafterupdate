@@ -552,16 +552,32 @@ else
                                                 <td class="td-status">
                                                     <span class="status-indicator">
                                                         <span class="status-dot"></span>
-                                                        Active
+                                                        @(string.IsNullOrWhiteSpace(currentUser.Status) ? "Active" : currentUser.Status)
                                                     </span>
                                                 </td>
                                                 <td class="td-actions">
                                                     <div class="action-btn-group">
+                                                        <button type="button" class="btn-edit-action" @onclick="() => StartEditUser(currentUser)" title="Edit user" disabled="@IsSubmitting">
+                                                            Edit
+                                                        </button>
+                                                        @if (currentUser.UserID == (Auth.UserID))
+                                                        {
+                                                            @* Current logged-in admin cannot deactivate self *@
+                                                        }
+                                                        else if (string.Equals(currentUser.Status, "Inactive", StringComparison.OrdinalIgnoreCase))
+                                                        {
+                                                            <button type="button" class="btn-activate-action" @onclick="() => HandleActivateUser(currentUser.UserID)" title="Activate user" disabled="@IsSubmitting">
+                                                                Activate
+                                                            </button>
+                                                        }
+                                                        else
+                                                        {
+                                                            <button type="button" class="btn-deactivate-action" @onclick="() => HandleDeactivateUser(currentUser.UserID)" title="Deactivate user" disabled="@IsSubmitting">
+                                                                Deactivate
+                                                            </button>
+                                                        }
                                                         <button type="button" class="btn-view-action" @onclick="() => OpenDetailsDrawer(currentUser)" title="View user details">
                                                             View
-                                                        </button>
-                                                        <button type="button" class="btn-more-action" @onclick="() => StartEditUser(currentUser)" title="Edit user" disabled="@IsSubmitting">
-                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
                                                         </button>
                                                     </div>
                                                 </td>

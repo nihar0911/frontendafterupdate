@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -256,48 +256,66 @@ public partial class AdminVendorProducts : ComponentBase
         }
     }
 
-    private void OpenDeleteConfirm(VendorProductDto vp)
+    private async Task HandleActivateVendorProduct(int id)
     {
-        DeletingMapping = vp;
-        SelectedMappingDetails = null;
-        IsFormOpen = false;
-        EditingMapping = null;
+        IsSubmitting = true;
         SuccessMessage = null;
         ErrorMessage = null;
-    }
-
-    private async Task ConfirmDelete()
-    {
-        if (DeletingMapping == null) return;
-
-        IsSubmitting = true;
         StateHasChanged();
 
         try
         {
-            var vendorName = GetVendorName(DeletingMapping.VendorID);
-            var productName = GetProductName(DeletingMapping.ProductID);
-
-            var result = await Api.DeleteVendorProductAsync(DeletingMapping.VendorProductID);
+            var result = await Api.ActivateVendorProductAsync(id);
             if (result.Success)
             {
-                SuccessMessage = $"Mapping deleted -- {vendorName} to {productName}";
-                DeletingMapping = null;
+                SuccessMessage = "Vendor product mapping activated successfully.";
                 await LoadData();
             }
             else
             {
                 ErrorMessage = !string.IsNullOrWhiteSpace(result.ErrorMessage)
                     ? result.ErrorMessage
-                    : "Unable to delete vendor product mapping.";
-                DeletingMapping = null;
+                    : "Unable to activate vendor product mapping.";
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[AdminVendorProducts] Error deleting mapping: {ex.Message}");
-            ErrorMessage = "An error occurred while deleting the mapping.";
-            DeletingMapping = null;
+            Console.WriteLine($"[AdminVendorProducts] Error activating mapping: {ex.Message}");
+            ErrorMessage = "An error occurred while activating the vendor product mapping.";
+        }
+        finally
+        {
+            IsSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleDeactivateVendorProduct(int id)
+    {
+        IsSubmitting = true;
+        SuccessMessage = null;
+        ErrorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var result = await Api.DeactivateVendorProductAsync(id);
+            if (result.Success)
+            {
+                SuccessMessage = "Vendor product mapping deactivated successfully.";
+                await LoadData();
+            }
+            else
+            {
+                ErrorMessage = !string.IsNullOrWhiteSpace(result.ErrorMessage)
+                    ? result.ErrorMessage
+                    : "Unable to deactivate vendor product mapping.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[AdminVendorProducts] Error deactivating mapping: {ex.Message}");
+            ErrorMessage = "An error occurred while deactivating the vendor product mapping.";
         }
         finally
         {

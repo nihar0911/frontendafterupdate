@@ -204,4 +204,72 @@ public partial class AdminOutlets : ComponentBase
     {
         return OrgNames.TryGetValue(orgId, out var name) ? name : $"Organization #{orgId}";
     }
+
+    private async Task HandleActivateOutlet(int outletId)
+    {
+        IsSubmitting = true;
+        SuccessMessage = null;
+        ErrorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var result = await Api.ActivateOutletAsync(outletId);
+            if (result.Success)
+            {
+                SuccessMessage = "Outlet activated successfully.";
+                await LoadData();
+            }
+            else
+            {
+                ErrorMessage = !string.IsNullOrWhiteSpace(result.ErrorMessage)
+                    ? result.ErrorMessage
+                    : "Unable to activate outlet.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[AdminOutlets] Error activating outlet: {ex.Message}");
+            ErrorMessage = "An error occurred while activating the outlet.";
+        }
+        finally
+        {
+            IsSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleDeactivateOutlet(int outletId)
+    {
+        IsSubmitting = true;
+        SuccessMessage = null;
+        ErrorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var result = await Api.DeactivateOutletAsync(outletId);
+            if (result.Success)
+            {
+                SuccessMessage = "Outlet deactivated successfully.";
+                await LoadData();
+            }
+            else
+            {
+                ErrorMessage = !string.IsNullOrWhiteSpace(result.ErrorMessage)
+                    ? result.ErrorMessage
+                    : "Unable to deactivate outlet.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[AdminOutlets] Error deactivating outlet: {ex.Message}");
+            ErrorMessage = "An error occurred while deactivating the outlet.";
+        }
+        finally
+        {
+            IsSubmitting = false;
+            StateHasChanged();
+        }
+    }
 }

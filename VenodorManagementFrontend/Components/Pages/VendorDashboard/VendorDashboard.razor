@@ -351,15 +351,8 @@ else
                         </svg>
                     </div>
 
-                    <!-- TOP HEADER LOGOUT BUTTON -->
-                    <button type="button" class="vd-header-pill vd-logout-header-pill" @onclick="HandleLogout" title="Logout">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                            <polyline points="16 17 21 12 16 7"></polyline>
-                            <line x1="21" y1="12" x2="9" y2="12"></line>
-                        </svg>
-                        <span>Logout</span>
-                    </button>
+                    <!-- User Profile Dropdown Menu -->
+                    <ProfileMenu OnMyProfileClick='() => SetSidebarNav("MyProfile")' VendorName="@VendorName" />
                 </div>
             </header>
 
@@ -814,24 +807,54 @@ else
                                         <h5 class="fw-bold text-dark mb-0 fs-6">Product &amp; Supply Details</h5>
                                     </div>
 
-                                    <div class="d-flex flex-column gap-3">
-                                        <div class="d-flex justify-content-between align-items-center py-2.5 border-bottom">
-                                            <span class="text-muted small">Procured Product</span>
-                                            <strong class="text-dark">@GetContractProductName(SelectedContract)</strong>
+                                    @if (SelectedContract.ContractProducts != null && SelectedContract.ContractProducts.Count > 1)
+                                    {
+                                        <div class="table-responsive mt-2">
+                                            <table class="table table-sm table-borderless align-middle mb-0" style="font-size: 0.85rem;">
+                                                <thead>
+                                                    <tr class="text-muted border-bottom" style="font-size: 0.72rem; letter-spacing: 0.03em;">
+                                                        <th>PRODUCT</th>
+                                                        <th class="text-end">CONTRACTED</th>
+                                                        <th class="text-end">FULFILLED</th>
+                                                        <th class="text-end">REMAINING</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var p in SelectedContract.ContractProducts)
+                                                    {
+                                                        string pUnit = string.IsNullOrWhiteSpace(p.Unit) ? GetContractUnit(SelectedContract) : p.Unit;
+                                                        <tr class="border-bottom">
+                                                            <td class="fw-semibold text-dark">@p.ProductName</td>
+                                                            <td class="text-end text-success fw-bold">@p.ContractQuantity.ToString("N2") @pUnit</td>
+                                                            <td class="text-end text-dark">@p.PurchasedQuantity.ToString("N2") @pUnit</td>
+                                                            <td class="text-end text-success fw-bold">@p.RemainingQuantity.ToString("N2") @pUnit</td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
                                         </div>
-                                        <div class="d-flex justify-content-between align-items-center py-2.5 border-bottom">
-                                            <span class="text-muted small">Agreed Unit Price</span>
-                                            <strong class="text-dark">Rs. @SelectedContract.UnitPrice.ToString("N2") / @GetContractUnit(SelectedContract)</strong>
+                                    }
+                                    else
+                                    {
+                                        <div class="d-flex flex-column gap-3">
+                                            <div class="d-flex justify-content-between align-items-center py-2.5 border-bottom">
+                                                <span class="text-muted small">Procured Product</span>
+                                                <strong class="text-dark">@GetContractProductName(SelectedContract)</strong>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center py-2.5 border-bottom">
+                                                <span class="text-muted small">Agreed Unit Price</span>
+                                                <strong class="text-dark">Rs. @SelectedContract.UnitPrice.ToString("N2") / @GetContractUnit(SelectedContract)</strong>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center py-2.5 border-bottom">
+                                                <span class="text-muted small">Fulfilled / Used Quantity</span>
+                                                <span class="text-dark">@SelectedContract.UsedQuantity.ToString("N2") @GetContractUnit(SelectedContract) (@GetUsedPercent(SelectedContract)%)</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center py-2.5">
+                                                <span class="text-muted small">Remaining Allocation</span>
+                                                <strong style="color: #047857;">@((SelectedContract.TotalQuantity - SelectedContract.UsedQuantity).ToString("N2")) @GetContractUnit(SelectedContract) (@GetRemainingPercent(SelectedContract)%)</strong>
+                                            </div>
                                         </div>
-                                        <div class="d-flex justify-content-between align-items-center py-2.5 border-bottom">
-                                            <span class="text-muted small">Fulfilled / Used Quantity</span>
-                                            <span class="text-dark">@SelectedContract.UsedQuantity.ToString("N2") @GetContractUnit(SelectedContract) (@GetUsedPercent(SelectedContract)%)</span>
-                                        </div>
-                                        <div class="d-flex justify-content-between align-items-center py-2.5">
-                                            <span class="text-muted small">Remaining Allocation</span>
-                                            <strong style="color: #047857;">@((SelectedContract.TotalQuantity - SelectedContract.UsedQuantity).ToString("N2")) @GetContractUnit(SelectedContract) (@GetRemainingPercent(SelectedContract)%)</strong>
-                                        </div>
-                                    </div>
+                                    }
                                 </div>
                             </div>
 

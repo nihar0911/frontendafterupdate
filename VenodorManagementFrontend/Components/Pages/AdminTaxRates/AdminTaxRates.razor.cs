@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -235,6 +235,74 @@ public partial class AdminTaxRates : ComponentBase
         {
             Console.WriteLine($"[AdminTaxRates] Error updating tax rate: {ex.Message}");
             ErrorMessage = "An error occurred while updating the tax rate.";
+        }
+        finally
+        {
+            IsSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleActivateTaxRate(int taxRateId)
+    {
+        IsSubmitting = true;
+        SuccessMessage = null;
+        ErrorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var result = await Api.ActivateTaxRateAsync(taxRateId);
+            if (result.Success)
+            {
+                SuccessMessage = "Tax rate activated successfully.";
+                await LoadTaxRates();
+            }
+            else
+            {
+                ErrorMessage = !string.IsNullOrWhiteSpace(result.ErrorMessage)
+                    ? result.ErrorMessage
+                    : "Unable to activate tax rate.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[AdminTaxRates] Error activating tax rate: {ex.Message}");
+            ErrorMessage = "An error occurred while activating the tax rate.";
+        }
+        finally
+        {
+            IsSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleDeactivateTaxRate(int taxRateId)
+    {
+        IsSubmitting = true;
+        SuccessMessage = null;
+        ErrorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var result = await Api.DeactivateTaxRateAsync(taxRateId);
+            if (result.Success)
+            {
+                SuccessMessage = "Tax rate deactivated successfully.";
+                await LoadTaxRates();
+            }
+            else
+            {
+                ErrorMessage = !string.IsNullOrWhiteSpace(result.ErrorMessage)
+                    ? result.ErrorMessage
+                    : "Unable to deactivate tax rate.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[AdminTaxRates] Error deactivating tax rate: {ex.Message}");
+            ErrorMessage = "An error occurred while deactivating the tax rate.";
         }
         finally
         {

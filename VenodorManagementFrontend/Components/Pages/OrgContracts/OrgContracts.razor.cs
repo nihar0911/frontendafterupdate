@@ -137,6 +137,24 @@ public partial class OrgContracts : ComponentBase
                     contract.ProductName = $"Product #{contract.ProductID}";
                 }
 
+                if (contract.ContractProducts != null && contract.ContractProducts.Count > 0)
+                {
+                    foreach (var cp in contract.ContractProducts)
+                    {
+                        if (productsDict.TryGetValue(cp.ProductID, out var cpp))
+                        {
+                            if (string.IsNullOrWhiteSpace(cp.ProductName) || cp.ProductName.StartsWith("Product #", StringComparison.OrdinalIgnoreCase))
+                            {
+                                cp.ProductName = cpp.ProductName;
+                            }
+                            if (string.IsNullOrWhiteSpace(cp.Unit))
+                            {
+                                cp.Unit = cpp.Unit ?? contract.Unit ?? "Kg";
+                            }
+                        }
+                    }
+                }
+
                 var firstAlloc = contract.Allocations?.FirstOrDefault();
                 int vendorId = contract.VendorID ?? firstAlloc?.VendorID ?? 0;
                 if (vendorsDict.TryGetValue(vendorId, out var ven))
@@ -183,7 +201,8 @@ public partial class OrgContracts : ComponentBase
                     c.ContractID.ToString().Contains(term) ||
                     (!string.IsNullOrEmpty(c.ProductName) && c.ProductName.ToLowerInvariant().Contains(term)) ||
                     (!string.IsNullOrEmpty(c.VendorName) && c.VendorName.ToLowerInvariant().Contains(term)) ||
-                    (!string.IsNullOrEmpty(c.OutletName) && c.OutletName.ToLowerInvariant().Contains(term))
+                    (!string.IsNullOrEmpty(c.OutletName) && c.OutletName.ToLowerInvariant().Contains(term)) ||
+                    (c.ContractProducts != null && c.ContractProducts.Any(cp => !string.IsNullOrEmpty(cp.ProductName) && cp.ProductName.ToLowerInvariant().Contains(term)))
                 );
             }
 
@@ -195,6 +214,15 @@ public partial class OrgContracts : ComponentBase
                 _ => query.OrderByDescending(c => c.ContractID)
             };
         }
+    }
+
+    private string GetContractProductsDisplay(ContractDto c)
+    {
+        if (c.ContractProducts != null && c.ContractProducts.Count > 1)
+        {
+            return string.Join(", ", c.ContractProducts.Select(p => p.ProductName));
+        }
+        return !string.IsNullOrWhiteSpace(c.ProductName) ? c.ProductName : "Products";
     }
 
     private int ActiveContractsCount => AllOrgContracts.Count(c => string.Equals(c.Status, "Active", StringComparison.OrdinalIgnoreCase));

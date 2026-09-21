@@ -1947,5 +1947,269 @@
     border-color: #113B34;
 }
 
+/* -----------------------------------------------------------------------------
+   9. MULTI-VENDOR SPLIT ALLOCATION STYLES
+   ----------------------------------------------------------------------------- */
+.split-toggle-field-wrap {
+    display: flex;
+    align-items: center;
+}
+
+.split-checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.78rem;
+    font-weight: 650;
+    color: #174F45;
+    background-color: #E6F4EA;
+    border: 1px solid #C6E7D1;
+    padding: 0.28rem 0.65rem;
+    border-radius: 4px;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s ease;
+    height: 32px;
+}
+
+.split-checkbox-label:hover {
+    background-color: #DCFCE7;
+    border-color: #86EFAC;
+}
+
+.split-checkbox-input {
+    accent-color: #174F45;
+    cursor: pointer;
+    width: 15px;
+    height: 15px;
+    margin: 0;
+}
+
+.split-checkbox-text {
+    white-space: nowrap;
+}
+
+/* Split Allocation Details Panel */
+.split-allocation-panel {
+    background-color: #F9FAFB;
+    border-top: 1px solid #E5E7EB;
+    padding: 1rem 1.15rem;
+}
+
+.split-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.split-panel-title-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.split-panel-title {
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: #111827;
+}
+
+.split-panel-sub {
+    font-size: 0.76rem;
+    color: #6B7280;
+}
+
+.btn-split-equally {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.32rem 0.75rem;
+    background-color: #FFFFFF;
+    border: 1px solid #174F45;
+    border-radius: 4px;
+    color: #174F45;
+    font-size: 0.76rem;
+    font-weight: 750;
+    cursor: pointer;
+    transition: all 0.15s;
+    height: 28px;
+}
+
+.btn-split-equally:hover {
+    background-color: #E6F4EA;
+    color: #113B34;
+}
+
+.split-empty-state {
+    background-color: #FFFFFF;
+    border: 1px dashed #D1D5DB;
+    border-radius: 4px;
+    padding: 1.25rem 1rem;
+    text-align: center;
+    font-size: 0.82rem;
+    color: #6B7280;
+}
+
+/* Split Allocations Table */
+.split-allocations-table-wrap {
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin-bottom: 0.75rem;
+}
+
+.split-allocations-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+}
+
+.split-allocations-table th {
+    background-color: #F9FAFB;
+    color: #4B5563;
+    font-size: 0.7rem;
+    font-weight: 750;
+    letter-spacing: 0.04em;
+    padding: 0.55rem 0.85rem;
+    border-bottom: 1px solid #E5E7EB;
+    text-align: left;
+}
+
+.split-allocations-table td {
+    padding: 0.65rem 0.85rem;
+    border-bottom: 1px solid #F3F4F6;
+    color: #374151;
+    vertical-align: middle;
+}
+
+.split-allocations-table tr:last-child td {
+    border-bottom: none;
+}
+
+.split-alloc-vendor-name {
+    font-weight: 750;
+    color: #111827;
+}
+
+.split-alloc-price {
+    font-weight: 700;
+    color: #174F45;
+}
+
+.split-qty-input-group {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #D1D5DB;
+    border-radius: 4px;
+    overflow: hidden;
+    background-color: #FFFFFF;
+}
+
+.split-qty-input-field {
+    width: 90px;
+    padding: 0.3rem 0.5rem;
+    border: none;
+    font-size: 0.84rem;
+    font-weight: 750;
+    color: #111827;
+    text-align: right;
+    outline: none;
+}
+
+.split-qty-input-field:focus {
+    background-color: #F0FDF4;
+}
+
+.split-qty-unit {
+    padding: 0 0.5rem;
+    background-color: #F3F4F6;
+    color: #4B5563;
+    font-size: 0.76rem;
+    font-weight: 700;
+    border-left: 1px solid #E5E7EB;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    height: 28px;
+}
+
+.btn-remove-split-alloc {
+    padding: 0.25rem 0.6rem;
+    background-color: #FEE2E2;
+    color: #991B1B;
+    border: 1px solid #FECACA;
+    border-radius: 4px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.btn-remove-split-alloc:hover {
+    background-color: #FCA5A5;
+}
+
+/* Split Summary Footer */
+.split-summary-footer {
+    padding: 0.65rem 0.9rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+.split-summary-footer.split-valid {
+    background-color: #F0FDF4;
+    border: 1px solid #BBF7D0;
+    color: #166534;
+}
+
+.split-summary-footer.split-remaining {
+    background-color: #FFFBEB;
+    border: 1px solid #FDE68A;
+    color: #92400E;
+}
+
+.split-summary-footer.split-exceeds {
+    background-color: #FEF2F2;
+    border: 1px solid #FECACA;
+    color: #991B1B;
+}
+
+.split-summary-metrics {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.split-metric-item {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.split-metric-label {
+    font-weight: 650;
+    opacity: 0.9;
+}
+
+.split-metric-val {
+    font-weight: 750;
+}
+
+.split-metric-divider {
+    color: #9CA3AF;
+    font-size: 0.85rem;
+}
+
+.text-warning-custom {
+    color: #B45309 !important;
+}
+
+
 
 

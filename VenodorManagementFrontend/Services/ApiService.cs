@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -1480,8 +1480,96 @@ namespace VenodorManagementFrontend.Services
                 };
             }
         }
+
+        public async Task<ApiResult<ContractDto>> RenewContractAsync(int contractId, RenewContractCommand command)
+        {
+            SetAuthHeader();
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync($"api/Contract/{contractId}/renew", command);
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<VenodorManagementFrontend.Models.RenewContractResponse>();
+                    if (result?.Contract != null && result.Contract.ContractID > 0)
+                    {
+                        return new ApiResult<ContractDto>
+                        {
+                            Success = true,
+                            Data = result.Contract
+                        };
+                    }
+
+                    try
+                    {
+                        var direct = await response.Content.ReadFromJsonAsync<ContractDto>();
+                        if (direct != null && direct.ContractID > 0)
+                        {
+                            return new ApiResult<ContractDto>
+                            {
+                                Success = true,
+                                Data = direct
+                            };
+                        }
+                    }
+                    catch { }
+                }
+
+                string errorText = "Unable to renew contract.";
+                try
+                {
+                    var jsonDoc = await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+                    if (jsonDoc.ValueKind == System.Text.Json.JsonValueKind.Object)
+                    {
+                        if (jsonDoc.TryGetProperty("message", out var msgProp) && msgProp.ValueKind == System.Text.Json.JsonValueKind.String)
+                        {
+                            errorText = msgProp.GetString()!;
+                        }
+                        else if (jsonDoc.TryGetProperty("error", out var errProp) && errProp.ValueKind == System.Text.Json.JsonValueKind.String)
+                        {
+                            errorText = errProp.GetString()!;
+                        }
+                        else if (jsonDoc.TryGetProperty("errors", out var errorsProp) && errorsProp.ValueKind == System.Text.Json.JsonValueKind.Object)
+                        {
+                            var sb = new System.Text.StringBuilder();
+                            foreach (var prop in errorsProp.EnumerateObject())
+                            {
+                                if (prop.Value.ValueKind == System.Text.Json.JsonValueKind.Array)
+                                {
+                                    foreach (var item in prop.Value.EnumerateArray())
+                                    {
+                                        if (sb.Length > 0) sb.Append(" ");
+                                        sb.Append(item.GetString());
+                                    }
+                                }
+                            }
+                            if (sb.Length > 0) errorText = sb.ToString();
+                        }
+                    }
+                }
+                catch
+                {
+                    var raw = await response.Content.ReadAsStringAsync();
+                    if (!string.IsNullOrWhiteSpace(raw)) errorText = raw;
+                }
+
+                return new ApiResult<ContractDto>
+                {
+                    Success = false,
+                    ErrorMessage = errorText
+                };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ApiService] Error renewing contract: {ex.Message}");
+                return new ApiResult<ContractDto>
+                {
+                    Success = false,
+                    ErrorMessage = ex.Message
+                };
+            }
+        }
     
-                public async Task<List<VendorProductDto>> GetVendorProductsAsync()
+        public async Task<List<VendorProductDto>> GetVendorProductsAsync()
         {
             SetAuthHeader();
             try
@@ -2267,7 +2355,346 @@ namespace VenodorManagementFrontend.Services
                 return (false, ex.Message, null);
             }
         }
+    
+        public async Task<ApiResult<LoginResponseWrapper>> LoginWithDetailsAsync(string email, string password)
+        {
+            try
+            {
+                var request = new LoginRequest { Email = email, Password = password };
+                var response = await _httpClient.PostAsJsonAsync("api/auth/login", request);
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<LoginResponseWrapper>();
+                    return new ApiResult<LoginResponseWrapper> { Success = true, Data = result };
+                }
+
+                string errorText = "Invalid email or password.";
+                try
+                {
+                    var raw = await response.Content.ReadAsStringAsync();
+                    using var doc = JsonDocument.Parse(raw);
+                    if (doc.RootElement.TryGetProperty("message", out var msgProp) && !string.IsNullOrWhiteSpace(msgProp.GetString()))
+                    {
+                        errorText = msgProp.GetString()!;
+                    }
+                }
+                catch { }
+
+                return new ApiResult<LoginResponseWrapper> { Success = false, ErrorMessage = errorText };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResult<LoginResponseWrapper> { Success = false, ErrorMessage = ex.Message };
+            }
+        }
+
+        // ==========================================
+        // ADMIN MASTER-DATA ACTIVATE / DEACTIVATE
+        // ==========================================
+
+        // 1. Vendors
+        public async Task<ApiResult<VendorDto>> ActivateVendorAsync(int vendorId)
+        {
+            SetAuthHeader();
+            try
+            {
+                var response = await _httpClient.PostAsync($"api/vendors/{vendorId}/activate", null);
+                if (response.IsSuccessStatusCode)
+                {
+                    var res = await response.Content.ReadFromJsonAsync<UpdateVendorResponse>();
+                    return new ApiResult<VendorDto> { Success = true, Data = res?.Vendor };
+                }
+                var error = await response.Content.ReadAsStringAsync();
+                return new ApiResult<VendorDto> { Success = false, ErrorMessage = error };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResult<VendorDto> { Success = false, ErrorMessage = ex.Message };
+            }
+        }
+
+        public async Task<ApiResult<VendorDto>> DeactivateVendorAsync(int vendorId)
+        {
+            SetAuthHeader();
+            try
+            {
+                var response = await _httpClient.PostAsync($"api/vendors/{vendorId}/deactivate", null);
+                if (response.IsSuccessStatusCode)
+                {
+                    var res = await response.Content.ReadFromJsonAsync<UpdateVendorResponse>();
+                    return new ApiResult<VendorDto> { Success = true, Data = res?.Vendor };
+                }
+                var error = await response.Content.ReadAsStringAsync();
+                return new ApiResult<VendorDto> { Success = false, ErrorMessage = error };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResult<VendorDto> { Success = false, ErrorMessage = ex.Message };
+            }
+        }
+
+        // 2. Products
+        public async Task<ApiResult<ProductDto>> ActivateProductAsync(int productId)
+        {
+            SetAuthHeader();
+            try
+            {
+                var response = await _httpClient.PostAsync($"api/products/{productId}/activate", null);
+                if (response.IsSuccessStatusCode)
+                {
+                    var res = await response.Content.ReadFromJsonAsync<UpdateProductResponse>();
+                    return new ApiResult<ProductDto> { Success = true, Data = res?.Product };
+                }
+                var error = await response.Content.ReadAsStringAsync();
+                return new ApiResult<ProductDto> { Success = false, ErrorMessage = error };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResult<ProductDto> { Success = false, ErrorMessage = ex.Message };
+            }
+        }
+
+        public async Task<ApiResult<ProductDto>> DeactivateProductAsync(int productId)
+        {
+            SetAuthHeader();
+            try
+            {
+                var response = await _httpClient.PostAsync($"api/products/{productId}/deactivate", null);
+                if (response.IsSuccessStatusCode)
+                {
+                    var res = await response.Content.ReadFromJsonAsync<UpdateProductResponse>();
+                    return new ApiResult<ProductDto> { Success = true, Data = res?.Product };
+                }
+                var error = await response.Content.ReadAsStringAsync();
+                return new ApiResult<ProductDto> { Success = false, ErrorMessage = error };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResult<ProductDto> { Success = false, ErrorMessage = ex.Message };
+            }
+        }
+
+        // 3. Vendor Products
+        public async Task<ApiResult<VendorProductDto>> ActivateVendorProductAsync(int id)
+        {
+            SetAuthHeader();
+            try
+            {
+                var response = await _httpClient.PostAsync($"api/vendorproducts/{id}/activate", null);
+                if (response.IsSuccessStatusCode)
+                {
+                    var res = await response.Content.ReadFromJsonAsync<UpdateVendorProductResponse>();
+                    return new ApiResult<VendorProductDto> { Success = true, Data = res?.VendorProduct };
+                }
+                var error = await response.Content.ReadAsStringAsync();
+                return new ApiResult<VendorProductDto> { Success = false, ErrorMessage = error };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResult<VendorProductDto> { Success = false, ErrorMessage = ex.Message };
+            }
+        }
+
+        public async Task<ApiResult<VendorProductDto>> DeactivateVendorProductAsync(int id)
+        {
+            SetAuthHeader();
+            try
+            {
+                var response = await _httpClient.PostAsync($"api/vendorproducts/{id}/deactivate", null);
+                if (response.IsSuccessStatusCode)
+                {
+                    var res = await response.Content.ReadFromJsonAsync<UpdateVendorProductResponse>();
+                    return new ApiResult<VendorProductDto> { Success = true, Data = res?.VendorProduct };
+                }
+                var error = await response.Content.ReadAsStringAsync();
+                return new ApiResult<VendorProductDto> { Success = false, ErrorMessage = error };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResult<VendorProductDto> { Success = false, ErrorMessage = ex.Message };
+            }
+        }
+
+        // 4. Tax Rates
+        public async Task<ApiResult<TaxRateDto>> ActivateTaxRateAsync(int taxRateId)
+        {
+            SetAuthHeader();
+            try
+            {
+                var response = await _httpClient.PostAsync($"api/taxrates/{taxRateId}/activate", null);
+                if (response.IsSuccessStatusCode)
+                {
+                    var res = await response.Content.ReadFromJsonAsync<UpdateTaxRateResponse>();
+                    return new ApiResult<TaxRateDto> { Success = true, Data = res?.TaxRate };
+                }
+                var error = await response.Content.ReadAsStringAsync();
+                return new ApiResult<TaxRateDto> { Success = false, ErrorMessage = error };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResult<TaxRateDto> { Success = false, ErrorMessage = ex.Message };
+            }
+        }
+
+        public async Task<ApiResult<TaxRateDto>> DeactivateTaxRateAsync(int taxRateId)
+        {
+            SetAuthHeader();
+            try
+            {
+                var response = await _httpClient.PostAsync($"api/taxrates/{taxRateId}/deactivate", null);
+                if (response.IsSuccessStatusCode)
+                {
+                    var res = await response.Content.ReadFromJsonAsync<UpdateTaxRateResponse>();
+                    return new ApiResult<TaxRateDto> { Success = true, Data = res?.TaxRate };
+                }
+                var error = await response.Content.ReadAsStringAsync();
+                return new ApiResult<TaxRateDto> { Success = false, ErrorMessage = error };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResult<TaxRateDto> { Success = false, ErrorMessage = ex.Message };
+            }
+        }
+
+        // 5. Organizations
+        public async Task<ApiResult<OrganizationDto>> ActivateOrganizationAsync(int orgId)
+        {
+            SetAuthHeader();
+            try
+            {
+                var response = await _httpClient.PostAsync($"api/organizations/{orgId}/activate", null);
+                if (response.IsSuccessStatusCode)
+                {
+                    var org = await response.Content.ReadFromJsonAsync<OrganizationDto>();
+                    return new ApiResult<OrganizationDto> { Success = true, Data = org };
+                }
+                var error = await response.Content.ReadAsStringAsync();
+                return new ApiResult<OrganizationDto> { Success = false, ErrorMessage = error };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResult<OrganizationDto> { Success = false, ErrorMessage = ex.Message };
+            }
+        }
+
+        public async Task<ApiResult<OrganizationDto>> DeactivateOrganizationAsync(int orgId)
+        {
+            SetAuthHeader();
+            try
+            {
+                var response = await _httpClient.PostAsync($"api/organizations/{orgId}/deactivate", null);
+                if (response.IsSuccessStatusCode)
+                {
+                    var org = await response.Content.ReadFromJsonAsync<OrganizationDto>();
+                    return new ApiResult<OrganizationDto> { Success = true, Data = org };
+                }
+                var error = await response.Content.ReadAsStringAsync();
+                return new ApiResult<OrganizationDto> { Success = false, ErrorMessage = error };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResult<OrganizationDto> { Success = false, ErrorMessage = ex.Message };
+            }
+        }
+
+        // 6. Outlets
+        public async Task<ApiResult<OutletDto>> ActivateOutletAsync(int outletId)
+        {
+            SetAuthHeader();
+            try
+            {
+                var response = await _httpClient.PostAsync($"api/outlets/{outletId}/activate", null);
+                if (response.IsSuccessStatusCode)
+                {
+                    var outlet = await response.Content.ReadFromJsonAsync<OutletDto>();
+                    return new ApiResult<OutletDto> { Success = true, Data = outlet };
+                }
+                var error = await response.Content.ReadAsStringAsync();
+                return new ApiResult<OutletDto> { Success = false, ErrorMessage = error };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResult<OutletDto> { Success = false, ErrorMessage = ex.Message };
+            }
+        }
+
+        public async Task<ApiResult<OutletDto>> DeactivateOutletAsync(int outletId)
+        {
+            SetAuthHeader();
+            try
+            {
+                var response = await _httpClient.PostAsync($"api/outlets/{outletId}/deactivate", null);
+                if (response.IsSuccessStatusCode)
+                {
+                    var outlet = await response.Content.ReadFromJsonAsync<OutletDto>();
+                    return new ApiResult<OutletDto> { Success = true, Data = outlet };
+                }
+                var error = await response.Content.ReadAsStringAsync();
+                return new ApiResult<OutletDto> { Success = false, ErrorMessage = error };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResult<OutletDto> { Success = false, ErrorMessage = ex.Message };
+            }
+        }
+
+        // 7. Users
+        public async Task<ApiResult<UserDto>> ActivateUserAsync(int userId)
+        {
+            SetAuthHeader();
+            try
+            {
+                var response = await _httpClient.PostAsync($"api/users/{userId}/activate", null);
+                if (response.IsSuccessStatusCode)
+                {
+                    var user = await response.Content.ReadFromJsonAsync<UserDto>();
+                    return new ApiResult<UserDto> { Success = true, Data = user };
+                }
+                var errorText = await response.Content.ReadAsStringAsync();
+                try
+                {
+                    using var doc = JsonDocument.Parse(errorText);
+                    if (doc.RootElement.TryGetProperty("message", out var msgProp))
+                    {
+                        return new ApiResult<UserDto> { Success = false, ErrorMessage = msgProp.GetString() };
+                    }
+                }
+                catch { }
+                return new ApiResult<UserDto> { Success = false, ErrorMessage = errorText };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResult<UserDto> { Success = false, ErrorMessage = ex.Message };
+            }
+        }
+
+        public async Task<ApiResult<UserDto>> DeactivateUserAsync(int userId)
+        {
+            SetAuthHeader();
+            try
+            {
+                var response = await _httpClient.PostAsync($"api/users/{userId}/deactivate", null);
+                if (response.IsSuccessStatusCode)
+                {
+                    var user = await response.Content.ReadFromJsonAsync<UserDto>();
+                    return new ApiResult<UserDto> { Success = true, Data = user };
+                }
+                var errorText = await response.Content.ReadAsStringAsync();
+                try
+                {
+                    using var doc = JsonDocument.Parse(errorText);
+                    if (doc.RootElement.TryGetProperty("message", out var msgProp))
+                    {
+                        return new ApiResult<UserDto> { Success = false, ErrorMessage = msgProp.GetString() };
+                    }
+                }
+                catch { }
+                return new ApiResult<UserDto> { Success = false, ErrorMessage = errorText };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResult<UserDto> { Success = false, ErrorMessage = ex.Message };
+            }
+        }
     }
 }
-
-

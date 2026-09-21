@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace VenodorManagementFrontend.Models;
@@ -39,4 +39,5 @@ public class VendorRecommendationDto
             ? PurchasedQuantity.Value - ContractQuantity.Value
             : null;
         public decimal AverageSpoilagePercentage { get; set; }
+        public decimal? ExtraOrderQuantity => PurchasedQuantity.HasValue && ContractQuantity.HasValue ? Math.Max(PurchasedQuantity.Value - ContractQuantity.Value, 0m) : null;
     }

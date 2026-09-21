@@ -1,4 +1,4 @@
-@page "/admin/vendorproducts"
+﻿@page "/admin/vendorproducts"
 @rendermode InteractiveServer
 @inject ApiService Api
 @inject AuthService Auth
@@ -424,30 +424,6 @@ else
                         </div>
                     }
 
-                    <!-- DELETE CONFIRMATION WRAPPER -->
-                    @if (DeletingMapping != null)
-                    {
-                        <div class="delete-confirm-card">
-                            <div class="delete-confirm-body">
-                                <h5 class="fw-bold text-danger mb-2">Confirm Delete</h5>
-                                <p class="mb-3">
-                                    Are you sure you want to delete the mapping for <strong>@GetVendorName(DeletingMapping.VendorID)</strong> supplying <strong>@GetProductName(DeletingMapping.ProductID)</strong>?
-                                    <br /><small class="text-muted">This permanently removes the mapping and cannot be undone.</small>
-                                </p>
-                                <div class="d-flex justify-content-end gap-2">
-                                    <button type="button" class="btn-form-cancel" @onclick="() => DeletingMapping = null" disabled="@IsSubmitting">CANCEL</button>
-                                    <button type="button" class="btn-delete-confirm" @onclick="ConfirmDelete" disabled="@IsSubmitting">
-                                        @if (IsSubmitting)
-                                        {
-                                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                                        }
-                                        YES, DELETE
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    }
-
                     <!-- VENDOR PRODUCTS DATA TABLE -->
                     @if (IsLoading)
                     {
@@ -514,13 +490,20 @@ else
                                                 <td class="td-actions">
                                                     <div class="action-btn-group">
                                                         <button type="button" class="btn-edit-action" @onclick="() => OpenEditForm(currentVp)" title="Edit mapping" disabled="@IsSubmitting">
-                                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                                             Edit
                                                         </button>
-                                                        <button type="button" class="btn-delete-action" @onclick="() => OpenDeleteConfirm(currentVp)" title="Delete mapping" disabled="@IsSubmitting">
-                                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                                                            Delete
-                                                        </button>
+                                                        @if (isActive)
+                                                        {
+                                                            <button type="button" class="btn-deactivate-action" @onclick="() => HandleDeactivateVendorProduct(currentVp.VendorProductID)" title="Deactivate mapping" disabled="@IsSubmitting">
+                                                                Deactivate
+                                                            </button>
+                                                        }
+                                                        else
+                                                        {
+                                                            <button type="button" class="btn-activate-action" @onclick="() => HandleActivateVendorProduct(currentVp.VendorProductID)" title="Activate mapping" disabled="@IsSubmitting">
+                                                                Activate
+                                                            </button>
+                                                        }
                                                     </div>
                                                 </td>
                                             </tr>

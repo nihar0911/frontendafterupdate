@@ -325,7 +325,7 @@ else
                                 var currentContract = contract;
                                 bool isActive = string.Equals(currentContract.Status, "Active", StringComparison.OrdinalIgnoreCase);
                                 string outletName = GetOutletName(currentContract.OutletID);
-                                string productName = GetProductName(currentContract.ProductID);
+                                string productName = GetContractProductsDisplay(currentContract);
 
                                 <div class="contract-card">
                                     <!-- Card Header Banner -->
