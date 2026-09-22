@@ -70,7 +70,32 @@ public partial class QuotationReview : ComponentBase
         {
             return Auth.UserName[0].ToString().ToUpperInvariant();
         }
-        return Auth.IsPurchaseManager ? "P" : "G";
+        if (Auth.IsOutletManager) return "O";
+        if (Auth.IsPurchaseManager) return "P";
+        return "G";
+    }
+
+    private void NavigateBack()
+    {
+        if (Auth.IsOutletManager)
+        {
+            if (PurchaseRequest != null && PurchaseRequest.RequestID > 0)
+            {
+                Nav.NavigateTo($"/purchase-request/{PurchaseRequest.RequestID}");
+            }
+            else
+            {
+                Nav.NavigateTo("/outlet-manager?tab=MyRequests");
+            }
+        }
+        else if (Auth.IsPurchaseManager)
+        {
+            Nav.NavigateTo("/quotations");
+        }
+        else
+        {
+            Nav.NavigateTo("/quotations");
+        }
     }
 
     protected override async Task OnInitializedAsync()
@@ -152,7 +177,7 @@ public partial class QuotationReview : ComponentBase
             PurchaseRequest = requests?.FirstOrDefault(pr => pr.RequestID == Quotation.RequestID);
             if (PurchaseRequest != null)
             {
-                if (Auth.IsPurchaseManager && Auth.OutletID.HasValue && PurchaseRequest.OutletID != Auth.OutletID.Value)
+                if ((Auth.IsPurchaseManager || Auth.IsOutletManager) && Auth.OutletID.HasValue && PurchaseRequest.OutletID != Auth.OutletID.Value)
                 {
                     ErrorMessage = "You are not authorized to view quotations belonging to another outlet.";
                     Quotation = null;

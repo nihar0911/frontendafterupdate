@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -287,8 +287,9 @@ public partial class OutletManagerDashboard : ComponentBase
                 ActiveTab = QueryTab;
             }
         }
+        else if (string.IsNullOrWhiteSpace(ActiveTab))
         {
-            ActiveTab = QueryTab;
+            ActiveTab = "Dashboard";
         }
 
         if (QueryPoId.HasValue && QueryPoId.Value > 0 && SelectedPurchaseOrder?.PurchaseOrderID != QueryPoId.Value && !IsLoading)

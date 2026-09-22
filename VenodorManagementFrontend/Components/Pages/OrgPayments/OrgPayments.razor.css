@@ -1,4 +1,4 @@
-/* =============================================================================
+﻿/* =============================================================================
    ORGANIZATION PAYMENTS PAGE — ENTERPRISE STYLES (OrgPayments.razor.css)
    ============================================================================= */
 
@@ -143,6 +143,11 @@
 .nav-item-btn:hover {
     background-color: rgba(255, 255, 255, 0.09);
     color: #FFFFFF;
+}
+
+.nav-item-btn.nav-logout:hover {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #FCA5A5;
 }
 
 .nav-item-btn.active {

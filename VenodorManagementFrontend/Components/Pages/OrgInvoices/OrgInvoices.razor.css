@@ -1,4 +1,4 @@
-/* =============================================================================
+﻿/* =============================================================================
    ORGANIZATION PURCHASE ORDERS PAGE — SCOPED STYLES (OrgPurchaseOrders.razor.css)
    Clean, Professional, Enterprise Design
    ============================================================================= */
@@ -162,6 +162,11 @@
     background-color: rgba(255, 255, 255, 0.15);
     color: #FFFFFF;
     font-weight: 700;
+}
+
+.nav-link.nav-logout:hover {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #FCA5A5;
 }
 
 .nav-icon {

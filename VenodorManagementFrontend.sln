@@ -1,9 +1,9 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.37516.0 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VenodorManagementFrontend", "VenodorManagementFrontend\VenodorManagementFrontend.csproj", "{EB526F32-00D3-44BA-8CA9-1DF564129F41}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VendorManagement.Frontend", "VenodorManagementFrontend\VendorManagement.Frontend.csproj", "{EB526F32-00D3-44BA-8CA9-1DF564129F41}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

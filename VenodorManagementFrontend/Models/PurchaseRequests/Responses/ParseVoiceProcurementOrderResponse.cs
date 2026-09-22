@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace VenodorManagementFrontend.Models;
@@ -12,6 +12,8 @@ public class ParseVoiceProcurementOrderResponse
     public string? OutletResolutionStatus { get; set; } // Resolved, Unauthorized, NotFound, Ambiguous, Unresolved, NotSpecified
     public DateTime? RequiredDate { get; set; }
     public string? DateResolutionStatus { get; set; } // Resolved, NotSpecified, Unresolved
+    public string? DetectedLanguage { get; set; } // "hi" or "en"
+    public string? AssistantResponseText { get; set; }
     public List<ParsedProcurementItemDto> Items { get; set; } = new();
 
     // Single-item convenience properties (matching backend response)

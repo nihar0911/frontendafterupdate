@@ -37,6 +37,131 @@ else
                                    IsSidebarCollapsed="IsSidebarCollapsed" 
                                    OnToggleSidebar="(c) => IsSidebarCollapsed = c" />
         }
+        else if (Auth.IsOutletManager)
+        {
+        <!-- =======================================================================
+             LEFT SIDEBAR NAVIGATION (OUTLET MANAGER WORKSPACE - ENTERPRISE DARK GREEN)
+             ======================================================================= -->
+        <aside class="org-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-branding" @onclick='() => Nav.NavigateTo("/outlet-manager")' style="cursor: pointer;">
+                    <div class="brand-emblem">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+                            <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+                            <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+                            <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+                        </svg>
+                    </div>
+                    <div class="brand-text">
+                        <span class="brand-name">OUTLET</span>
+                        <span class="brand-sub">WORKSPACE</span>
+                    </div>
+                </div>
+                <button class="sidebar-collapse-btn" @onclick="ToggleSidebar" title="Toggle Sidebar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        @if (IsSidebarCollapsed)
+                        {
+                            <polyline points="13 17 18 12 13 7"></polyline>
+                            <polyline points="6 17 11 12 6 7"></polyline>
+                        }
+                        else
+                        {
+                            <polyline points="11 17 6 12 11 7"></polyline>
+                            <polyline points="18 17 13 12 18 7"></polyline>
+                        }
+                    </svg>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/outlet-manager")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Dashboard</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link active" @onclick='() => Nav.NavigateTo("/outlet-manager?tab=MyRequests")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    <line x1="10" y1="9" x2="8" y2="9"></line>
+                                </svg>
+                            </span>
+                            <span class="nav-label">My Purchase Requests</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/outlet-manager?tab=PurchaseOrders")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="1" y="3" width="15" height="13"></rect>
+                                    <polygon points="16 8 20 8 23 11 23 16 16 8"></polygon>
+                                    <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                    <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Purchase Orders</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/outlet-manager?tab=MyContracts")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                </svg>
+                            </span>
+                            <span class="nav-label">My Contracts</span>
+                        </button>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/outlet-manager?tab=MyOutlet")'>
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"></path>
+                                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                                    <path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"></path>
+                                    <path d="M2 7h20"></path>
+                                    <path d="M22 7v3a2 2 0 0 1-2 2v0a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12v0a2 2 0 0 1-2-2V7"></path>
+                                </svg>
+                            </span>
+                            <span class="nav-label">My Outlet</span>
+                        </button>
+                    </li>
+                </ul>
+
+                <ul class="nav-list nav-list-bottom">
+                    <li class="nav-item">
+                        <button class="nav-link nav-logout" @onclick="HandleLogout">
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                    <polyline points="16 17 21 12 16 7"></polyline>
+                                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                                </svg>
+                            </span>
+                            <span class="nav-label">Logout</span>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+        }
         else
         {
         <!-- =======================================================================
@@ -203,6 +328,14 @@ else
                     {
                         <h1 class="topbar-title mb-0" style="font-size: 1.15rem; font-weight: 700; color: #111827;">Purchase Manager Portal</h1>
                     }
+                    else if (Auth.IsOutletManager)
+                    {
+                        <h1 class="topbar-title mb-0" style="font-size: 1.15rem; font-weight: 700; color: #111827;">Outlet Manager Workspace</h1>
+                    }
+                    else
+                    {
+                        <h1 class="topbar-title mb-0" style="font-size: 1.15rem; font-weight: 700; color: #111827;">Organization Portal</h1>
+                    }
                 </div>
 
                 <div class="header-right">
@@ -210,8 +343,8 @@ else
                         <div class="profile-capsule" @onclick="ToggleProfileDropdown">
                             <div class="profile-avatar">@GetUserInitial()</div>
                             <div class="profile-meta">
-                                <span class="profile-name">@(string.IsNullOrWhiteSpace(Auth.UserName) ? (Auth.CurrentUser?.Name ?? (Auth.IsPurchaseManager ? "Purchase Manager" : "Organization Manager")) : Auth.UserName)</span>
-                                <span class="profile-role">@(Auth.IsPurchaseManager ? "Purchase Manager" : (Auth.IsAdmin ? "System Admin" : "Organization Manager"))</span>
+                                <span class="profile-name">@(string.IsNullOrWhiteSpace(Auth.UserName) ? (Auth.CurrentUser?.Name ?? (Auth.IsOutletManager ? "Outlet Manager" : (Auth.IsPurchaseManager ? "Purchase Manager" : "Organization Manager"))) : Auth.UserName)</span>
+                                <span class="profile-role">@(Auth.IsOutletManager ? "Outlet Manager" : (Auth.IsPurchaseManager ? "Purchase Manager" : (Auth.IsAdmin ? "System Admin" : "Organization Manager")))</span>
                             </div>
                             <svg class="dropdown-arrow @(IsProfileDropdownOpen ? "open" : "")" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polyline points="6 9 12 15 18 9"></polyline>
@@ -237,23 +370,39 @@ else
                     <!-- BREADCRUMB & TOP BACK ACTION -->
                     <div class="top-breadcrumb-row">
                         <div class="breadcrumb-links">
-                            <a href="@(Auth.IsPurchaseManager ? "/purchase-manager" : "/org-dashboard")" class="bc-link">Dashboard</a>
-                            <span class="bc-sep">&rsaquo;</span>
-                            <a href="/quotations" class="bc-link">Quotation Review</a>
+                            @if (Auth.IsOutletManager)
+                            {
+                                <a href="/outlet-manager" class="bc-link">Dashboard</a>
+                                <span class="bc-sep">&rsaquo;</span>
+                                <a href="/outlet-manager?tab=MyRequests" class="bc-link">My Purchase Requests</a>
+                                @if (PurchaseRequest != null && PurchaseRequest.RequestID > 0)
+                                {
+                                    <span class="bc-sep">&rsaquo;</span>
+                                    <a href="/purchase-request/@PurchaseRequest.RequestID" class="bc-link">PR-@(PurchaseRequest.RequestID.ToString("D5"))</a>
+                                }
+                                <span class="bc-sep">&rsaquo;</span>
+                                <span class="bc-current">Review Quotation</span>
+                            }
+                            else
+                            {
+                                <a href="@(Auth.IsPurchaseManager ? "/purchase-manager" : "/org-dashboard")" class="bc-link">Dashboard</a>
+                                <span class="bc-sep">&rsaquo;</span>
+                                <a href="/quotations" class="bc-link">Quotation Review</a>
+                            }
                         </div>
 
-                        <button type="button" class="btn-back-dashboard" @onclick='() => Nav.NavigateTo("/quotations")'>
+                        <button type="button" class="btn-back-dashboard" @onclick="NavigateBack">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="19" y1="12" x2="5" y2="12"></line>
                                 <polyline points="12 19 5 12 12 5"></polyline>
                             </svg>
-                            <span>Back to Quotations</span>
+                            <span>@(Auth.IsOutletManager ? "Back to Purchase Request" : "Back to Quotations")</span>
                         </button>
                     </div>
 
                     <!-- PAGE MAIN HEADING -->
                     <div class="page-title-section">
-                        <h1 class="page-main-heading">@(Auth.IsPurchaseManager ? "Quotation Review" : "Quotation Review & Contract Creation")</h1>
+                        <h1 class="page-main-heading">@(Auth.IsPurchaseManager || Auth.IsOutletManager ? "Quotation Review" : "Quotation Review & Contract Creation")</h1>
                     </div>
 
                     @if (IsLoading)
@@ -275,7 +424,7 @@ else
                                 </svg>
                                 <span>@ErrorMessage</span>
                             </div>
-                            <button type="button" class="btn-back-dashboard" @onclick='() => Nav.NavigateTo("/quotations")'>Back to Quotations</button>
+                            <button type="button" class="btn-back-dashboard" @onclick="NavigateBack">@(Auth.IsOutletManager ? "Back to Purchase Request" : "Back to Quotations")</button>
                         </div>
                     }
                     else if (Quotation != null)
@@ -496,16 +645,16 @@ else
                                                                     @onclick='() => Nav.NavigateTo("/organization/purchase-orders")'>
                                                                 <span>Submit Purchase Order</span>
                                                             </button>
-                                                            <button type="button" class="btn-back-dashboard" @onclick='() => Nav.NavigateTo("/quotations")'>
-                                                                <span>Back to Quotations</span>
+                                                            <button type="button" class="btn-back-dashboard" @onclick="NavigateBack">
+                                                                <span>@(Auth.IsOutletManager ? "Back to Purchase Request" : "Back to Quotations")</span>
                                                             </button>
                                                         </div>
                                                     }
                                                     else
                                                     {
                                                         <div class="d-flex align-items-center gap-2">
-                                                            <button type="button" class="btn-back-dashboard" @onclick='() => Nav.NavigateTo("/quotations")'>
-                                                                <span>Back to Quotations</span>
+                                                            <button type="button" class="btn-back-dashboard" @onclick="NavigateBack">
+                                                                <span>@(Auth.IsOutletManager ? "Back to Purchase Request" : "Back to Quotations")</span>
                                                             </button>
                                                         </div>
                                                     }
@@ -521,8 +670,8 @@ else
                                             else
                                             {
                                                 <div class="d-flex align-items-center gap-2">
-                                                    <button type="button" class="btn-back-dashboard" @onclick='() => Nav.NavigateTo("/quotations")'>
-                                                        <span>Back to Quotations</span>
+                                                    <button type="button" class="btn-back-dashboard" @onclick="NavigateBack">
+                                                        <span>@(Auth.IsOutletManager ? "Back to Purchase Request" : "Back to Quotations")</span>
                                                     </button>
                                                 </div>
                                             }

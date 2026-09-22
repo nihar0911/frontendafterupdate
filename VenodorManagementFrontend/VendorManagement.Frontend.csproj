@@ -5,6 +5,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseAppHost>false</UseAppHost>
+    <RootNamespace>VenodorManagementFrontend</RootNamespace>
+    <AssemblyName>VendorManagement.Frontend</AssemblyName>
   </PropertyGroup>
 
 </Project>

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -85,6 +85,22 @@ public partial class PurchaseRequestDetails : ComponentBase
     {
         Auth.Logout();
         Nav.NavigateTo("/login", true);
+    }
+
+    private void NavigateBack()
+    {
+        if (Auth.IsOutletManager)
+        {
+            Nav.NavigateTo("/outlet-manager?tab=MyRequests");
+        }
+        else if (Auth.IsOrgManager)
+        {
+            Nav.NavigateTo("/org-dashboard");
+        }
+        else
+        {
+            Nav.NavigateTo("/procurement");
+        }
     }
 
     private async Task MarkAsRead(int notificationId)
