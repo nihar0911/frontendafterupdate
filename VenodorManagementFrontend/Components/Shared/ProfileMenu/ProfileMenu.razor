@@ -111,7 +111,7 @@
                 }
             </div>
             <div class="profile-modal-footer">
-                <button type="button" class="btn btn-outline-primary fw-semibold px-3 py-1.5" @onclick="OpenEditModal">
+                <button type="button" class="btn btn-outline-primary fw-semibold px-3 py-1.5" @onclick="OpenEditModalAsync">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
@@ -305,6 +305,19 @@
         else
         {
             ShowProfileModal = true;
+            if (Auth.IsAuthenticated)
+            {
+                try
+                {
+                    var profileRes = await Api.GetMyProfileAsync();
+                    if (profileRes.Success && profileRes.Data != null)
+                    {
+                        Auth.SetUser(profileRes.Data);
+                        StateHasChanged();
+                    }
+                }
+                catch { }
+            }
         }
     }
 
@@ -321,11 +334,11 @@
         }
         else
         {
-            OpenEditModal();
+            await OpenEditModalAsync();
         }
     }
 
-    private void OpenEditModal()
+    private async Task OpenEditModalAsync()
     {
         ShowProfileModal = false;
         EditName = DisplayName;
@@ -335,6 +348,22 @@
         FormError = null;
         FormSuccess = null;
         ShowEditProfileModal = true;
+
+        if (Auth.IsAuthenticated)
+        {
+            try
+            {
+                var profileRes = await Api.GetMyProfileAsync();
+                if (profileRes.Success && profileRes.Data != null)
+                {
+                    Auth.SetUser(profileRes.Data);
+                    EditName = profileRes.Data.Name;
+                    EditEmail = profileRes.Data.Email;
+                    StateHasChanged();
+                }
+            }
+            catch { }
+        }
     }
 
     private void CloseModals()
@@ -393,6 +422,10 @@
             if (result.Success && result.Data != null)
             {
                 Auth.SetUser(result.Data);
+                EditName = result.Data.Name;
+                EditEmail = result.Data.Email;
+                EditPassword = string.Empty;
+                EditConfirmPassword = string.Empty;
                 FormSuccess = "Profile updated successfully!";
                 StateHasChanged();
                 await Task.Delay(800);

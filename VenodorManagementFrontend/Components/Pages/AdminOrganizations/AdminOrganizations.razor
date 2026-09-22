@@ -180,21 +180,6 @@ else
                     </li>
 
                     <li class="nav-item">
-                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/admin/contracts")'>
-                            <span class="nav-icon">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                    <polyline points="14 2 14 8 20 8"></polyline>
-                                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                                    <polyline points="10 9 9 9 8 9"></polyline>
-                                </svg>
-                            </span>
-                            <span class="nav-label">Contracts</span>
-                        </button>
-                    </li>
-
-                    <li class="nav-item">
                         <button class="nav-link" @onclick='() => Nav.NavigateTo("/admin/profile")'>
                             <span class="nav-icon">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -294,6 +279,17 @@ else
                         </div>
 
                         <div class="page-title-right">
+                            <div class="search-box">
+                                <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                                <input type="text" class="search-input" placeholder="Search..." @bind="SearchQuery" @bind:event="oninput" />
+                                @if (!string.IsNullOrEmpty(SearchQuery))
+                                {
+                                    <button type="button" class="btn-clear-search" @onclick='() => SearchQuery = string.Empty' title="Clear search">&times;</button>
+                                }
+                            </div>
                             <button type="button" class="btn-add-primary" @onclick="OpenAddModal" disabled="@IsSubmitting">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                                 ADD ORGANIZATION
@@ -506,62 +502,61 @@ else
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach (var org in Organizations)
+                                        @if (!FilteredOrganizations.Any())
                                         {
-                                            var currentOrg = org;
-                                            <tr class="org-row">
-                                                <td class="td-name">
-                                                    <span class="org-name-link" @onclick="() => OpenDetailsDrawer(currentOrg)" title="Click to view details">
-                                                        @currentOrg.OrganizationName
-                                                    </span>
-                                                </td>
-                                                <td class="td-address">@(string.IsNullOrWhiteSpace(currentOrg.Address) ? "—" : currentOrg.Address)</td>
-                                                <td class="td-phone">@(string.IsNullOrWhiteSpace(currentOrg.Phone) ? "—" : currentOrg.Phone)</td>
-                                                <td class="td-email">@(string.IsNullOrWhiteSpace(currentOrg.Email) ? "—" : currentOrg.Email)</td>
-                                                <td class="td-status">
-                                                    <span class="status-indicator">
-                                                        <span class="status-dot"></span>
-                                                        @(string.IsNullOrWhiteSpace(currentOrg.Status) ? "Active" : currentOrg.Status)
-                                                    </span>
-                                                </td>
-                                                <td class="td-actions">
-                                                    <div class="action-btn-group">
-                                                        <button type="button" class="btn-edit-action" @onclick="() => OpenEditModal(currentOrg)" disabled="@IsSubmitting" title="Edit Organization">
-                                                            Edit
-                                                        </button>
-                                                        @if (string.Equals(currentOrg.Status, "Inactive", StringComparison.OrdinalIgnoreCase))
-                                                        {
-                                                            <button type="button" class="btn-activate-action" @onclick="() => HandleActivateOrganization(currentOrg.OrganizationID)" disabled="@IsSubmitting" title="Activate Organization">
-                                                                Activate
-                                                            </button>
-                                                        }
-                                                        else
-                                                        {
-                                                            <button type="button" class="btn-deactivate-action" @onclick="() => HandleDeactivateOrganization(currentOrg.OrganizationID)" disabled="@IsSubmitting" title="Deactivate Organization">
-                                                                Deactivate
-                                                            </button>
-                                                        }
-                                                        <button type="button" class="btn-more-action" @onclick="() => OpenDetailsDrawer(currentOrg)" title="View Organization Details">
-                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
-                                                        </button>
-                                                    </div>
+                                            <tr>
+                                                <td colspan="6" class="text-center py-4 text-muted">
+                                                    No organizations found matching "<strong>@SearchQuery</strong>".
                                                 </td>
                                             </tr>
                                         }
+                                        else
+                                        {
+                                            @foreach (var org in FilteredOrganizations)
+                                            {
+                                                var currentOrg = org;
+                                                <tr class="org-row">
+                                                    <td class="td-name">
+                                                        <span class="org-name-link" @onclick="() => OpenDetailsDrawer(currentOrg)" title="Click to view details">
+                                                            @currentOrg.OrganizationName
+                                                        </span>
+                                                    </td>
+                                                    <td class="td-address">@(string.IsNullOrWhiteSpace(currentOrg.Address) ? "—" : currentOrg.Address)</td>
+                                                    <td class="td-phone">@(string.IsNullOrWhiteSpace(currentOrg.Phone) ? "—" : currentOrg.Phone)</td>
+                                                    <td class="td-email">@(string.IsNullOrWhiteSpace(currentOrg.Email) ? "—" : currentOrg.Email)</td>
+                                                    <td class="td-status">
+                                                        <span class="status-indicator">
+                                                            <span class="status-dot"></span>
+                                                            @(string.IsNullOrWhiteSpace(currentOrg.Status) ? "Active" : currentOrg.Status)
+                                                        </span>
+                                                    </td>
+                                                    <td class="td-actions">
+                                                        <div class="action-btn-group">
+                                                            <button type="button" class="btn-edit-action" @onclick="() => OpenEditModal(currentOrg)" disabled="@IsSubmitting" title="Edit Organization">
+                                                                Edit
+                                                            </button>
+                                                            @if (string.Equals(currentOrg.Status, "Inactive", StringComparison.OrdinalIgnoreCase))
+                                                            {
+                                                                <button type="button" class="btn-activate-action" @onclick="() => HandleActivateOrganization(currentOrg.OrganizationID)" disabled="@IsSubmitting" title="Activate Organization">
+                                                                    Activate
+                                                                </button>
+                                                            }
+                                                            else
+                                                            {
+                                                                <button type="button" class="btn-deactivate-action" @onclick="() => HandleDeactivateOrganization(currentOrg.OrganizationID)" disabled="@IsSubmitting" title="Deactivate Organization">
+                                                                    Deactivate
+                                                                </button>
+                                                            }
+                                                            <button type="button" class="btn-more-action" @onclick="() => OpenDetailsDrawer(currentOrg)" title="View Organization Details">
+                                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        }
                                     </tbody>
                                 </table>
-                            </div>
-
-                            <!-- TABLE FOOTER -->
-                            <div class="table-pagination-footer">
-                                <span class="pagination-info">
-                                    Showing 1 to @Organizations.Count of @Organizations.Count organizations
-                                </span>
-                                <div class="pagination-controls">
-                                    <button class="page-btn page-arrow" disabled title="Previous page">&lsaquo;</button>
-                                    <button class="page-btn page-number active">1</button>
-                                    <button class="page-btn page-arrow" disabled title="Next page">&rsaquo;</button>
-                                </div>
                             </div>
                         </div>
                     }

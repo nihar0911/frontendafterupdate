@@ -208,23 +208,12 @@ else
                     @if (Auth.IsPurchaseManager)
                     {
                         <h1 class="page-title mb-0">Purchase Manager Portal</h1>
-                        <p class="page-subtitle mb-0">Payments &amp; Settlements • Record payments for approved invoices and inspect complete settlement audit history.</p>
                     }
                     else
                     {
                         <h1 class="page-title">Payments & Settlements</h1>
                         <p class="page-subtitle">Record payments for approved invoices and inspect complete settlement audit history.</p>
                     }
-                </div>
-                <div class="header-right">
-                    <button class="btn btn-outline-secondary d-flex align-items-center gap-2" @onclick="LoadDataAsync" disabled="@IsLoading">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="23 4 23 10 17 10"></polyline>
-                            <polyline points="1 20 1 14 7 14"></polyline>
-                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                        </svg>
-                        <span>Refresh</span>
-                    </button>
                 </div>
             </header>
 
@@ -266,7 +255,7 @@ else
                     </div>
                     <div class="kpi-data">
                         <span class="kpi-label">Total Amount Paid</span>
-                        <span class="kpi-value">Rs. @TotalPaidAmount.ToString("N2")</span>
+                        <span class="kpi-value">₹@TotalPaidAmount.ToString("N2")</span>
                         <span class="kpi-hint">Disbursed to vendors</span>
                     </div>
                 </div>
@@ -396,7 +385,7 @@ else
                                             <td>PO-@p.PurchaseOrderID</td>
                                             <td class="vendor-name-cell">@p.VendorName</td>
                                             <td>@(string.IsNullOrWhiteSpace(p.OutletName) ? (OutletDictionary.TryGetValue(p.OutletID, out var oName) ? oName : (p.OutletID > 0 ? $"Outlet #{p.OutletID}" : "—")) : p.OutletName)</td>
-                                            <td class="fw-bold text-dark">Rs. @p.Amount.ToString("N2")</td>
+                                            <td class="fw-bold text-dark">₹@p.Amount.ToString("N2")</td>
                                             <td>@p.PaymentDate.ToIst("dd MMM yyyy")</td>
                                             <td>
                                                 <span class="badge-payment-method">@p.PaymentMethod</span>
@@ -470,7 +459,7 @@ else
                                             <td class="vendor-name-cell">@inv.VendorName</td>
                                             <td>@GetInvoiceOutletName(inv)</td>
                                             <td>@inv.InvoiceDate.ToIst("dd MMM yyyy")</td>
-                                            <td class="fw-bold text-success">Rs. @inv.TotalAmount.ToString("N2")</td>
+                                            <td class="fw-bold text-success">₹@inv.TotalAmount.ToString("N2")</td>
                                             <td>
                                                 <span class="status-pill pill-approved">Approved</span>
                                             </td>
@@ -561,7 +550,7 @@ else
                         <div class="amount-due-card">
                             <div class="amount-due-label">Amount Due</div>
                             <div class="amount-due-figure">
-                                Rs. @SelectedInvoiceForPayment.TotalAmount.ToString("N2")
+                                ₹@SelectedInvoiceForPayment.TotalAmount.ToString("N2")
                             </div>
                         </div>
 
@@ -599,7 +588,7 @@ else
                             }
                             else
                             {
-                                <span>Confirm Payment (Rs. @SelectedInvoiceForPayment.TotalAmount.ToString("N2"))</span>
+                                <span>Confirm Payment (₹@SelectedInvoiceForPayment.TotalAmount.ToString("N2"))</span>
                             }
                         </button>
                     </div>

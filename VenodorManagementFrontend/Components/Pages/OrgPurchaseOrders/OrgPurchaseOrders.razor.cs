@@ -81,6 +81,7 @@ public partial class OrgPurchaseOrders : ComponentBase
     private bool IsActionProcessing { get; set; } = false;
     private int SelectedQuotationId { get; set; } = 0;
     private DateTime ExpectedDeliveryDate { get; set; } = DateTime.Today.AddDays(3);
+    private string SelectedSubmissionApproverRole { get; set; } = "Organization Manager";
 
     // Bulk PO Submission State
     private HashSet<int> SelectedQuotationIds { get; set; } = new();
@@ -464,8 +465,6 @@ public partial class OrgPurchaseOrders : ComponentBase
                 }
 
                 SelectedPoForDetail = po;
-                SelectedDetailApproverRole = GetApproverRole(po);
-                IsSavingApproverRoleForDetail = false;
 
                 try
                 {
@@ -745,6 +744,7 @@ public partial class OrgPurchaseOrders : ComponentBase
         ShowBulkResults = false;
         BulkResults.Clear();
         BulkSummaryMessage = null;
+        SelectedSubmissionApproverRole = "Organization Manager";
     }
 
     private async Task SubmitBulkPurchaseOrdersAsync()
@@ -777,7 +777,8 @@ public partial class OrgPurchaseOrders : ComponentBase
             var command = new CreatePurchaseOrderCommand
             {
                 QuotationID = item.QuotationID,
-                ExpectedDeliveryDate = BulkExpectedDeliveryDate
+                ExpectedDeliveryDate = BulkExpectedDeliveryDate,
+                ApproverRole = SelectedSubmissionApproverRole
             };
 
             var result = await Api.CreatePurchaseOrderWithResultAsync(command);
@@ -855,6 +856,7 @@ public partial class OrgPurchaseOrders : ComponentBase
     {
         if (!Auth.IsPurchaseManager && !Auth.IsAdmin) return;
         ModalErrorMessage = null;
+        SelectedSubmissionApproverRole = "Organization Manager";
         if (EligiblePoOptions.Count > 0)
         {
             SelectedQuotationId = EligiblePoOptions.First().QuotationID;
@@ -893,7 +895,8 @@ public partial class OrgPurchaseOrders : ComponentBase
             var command = new CreatePurchaseOrderCommand
             {
                 QuotationID = SelectedQuotationId,
-                ExpectedDeliveryDate = ExpectedDeliveryDate
+                ExpectedDeliveryDate = ExpectedDeliveryDate,
+                ApproverRole = SelectedSubmissionApproverRole
             };
 
             var createdPo = await Api.CreatePurchaseOrderAsync(command);
@@ -959,90 +962,7 @@ public partial class OrgPurchaseOrders : ComponentBase
             : "Organization Manager";
     }
 
-    private string SelectedDetailApproverRole { get; set; } = "Organization Manager";
-    private bool IsSavingApproverRoleForDetail { get; set; } = false;
 
-    private void HandleDetailApproverRoleChanged(ChangeEventArgs e)
-    {
-        var val = e.Value?.ToString();
-        if (!string.IsNullOrWhiteSpace(val))
-        {
-            SelectedDetailApproverRole = string.Equals(val, "Outlet Manager", StringComparison.OrdinalIgnoreCase)
-                ? "Outlet Manager"
-                : "Organization Manager";
-        }
-    }
-
-    private async Task SaveDetailApproverRole()
-    {
-        if (SelectedPoForDetail == null || !IsAwaitingApproval(SelectedPoForDetail))
-        {
-            return;
-        }
-
-        if (!Auth.IsPurchaseManager)
-        {
-            return;
-        }
-
-        var currentRole = GetApproverRole(SelectedPoForDetail);
-        if (string.Equals(currentRole, SelectedDetailApproverRole, StringComparison.OrdinalIgnoreCase))
-        {
-            return;
-        }
-
-        if (IsSavingApproverRoleForDetail)
-        {
-            return;
-        }
-
-        IsSavingApproverRoleForDetail = true;
-        ActionSuccessMessage = null;
-        ActionErrorMessage = null;
-        StateHasChanged();
-
-        try
-        {
-            var updatedPo = await Api.ChangePurchaseOrderApproverRoleAsync(
-                SelectedPoForDetail.PurchaseOrderID,
-                SelectedDetailApproverRole);
-
-            if (updatedPo != null)
-            {
-                SelectedPoForDetail.ApproverRole = updatedPo.ApproverRole;
-                SelectedDetailApproverRole = GetApproverRole(updatedPo);
-
-                var listed = AllPurchaseOrders.FirstOrDefault(p => p.PurchaseOrderID == updatedPo.PurchaseOrderID);
-                if (listed != null)
-                {
-                    listed.ApproverRole = updatedPo.ApproverRole;
-                }
-
-                ActionSuccessMessage = $"Approval authority for PO-{updatedPo.PurchaseOrderID} changed to {SelectedDetailApproverRole}.";
-                await LoadData();
-                if (SelectedPoForDetail != null)
-                {
-                    await OpenPoDetails(SelectedPoForDetail.PurchaseOrderID, updateUrl: false);
-                }
-            }
-            else
-            {
-                SelectedDetailApproverRole = GetApproverRole(SelectedPoForDetail);
-                ActionErrorMessage = "Unable to change approval authority. Please try again.";
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[OrgPurchaseOrders] ChangeApproverRole error: {ex.Message}");
-            SelectedDetailApproverRole = GetApproverRole(SelectedPoForDetail);
-            ActionErrorMessage = "An error occurred while changing approval authority.";
-        }
-        finally
-        {
-            IsSavingApproverRoleForDetail = false;
-            StateHasChanged();
-        }
-    }
 
     private bool CanApprovePo(PurchaseOrderDto po)
     {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -78,12 +78,30 @@ public partial class OutletManagerDashboard : ComponentBase
     private int DeliveredOrdersCount => OrdersForMyOutlet.Count(p => string.Equals(p.Status, "Delivered", StringComparison.OrdinalIgnoreCase) || string.Equals(p.Status, "Completed", StringComparison.OrdinalIgnoreCase));
 
     private string PoSearchQuery { get; set; } = string.Empty;
+    private string PoStatusFilter { get; set; } = "All";
 
     private List<PurchaseOrderDto> FilteredPOs
     {
         get
         {
             var list = OrdersForMyOutlet.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(PoStatusFilter) && PoStatusFilter != "All")
+            {
+                if (PoStatusFilter == "Pending")
+                {
+                    list = list.Where(p => string.Equals(p.Status, "Pending", StringComparison.OrdinalIgnoreCase));
+                }
+                else if (PoStatusFilter == "Dispatched")
+                {
+                    list = list.Where(p => string.Equals(p.Status, "Dispatched", StringComparison.OrdinalIgnoreCase) || string.Equals(p.Status, "In Transit", StringComparison.OrdinalIgnoreCase));
+                }
+                else if (PoStatusFilter == "Delivered")
+                {
+                    list = list.Where(p => string.Equals(p.Status, "Delivered", StringComparison.OrdinalIgnoreCase) || string.Equals(p.Status, "Completed", StringComparison.OrdinalIgnoreCase));
+                }
+            }
+
             if (!string.IsNullOrWhiteSpace(PoSearchQuery))
             {
                 var q = PoSearchQuery.Trim().ToLowerInvariant();
@@ -161,6 +179,64 @@ public partial class OutletManagerDashboard : ComponentBase
         }
     }
 
+    // =========================================================================
+    // CONTRACT PROPERTIES & FILTERS FOR MY CONTRACTS
+    // =========================================================================
+    private string ContractSearchQuery { get; set; } = string.Empty;
+    private string ContractStatusFilter { get; set; } = "All";
+    private ContractDto? SelectedContractForModal { get; set; }
+    private bool ShowContractDetailsModal { get; set; } = false;
+    private bool IsLoadingContractDetails { get; set; } = false;
+
+    private int TotalContractsCount => ContractsForMyOutlet.Count;
+    private int ExpiredContractsCount => ContractsForMyOutlet.Count(c => string.Equals(c.Status, "Expired", StringComparison.OrdinalIgnoreCase));
+    private int EndedContractsCount => ContractsForMyOutlet.Count(c => string.Equals(c.Status, "Ended", StringComparison.OrdinalIgnoreCase) || string.Equals(c.Status, "Terminated", StringComparison.OrdinalIgnoreCase));
+
+    private List<ContractDto> FilteredContracts
+    {
+        get
+        {
+            var list = ContractsForMyOutlet.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(ContractStatusFilter) && ContractStatusFilter != "All")
+            {
+                if (string.Equals(ContractStatusFilter, "Active", StringComparison.OrdinalIgnoreCase))
+                {
+                    list = list.Where(c => string.Equals(c.Status, "Active", StringComparison.OrdinalIgnoreCase));
+                }
+                else if (string.Equals(ContractStatusFilter, "Expired", StringComparison.OrdinalIgnoreCase))
+                {
+                    list = list.Where(c => string.Equals(c.Status, "Expired", StringComparison.OrdinalIgnoreCase));
+                }
+                else if (string.Equals(ContractStatusFilter, "Ended", StringComparison.OrdinalIgnoreCase) || string.Equals(ContractStatusFilter, "Terminated", StringComparison.OrdinalIgnoreCase))
+                {
+                    list = list.Where(c => string.Equals(c.Status, "Ended", StringComparison.OrdinalIgnoreCase) || string.Equals(c.Status, "Terminated", StringComparison.OrdinalIgnoreCase));
+                }
+                else
+                {
+                    list = list.Where(c => string.Equals(c.Status, ContractStatusFilter, StringComparison.OrdinalIgnoreCase));
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(ContractSearchQuery))
+            {
+                var q = ContractSearchQuery.Trim();
+                list = list.Where(c =>
+                    c.ContractID.ToString().Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                    ($"CT-{c.ContractID}").Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                    ($"CT-#{c.ContractID}").Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                    (!string.IsNullOrWhiteSpace(c.ProductName) && c.ProductName.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrWhiteSpace(c.VendorName) && c.VendorName.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrWhiteSpace(c.PaymentMethod) && c.PaymentMethod.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                    (c.Products != null && c.Products.Any(p => !string.IsNullOrWhiteSpace(p.ProductName) && p.ProductName.Contains(q, StringComparison.OrdinalIgnoreCase))) ||
+                    (c.Allocations != null && c.Allocations.Any(a => !string.IsNullOrWhiteSpace(a.VendorName) && a.VendorName.Contains(q, StringComparison.OrdinalIgnoreCase)))
+                );
+            }
+
+            return list.OrderByDescending(c => c.ContractID).ToList();
+        }
+    }
+
     private void ClearFilters()
     {
         SearchQuery = string.Empty;
@@ -195,7 +271,22 @@ public partial class OutletManagerDashboard : ComponentBase
 
     protected override async Task OnParametersSetAsync()
     {
-        if (!string.IsNullOrWhiteSpace(QueryTab) && QueryTab != ActiveTab)
+        var uri = Nav.Uri;
+        if (uri.EndsWith("/contracts", StringComparison.OrdinalIgnoreCase) || uri.Contains("/contracts?", StringComparison.OrdinalIgnoreCase))
+        {
+            ActiveTab = "MyContracts";
+        }
+        else if (!string.IsNullOrWhiteSpace(QueryTab))
+        {
+            if (string.Equals(QueryTab, "MyContracts", StringComparison.OrdinalIgnoreCase) || string.Equals(QueryTab, "contracts", StringComparison.OrdinalIgnoreCase))
+            {
+                ActiveTab = "MyContracts";
+            }
+            else if (QueryTab != ActiveTab)
+            {
+                ActiveTab = QueryTab;
+            }
+        }
         {
             ActiveTab = QueryTab;
         }
@@ -330,7 +421,7 @@ public partial class OutletManagerDashboard : ComponentBase
                 }
             }
 
-            ActiveContractsCount = ContractsForMyOutlet.Count;
+            ActiveContractsCount = ContractsForMyOutlet.Count(c => string.Equals(c.Status, "Active", StringComparison.OrdinalIgnoreCase));
 
             await LoadNotifications();
             BuildRecentActivities();
@@ -513,6 +604,82 @@ public partial class OutletManagerDashboard : ComponentBase
     private void SetActiveTab(string tabName)
     {
         ActiveTab = tabName;
+    }
+
+    private void NavigateToRequests(string status = "All")
+    {
+        ActiveTab = "MyRequests";
+        StatusFilter = status;
+        SearchQuery = string.Empty;
+        FromDateFilter = null;
+        ToDateFilter = null;
+    }
+
+    private void NavigateToContracts(string status = "All")
+    {
+        ActiveTab = "MyContracts";
+        ContractStatusFilter = status;
+        ContractSearchQuery = string.Empty;
+    }
+
+    private void NavigateToContracts()
+    {
+        NavigateToContracts("All");
+    }
+
+    private void ClearContractFilters()
+    {
+        ContractSearchQuery = string.Empty;
+        ContractStatusFilter = "All";
+    }
+
+    private async Task OpenContractDetails(int contractId)
+    {
+        IsLoadingContractDetails = true;
+        ShowContractDetailsModal = true;
+        SelectedContractForModal = ContractsForMyOutlet.FirstOrDefault(c => c.ContractID == contractId);
+
+        try
+        {
+            var detailedContract = await Api.GetContractByIdAsync(contractId);
+            if (detailedContract != null)
+            {
+                if (string.IsNullOrWhiteSpace(detailedContract.ProductName) && ProductLookup.TryGetValue(detailedContract.ProductID, out var pObj))
+                {
+                    detailedContract.ProductName = pObj.ProductName;
+                    if (string.IsNullOrWhiteSpace(detailedContract.Unit))
+                        detailedContract.Unit = pObj.Unit;
+                }
+                SelectedContractForModal = detailedContract;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[OutletManagerDashboard] Error fetching contract details: {ex.Message}");
+        }
+        finally
+        {
+            IsLoadingContractDetails = false;
+            StateHasChanged();
+        }
+    }
+
+    private void CloseContractDetails()
+    {
+        ShowContractDetailsModal = false;
+        SelectedContractForModal = null;
+    }
+
+    private void SetPoStatusFilter(string filter)
+    {
+        if (PoStatusFilter == filter)
+        {
+            PoStatusFilter = "All";
+        }
+        else
+        {
+            PoStatusFilter = filter;
+        }
     }
 
     private void NavigateToRequest(int requestId)

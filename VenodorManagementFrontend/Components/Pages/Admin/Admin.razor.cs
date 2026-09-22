@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,8 +12,7 @@ namespace VenodorManagementFrontend.Components.Pages.Admin;
 
 public partial class Admin : ComponentBase
 {
-
-private bool IsLoading { get; set; } = true;
+    private bool IsLoading { get; set; } = true;
     private bool HasError { get; set; } = false;
 
     private int TotalOrganizations { get; set; }
@@ -22,7 +21,6 @@ private bool IsLoading { get; set; } = true;
     private int TotalOutlets { get; set; }
     private int TotalProducts { get; set; }
     private int TotalTaxRates { get; set; }
-    private int ActiveContracts { get; set; }
 
     private bool IsSidebarCollapsed { get; set; } = false;
     private bool IsProfileDropdownOpen { get; set; } = false;
@@ -109,10 +107,9 @@ private bool IsLoading { get; set; } = true;
             var outletsTask = Api.GetOutletsAsync();
             var productsTask = Api.GetProductsAsync();
             var taxRatesTask = Api.GetTaxRatesAsync();
-            var contractsTask = Api.GetContractsAsync();
             var notifsTask = Api.GetMyNotificationsAsync();
 
-            await Task.WhenAll(orgsTask, usersTask, vendorsTask, outletsTask, productsTask, taxRatesTask, contractsTask, notifsTask);
+            await Task.WhenAll(orgsTask, usersTask, vendorsTask, outletsTask, productsTask, taxRatesTask, notifsTask);
 
             var orgs = await orgsTask;
             var users = await usersTask;
@@ -120,7 +117,6 @@ private bool IsLoading { get; set; } = true;
             var outlets = await outletsTask;
             var products = await productsTask;
             var taxRates = await taxRatesTask;
-            var contracts = await contractsTask;
             Notifications = await notifsTask ?? new List<NotificationDto>();
 
             TotalOrganizations = orgs?.Count ?? 0;
@@ -129,7 +125,6 @@ private bool IsLoading { get; set; } = true;
             TotalOutlets = outlets?.Count ?? 0;
             TotalProducts = products?.Count ?? 0;
             TotalTaxRates = taxRates?.Count ?? 0;
-            ActiveContracts = contracts?.Count(c => string.Equals(c.Status, "Active", StringComparison.OrdinalIgnoreCase)) ?? 0;
         }
         catch (Exception)
         {
@@ -147,5 +142,4 @@ private bool IsLoading { get; set; } = true;
         Auth.Logout();
         Nav.NavigateTo("/login");
     }
-
 }

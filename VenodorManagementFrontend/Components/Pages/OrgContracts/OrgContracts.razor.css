@@ -402,6 +402,13 @@
     margin: 0;
 }
 
+.header-action-buttons-group {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+}
+
 .btn-start-procure-header {
     display: inline-flex;
     align-items: center;

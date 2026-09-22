@@ -303,11 +303,11 @@ public partial class ContractDetails : ComponentBase
     {
         if (Auth.IsAdmin)
         {
-            Nav.NavigateTo("/admin/contracts");
+            Nav.NavigateTo("/admin");
         }
         else if (Auth.IsOrgManager)
         {
-            Nav.NavigateTo("/admin/contracts");
+            Nav.NavigateTo("/organization/contracts");
         }
         else if (Auth.IsOutletManager)
         {

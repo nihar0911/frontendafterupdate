@@ -1,4 +1,6 @@
-@page "/outlet-manager"
+﻿@page "/outlet-manager"
+@page "/outlet-manager/contracts"
+@page "/outlet/contracts"
 @rendermode InteractiveServer 
 @inject ApiService Api
 @inject AuthService Auth
@@ -91,6 +93,19 @@ else
                     </button>
 
                     <button type="button" 
+                            class="om-nav-item @(ActiveTab == "MyContracts" ? "active" : "")"
+                            @onclick='() => SetActiveTab("MyContracts")'>
+                        <svg class="om-nav-icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        <span>My Contracts</span>
+                    </button>
+
+                    <button type="button" 
                             class="om-nav-item @(ActiveTab == "MyOutlet" ? "active" : "")"
                             @onclick='() => SetActiveTab("MyOutlet")'>
                         <svg class="om-nav-icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -105,21 +120,8 @@ else
                 </nav>
             </div>
 
-            <!-- SIDEBAR FOOTER (USER & LOGOUT) -->
+            <!-- SIDEBAR FOOTER (LOGOUT) -->
             <div class="om-sidebar-bottom">
-                <div class="om-user-profile-row">
-                    <div class="om-avatar-circle">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="12" cy="7" r="4"></circle>
-                        </svg>
-                    </div>
-                    <div class="om-user-info-text">
-                        <div class="om-user-name">@OutletManagerName</div>
-                        <div class="om-user-role">Outlet Manager</div>
-                    </div>
-                </div>
-
                 <button type="button" class="om-logout-btn" @onclick="HandleLogout">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
@@ -140,10 +142,13 @@ else
             <!-- TOP HEADER -->
             <header class="om-top-header">
                 <div class="om-header-left">
-                    <h1 class="om-welcome-title">@GetGreeting(), @OutletManagerName</h1>
-                    <p class="om-welcome-subtitle">
-                        Outlet: <span class="om-accent-text">@OutletNameDisplay</span> | Organization: @OrganizationNameDisplay
-                    </p>
+                    @if (ActiveTab == "Dashboard")
+                    {
+                        <h1 class="om-welcome-title">@GetGreeting(), @OutletManagerName</h1>
+                        <p class="om-welcome-subtitle">
+                            Outlet: <span class="om-accent-text">@OutletNameDisplay</span> | Organization: @OrganizationNameDisplay
+                        </p>
+                    }
                 </div>
 
                 <div class="om-header-right">
@@ -181,7 +186,7 @@ else
                                             }
                                             @if (Notifications != null && Notifications.Count > 0)
                                             {
-                                                <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none small text-danger" @onclick="ClearAll">Clear all</button>
+                                                <button type="button" class="btn btn-link btn-sm p-0 text-danger" @onclick="ClearAll">Clear all</button>
                                             }
                                         </div>
                                     </div>
@@ -235,18 +240,6 @@ else
                         }
                     </div>
 
-                    <!-- OUTLET CONTEXT PILL -->
-                    <div class="om-header-pill om-outlet-pill">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#174F45" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
-                            <circle cx="12" cy="10" r="3"></circle>
-                        </svg>
-                        <span class="om-outlet-pill-text">@OutletNameDisplay</span>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                    </div>
-
                     <!-- User Profile Dropdown Menu -->
                     <ProfileMenu OnMyProfileClick='() => SetActiveTab("MyProfile")' OutletName="@OutletNameDisplay" OrganizationName="@OrganizationNameDisplay" />
 
@@ -275,7 +268,7 @@ else
                         <div class="om-metric-grid">
                             
                             <!-- 1. TOTAL PURCHASE REQUESTS -->
-                            <div class="om-metric-card">
+                            <button type="button" class="om-metric-card" @onclick='() => NavigateToRequests("All")' title="View all purchase requests">
                                 <div class="om-metric-header">
                                     <span class="om-metric-label">Total Purchase Requests</span>
                                     <div class="om-metric-icon-box bg-soft-green">
@@ -289,10 +282,10 @@ else
                                 </div>
                                 <div class="om-metric-value text-dark">@PurchaseRequestsCount</div>
                                 <div class="om-metric-desc">All requests for this outlet</div>
-                            </div>
+                            </button>
 
                             <!-- 2. PENDING REQUESTS -->
-                            <div class="om-metric-card">
+                            <button type="button" class="om-metric-card" @onclick='() => NavigateToRequests("Pending")' title="View pending purchase requests">
                                 <div class="om-metric-header">
                                     <span class="om-metric-label">Pending Requests</span>
                                     <div class="om-metric-icon-box bg-soft-amber">
@@ -304,10 +297,10 @@ else
                                 </div>
                                 <div class="om-metric-value text-amber">@PendingQuotationsCount</div>
                                 <div class="om-metric-desc">Awaiting approval</div>
-                            </div>
+                            </button>
 
                             <!-- 3. APPROVED REQUESTS -->
-                            <div class="om-metric-card">
+                            <button type="button" class="om-metric-card" @onclick='() => NavigateToRequests("Approved")' title="View approved purchase requests">
                                 <div class="om-metric-header">
                                     <span class="om-metric-label">Approved Requests</span>
                                     <div class="om-metric-icon-box bg-soft-green-check">
@@ -318,10 +311,10 @@ else
                                 </div>
                                 <div class="om-metric-value text-green">@ApprovedRequestsCount</div>
                                 <div class="om-metric-desc">Approved / completed</div>
-                            </div>
+                            </button>
 
                             <!-- 4. REJECTED REQUESTS -->
-                            <div class="om-metric-card">
+                            <button type="button" class="om-metric-card" @onclick='() => NavigateToRequests("Rejected")' title="View rejected purchase requests">
                                 <div class="om-metric-header">
                                     <span class="om-metric-label">Rejected Requests</span>
                                     <div class="om-metric-icon-box bg-soft-red">
@@ -334,10 +327,10 @@ else
                                 </div>
                                 <div class="om-metric-value text-red">@RejectedRequestsCount</div>
                                 <div class="om-metric-desc">Returned / not approved</div>
-                            </div>
+                            </button>
 
                             <!-- 5. ACTIVE CONTRACTS -->
-                            <div class="om-metric-card">
+                            <button type="button" class="om-metric-card" @onclick="NavigateToContracts" title="View active contracts">
                                 <div class="om-metric-header">
                                     <span class="om-metric-label">Active Contracts</span>
                                     <div class="om-metric-icon-box bg-soft-blue">
@@ -349,7 +342,7 @@ else
                                 </div>
                                 <div class="om-metric-value text-blue">@ActiveContractsCount</div>
                                 <div class="om-metric-desc">Active agreements</div>
-                            </div>
+                            </button>
 
                         </div>
 
@@ -732,6 +725,247 @@ else
                 <!-- ===============================================================
                      TAB 3: MY OUTLET VIEW (EXACT MATCH TO REFERENCE DESIGN)
                      =============================================================== -->
+                                <!-- ===============================================================
+                     TAB: MY CONTRACTS VIEW (READ-ONLY FOR OUTLET)
+                     =============================================================== -->
+                else if (ActiveTab == "MyContracts")
+                {
+                    <div class="om-contracts-page-container">
+                        
+                        <!-- PAGE HEADER -->
+                        <div class="om-prs-header-card">
+                            <div class="om-prs-header-text">
+                                <h2 class="om-prs-title">My Contracts</h2>
+                                <p class="om-prs-subtitle">View active and historical vendor supply contracts assigned to your outlet.</p>
+                            </div>
+                            <div class="om-prs-header-icon">
+                                <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#2E7D61" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    <polyline points="10 9 9 9 8 9"></polyline>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <!-- KPI SUMMARY TILES -->
+                        <div class="om-contracts-kpi-grid">
+                            <div class="om-kpi-pill">
+                                <span class="om-kpi-label">Total Assigned</span>
+                                <span class="om-kpi-value text-dark">@TotalContractsCount</span>
+                            </div>
+                            <div class="om-kpi-pill">
+                                <span class="om-kpi-label">Active Agreements</span>
+                                <span class="om-kpi-value text-success">@ActiveContractsCount</span>
+                            </div>
+                            <div class="om-kpi-pill">
+                                <span class="om-kpi-label">Expired</span>
+                                <span class="om-kpi-value text-warning">@ExpiredContractsCount</span>
+                            </div>
+                            <div class="om-kpi-pill">
+                                <span class="om-kpi-label">Ended / Inactive</span>
+                                <span class="om-kpi-value text-muted">@EndedContractsCount</span>
+                            </div>
+                        </div>
+
+                        <!-- SEARCH & FILTER TOOLBAR -->
+                        <div class="om-prs-toolbar-card">
+                            
+                            <!-- Search Bar -->
+                            <div class="om-prs-search-box">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                                <input type="text" 
+                                       class="om-prs-search-input" 
+                                       placeholder="Search by contract ref, vendor, product, payment..." 
+                                       @bind="ContractSearchQuery" 
+                                       @bind:event="oninput" />
+                            </div>
+
+                            <!-- Status Dropdown -->
+                            <div class="om-prs-filter-group">
+                                <span class="om-prs-filter-label">Status</span>
+                                <select class="om-prs-filter-select" @bind="ContractStatusFilter">
+                                    <option value="All">All Statuses</option>
+                                    <option value="Active">Active</option>
+                                    <option value="Expired">Expired</option>
+                                    <option value="Ended">Ended / Terminated</option>
+                                </select>
+                            </div>
+
+                            <!-- Clear Filters -->
+                            <button type="button" class="om-prs-clear-btn" @onclick="ClearContractFilters">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                                    <path d="M3 3v5h5"></path>
+                                </svg>
+                                <span>Clear Filters</span>
+                            </button>
+
+                        </div>
+
+                        <!-- CONTRACTS TABLE CARD -->
+                        <div class="om-card om-table-card">
+                            <div class="om-card-body p-0">
+                                @if (FilteredContracts == null || FilteredContracts.Count == 0)
+                                {
+                                    <div class="p-5 text-center text-muted">
+                                        <div class="mb-3">
+                                            <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                                <polyline points="14 2 14 8 20 8"></polyline>
+                                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                                <polyline points="10 9 9 9 8 9"></polyline>
+                                            </svg>
+                                        </div>
+                                        <h5 class="fw-bold text-dark mb-1">No contracts assigned to this outlet.</h5>
+                                        <p class="small text-muted mb-0">
+                                            @if (!string.IsNullOrWhiteSpace(ContractSearchQuery) || ContractStatusFilter != "All")
+                                            {
+                                                <span>No contracts match your current filter criteria. Try adjusting or clearing your filters.</span>
+                                            }
+                                            else
+                                            {
+                                                <span>Contracts are created and assigned to your outlet by the Organization Manager.</span>
+                                            }
+                                        </p>
+                                        @if (!string.IsNullOrWhiteSpace(ContractSearchQuery) || ContractStatusFilter != "All")
+                                        {
+                                            <button type="button" class="btn btn-outline-secondary btn-sm mt-3 px-3 fw-semibold" @onclick="ClearContractFilters">
+                                                Reset Filters
+                                            </button>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="table-responsive">
+                                        <table class="table om-table mb-0 align-middle">
+                                            <thead>
+                                                <tr>
+                                                    <th>CONTRACT REF</th>
+                                                    <th>VENDOR</th>
+                                                    <th>PRODUCT(S)</th>
+                                                    <th>QUANTITY / UTILIZATION</th>
+                                                    <th>CONTRACT PERIOD</th>
+                                                    <th>PAYMENT METHOD</th>
+                                                    <th>STATUS</th>
+                                                    <th class="text-end">ACTION</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var contract in FilteredContracts)
+                                                {
+                                                    string statusClass = "status-active";
+                                                    if (string.Equals(contract.Status, "Expired", StringComparison.OrdinalIgnoreCase))
+                                                        statusClass = "status-expired";
+                                                    else if (string.Equals(contract.Status, "Ended", StringComparison.OrdinalIgnoreCase) || string.Equals(contract.Status, "Terminated", StringComparison.OrdinalIgnoreCase))
+                                                        statusClass = "status-ended";
+                                                    else if (!string.Equals(contract.Status, "Active", StringComparison.OrdinalIgnoreCase))
+                                                        statusClass = "status-inactive";
+
+                                                    decimal totalQty = contract.TotalQuantity;
+                                                    decimal usedQty = contract.UsedQuantity;
+                                                    decimal remainingQty = Math.Max(totalQty - usedQty, 0);
+                                                    decimal pctUsed = totalQty > 0 ? Math.Min(Math.Round((usedQty / totalQty) * 100, 1), 100) : 0;
+
+                                                    <tr>
+                                                        <td>
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                <span class="om-contract-badge">CT-#@contract.ContractID</span>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="fw-semibold text-dark">
+                                                                @if (!string.IsNullOrWhiteSpace(contract.VendorName))
+                                                                {
+                                                                    @contract.VendorName
+                                                                }
+                                                                else if (contract.Allocations != null && contract.Allocations.Count > 0)
+                                                                {
+                                                                    <span>@contract.Allocations.First().VendorName</span>
+                                                                    @if (contract.Allocations.Count > 1)
+                                                                    {
+                                                                        <span class="badge bg-light text-secondary ms-1">+@(contract.Allocations.Count - 1) more</span>
+                                                                    }
+                                                                }
+                                                                else
+                                                                {
+                                                                    <span class="text-muted">Assigned Vendor</span>
+                                                                }
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            @if (contract.Products != null && contract.Products.Count > 0)
+                                                            {
+                                                                <div class="fw-semibold text-dark">@contract.Products.First().ProductName</div>
+                                                                @if (contract.Products.Count > 1)
+                                                                {
+                                                                    <div class="small text-muted">+@(contract.Products.Count - 1) other products</div>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <div class="small text-muted">Unit: @contract.Products.First().Unit</div>
+                                                                }
+                                                            }
+                                                            else
+                                                            {
+                                                                <div class="fw-semibold text-dark">@(string.IsNullOrWhiteSpace(contract.ProductName) ? $"Product #{contract.ProductID}" : contract.ProductName)</div>
+                                                                <div class="small text-muted">Unit: @(string.IsNullOrWhiteSpace(contract.Unit) ? "Kg" : contract.Unit)</div>
+                                                            }
+                                                        </td>
+                                                        <td style="min-width: 170px;">
+                                                            <div class="d-flex justify-content-between small mb-1">
+                                                                <span class="fw-bold text-dark">@usedQty.ToString("N0") / @totalQty.ToString("N0") @(string.IsNullOrWhiteSpace(contract.Unit) ? "units" : contract.Unit)</span>
+                                                                <span class="text-muted">@pctUsed%</span>
+                                                            </div>
+                                                            <div class="progress om-progress-bar">
+                                                                <div class="progress-bar @(pctUsed >= 90 ? "bg-danger" : pctUsed >= 70 ? "bg-warning" : "bg-success")" 
+                                                                     role="progressbar" 
+                                                                     style="width: @pctUsed%;" 
+                                                                     aria-valuenow="@pctUsed" 
+                                                                     aria-valuemin="0" 
+                                                                     aria-valuemax="100"></div>
+                                                            </div>
+                                                            <div class="small text-muted mt-1">@remainingQty.ToString("N0") remaining</div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="small fw-semibold text-dark">@contract.StartDate.ToString("dd MMM yyyy")</div>
+                                                            <div class="small text-muted">to @contract.EndDate.ToString("dd MMM yyyy")</div>
+                                                        </td>
+                                                        <td>
+                                                            <span class="om-payment-pill">@(string.IsNullOrWhiteSpace(contract.PaymentMethod) ? "Standard Terms" : contract.PaymentMethod)</span>
+                                                        </td>
+                                                        <td>
+                                                            <span class="om-status-pill @statusClass">@contract.Status</span>
+                                                        </td>
+                                                        <td class="text-end">
+                                                            <button type="button" 
+                                                                    class="btn om-btn-details" 
+                                                                    @onclick="() => OpenContractDetails(contract.ContractID)"
+                                                                    title="View contract details">
+                                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                                                    <circle cx="12" cy="12" r="3"></circle>
+                                                                </svg>
+                                                                <span>View Details</span>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                    </div>
+                }
                 else if (ActiveTab == "MyOutlet")
                 {
                     <div class="om-card om-outlet-detail-card">
@@ -941,7 +1175,7 @@ else
                         <!-- TOP 3 SUMMARY CARDS -->
                         <div class="om-po-metrics-row mb-4">
                             <!-- 1. PENDING -->
-                            <div class="om-po-stat-card">
+                            <button type="button" class="om-po-stat-card @(PoStatusFilter == "Pending" ? "active" : "")" @onclick='() => SetPoStatusFilter("Pending")' title="Filter by pending purchase orders">
                                 <div class="om-po-stat-icon-box bg-stat-yellow">
                                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <circle cx="12" cy="12" r="10"></circle>
@@ -953,10 +1187,10 @@ else
                                     <div class="om-po-stat-label">Pending</div>
                                     <div class="om-po-stat-desc">Awaiting vendor confirmation</div>
                                 </div>
-                            </div>
+                            </button>
 
                             <!-- 2. DISPATCHED / IN TRANSIT -->
-                            <div class="om-po-stat-card">
+                            <button type="button" class="om-po-stat-card @(PoStatusFilter == "Dispatched" ? "active" : "")" @onclick='() => SetPoStatusFilter("Dispatched")' title="Filter by dispatched or in-transit purchase orders">
                                 <div class="om-po-stat-icon-box bg-stat-blue">
                                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <rect x="1" y="3" width="15" height="13"></rect>
@@ -970,10 +1204,10 @@ else
                                     <div class="om-po-stat-label">Dispatched / In Transit</div>
                                     <div class="om-po-stat-desc">On the way to your outlet</div>
                                 </div>
-                            </div>
+                            </button>
 
                             <!-- 3. DELIVERED -->
-                            <div class="om-po-stat-card">
+                            <button type="button" class="om-po-stat-card @(PoStatusFilter == "Delivered" ? "active" : "")" @onclick='() => SetPoStatusFilter("Delivered")' title="Filter by delivered purchase orders">
                                 <div class="om-po-stat-icon-box bg-stat-green">
                                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
@@ -985,13 +1219,20 @@ else
                                     <div class="om-po-stat-label">Delivered</div>
                                     <div class="om-po-stat-desc">Successfully received</div>
                                 </div>
-                            </div>
+                            </button>
                         </div>
 
                         <!-- MAIN ORDERS TABLE CARD -->
                         <div class="om-card om-po-table-card">
                             <div class="om-po-table-header">
-                                <h3 class="om-po-table-title mb-0">Purchase Orders</h3>
+                                <div class="d-flex align-items-center gap-2">
+                                    <h3 class="om-po-table-title mb-0">Purchase Orders</h3>
+                                    @if (PoStatusFilter != "All")
+                                    {
+                                        <span class="badge bg-secondary-subtle text-dark border ms-2">Filter: @(PoStatusFilter == "Dispatched" ? "Dispatched / In Transit" : PoStatusFilter)</span>
+                                        <button type="button" class="btn btn-link btn-sm text-decoration-none p-0 ms-1 small text-muted" @onclick='() => PoStatusFilter = "All"'>Clear</button>
+                                    }
+                                </div>
                                 <div class="om-po-search-box">
                                     <svg class="om-po-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <circle cx="11" cy="11" r="8"></circle>
@@ -1116,16 +1357,6 @@ else
                                             </tbody>
                                         </table>
                                     </div>
-
-                                    <!-- PAGINATION FOOTER -->
-                                    <div class="om-po-pagination-footer">
-                                        <span class="om-po-pagination-text">Showing 1 to @FilteredPOs.Count of @FilteredPOs.Count orders</span>
-                                        <div class="om-po-page-pills">
-                                            <button type="button" class="om-po-page-arrow" disabled>&lsaquo;</button>
-                                            <button type="button" class="om-po-page-num active">1</button>
-                                            <button type="button" class="om-po-page-arrow" disabled>&rsaquo;</button>
-                                        </div>
-                                    </div>
                                 }
                             </div>
                         </div>
@@ -1186,6 +1417,184 @@ else
         <!-- ===================================================================
              PURCHASE ORDER STATUS & DETAILS MODAL (MATCHES SCREENSHOT 1 DESIGN)
              =================================================================== -->
+        <!-- ===================================================================
+             READ-ONLY CONTRACT DETAILS MODAL (OUTLET MANAGER)
+             =================================================================== -->
+        @if (ShowContractDetailsModal && SelectedContractForModal != null)
+        {
+            <div class="om-modal-backdrop" @onclick="CloseContractDetails">
+                <div class="om-modal-dialog" @onclick:stopPropagation="true">
+                    
+                    <!-- MODAL HEADER -->
+                    <div class="om-modal-header">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="om-modal-icon-box">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#174F45" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <h4 class="om-modal-title mb-0">Contract CT-#@SelectedContractForModal.ContractID</h4>
+                                    <span class="om-status-pill @(string.Equals(SelectedContractForModal.Status, "Active", StringComparison.OrdinalIgnoreCase) ? "status-active" : "status-expired")">
+                                        @SelectedContractForModal.Status
+                                    </span>
+                                </div>
+                                <p class="om-modal-subtitle mb-0">Assigned to: <strong>@OutletNameDisplay</strong> &bull; Organization: <strong>@OrganizationNameDisplay</strong></p>
+                            </div>
+                        </div>
+                        <button type="button" class="om-btn-close-modal" @onclick="CloseContractDetails" aria-label="Close">&times;</button>
+                    </div>
+
+                    <!-- MODAL BODY -->
+                    <div class="om-modal-body">
+                        
+                        @if (IsLoadingContractDetails)
+                        {
+                            <div class="py-4 text-center">
+                                <div class="spinner-border spinner-border-sm text-success" role="status"></div>
+                                <span class="ms-2 text-muted small">Loading complete contract terms...</span>
+                            </div>
+                        }
+
+                        <!-- SECTION 1: OVERVIEW METADATA -->
+                        <div class="om-modal-section">
+                            <h6 class="om-section-heading">Contract Information</h6>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="om-detail-item">
+                                        <span class="om-detail-label">Primary Vendor</span>
+                                        <span class="om-detail-val fw-semibold text-dark">
+                                            @(string.IsNullOrWhiteSpace(SelectedContractForModal.VendorName) ? "Multi-Vendor Agreement" : SelectedContractForModal.VendorName)
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="om-detail-item">
+                                        <span class="om-detail-label">Payment Terms / Method</span>
+                                        <span class="om-detail-val">
+                                            @(string.IsNullOrWhiteSpace(SelectedContractForModal.PaymentMethod) ? "Standard Agreement Terms" : SelectedContractForModal.PaymentMethod)
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="om-detail-item">
+                                        <span class="om-detail-label">Validity Period</span>
+                                        <span class="om-detail-val">
+                                            @SelectedContractForModal.StartDate.ToString("dd MMM yyyy") &ndash; @SelectedContractForModal.EndDate.ToString("dd MMM yyyy")
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SECTION 2: PRODUCTS & QUANTITY BREAKDOWN -->
+                        <div class="om-modal-section">
+                            <h6 class="om-section-heading">Product & Quantity Allocation</h6>
+                            <div class="table-responsive">
+                                <table class="table table-bordered om-modal-table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>PRODUCT</th>
+                                            <th class="text-end">CONTRACT QTY</th>
+                                            <th class="text-end">UTILIZED / ORDERED</th>
+                                            <th class="text-end">REMAINING QTY</th>
+                                            <th class="text-end">UNIT PRICE</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @if (SelectedContractForModal.Products != null && SelectedContractForModal.Products.Count > 0)
+                                        {
+                                            @foreach (var prod in SelectedContractForModal.Products)
+                                            {
+                                                decimal rem = Math.Max(prod.ContractQuantity - prod.PurchasedQuantity, 0);
+                                                <tr>
+                                                    <td class="fw-semibold">@prod.ProductName</td>
+                                                    <td class="text-end">@prod.ContractQuantity.ToString("N2") @prod.Unit</td>
+                                                    <td class="text-end text-primary fw-semibold">@prod.PurchasedQuantity.ToString("N2") @prod.Unit</td>
+                                                    <td class="text-end text-success fw-bold">@rem.ToString("N2") @prod.Unit</td>
+                                                    <td class="text-end">@(prod.UnitPrice.HasValue ? prod.UnitPrice.Value.ToString("C") : "-")</td>
+                                                </tr>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <tr>
+                                                <td class="fw-semibold">@(string.IsNullOrWhiteSpace(SelectedContractForModal.ProductName) ? $"Product #{SelectedContractForModal.ProductID}" : SelectedContractForModal.ProductName)</td>
+                                                <td class="text-end">@SelectedContractForModal.TotalQuantity.ToString("N2") @(string.IsNullOrWhiteSpace(SelectedContractForModal.Unit) ? "units" : SelectedContractForModal.Unit)</td>
+                                                <td class="text-end text-primary fw-semibold">@SelectedContractForModal.UsedQuantity.ToString("N2") @(string.IsNullOrWhiteSpace(SelectedContractForModal.Unit) ? "units" : SelectedContractForModal.Unit)</td>
+                                                <td class="text-end text-success fw-bold">@SelectedContractForModal.RemainingQuantity.ToString("N2") @(string.IsNullOrWhiteSpace(SelectedContractForModal.Unit) ? "units" : SelectedContractForModal.Unit)</td>
+                                                <td class="text-end">@(SelectedContractForModal.UnitPrice > 0 ? SelectedContractForModal.UnitPrice.ToString("C") : "Contract Rate")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- SECTION 3: VENDOR ALLOCATIONS (IF MULTI-VENDOR) -->
+                        @if (SelectedContractForModal.Allocations != null && SelectedContractForModal.Allocations.Count > 0)
+                        {
+                            <div class="om-modal-section">
+                                <h6 class="om-section-heading">Vendor Allocations</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered om-modal-table mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>VENDOR</th>
+                                                <th class="text-center">ALLOCATION %</th>
+                                                <th class="text-end">ALLOCATED QTY</th>
+                                                <th class="text-end">UTILIZED QTY</th>
+                                                <th class="text-center">STATUS</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var alloc in SelectedContractForModal.Allocations)
+                                            {
+                                                <tr>
+                                                    <td class="fw-semibold">@alloc.VendorName</td>
+                                                    <td class="text-center fw-bold text-success">@alloc.AllocationPercentage.ToString("0.##")%</td>
+                                                    <td class="text-end">@alloc.AllocatedQuantity.ToString("N2")</td>
+                                                    <td class="text-end text-primary">@alloc.UsedQuantity.ToString("N2")</td>
+                                                    <td class="text-center">
+                                                        <span class="badge @(string.Equals(alloc.Status, "Active", StringComparison.OrdinalIgnoreCase) ? "bg-success" : "bg-secondary")">
+                                                            @alloc.Status
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- READ-ONLY NOTICE -->
+                        <div class="om-modal-notice">
+                            <div class="d-flex align-items-center gap-2 text-muted small">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                </svg>
+                                <span>This is a read-only agreement view. Contract renewals, allocations, and terms are managed by Organization Administration.</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- MODAL FOOTER -->
+                    <div class="om-modal-footer">
+                        <button type="button" class="btn btn-secondary px-4 fw-semibold" @onclick="CloseContractDetails">Close</button>
+                    </div>
+
+                </div>
+            </div>
+        }
+
         @if (ShowPoDetailsModal && SelectedPurchaseOrder != null)
         {
             var primaryItem = SelectedPurchaseOrder.Items?.FirstOrDefault();

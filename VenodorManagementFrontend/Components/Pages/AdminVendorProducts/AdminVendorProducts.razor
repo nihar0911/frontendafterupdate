@@ -1,4 +1,4 @@
-﻿@page "/admin/vendorproducts"
+@page "/admin/vendorproducts"
 @rendermode InteractiveServer
 @inject ApiService Api
 @inject AuthService Auth
@@ -174,21 +174,6 @@ else
                     </li>
 
                     <li class="nav-item">
-                        <button class="nav-link" @onclick='() => Nav.NavigateTo("/admin/contracts")'>
-                            <span class="nav-icon">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                    <polyline points="14 2 14 8 20 8"></polyline>
-                                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                                    <polyline points="10 9 9 9 8 9"></polyline>
-                                </svg>
-                            </span>
-                            <span class="nav-label">Contracts</span>
-                        </button>
-                    </li>
-
-                    <li class="nav-item">
                         <button class="nav-link" @onclick='() => Nav.NavigateTo("/admin/profile")'>
                             <span class="nav-icon">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -289,6 +274,17 @@ else
                         </div>
 
                         <div class="page-title-right">
+                            <div class="search-box">
+                                <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                                <input type="text" class="search-input" placeholder="Search..." @bind="SearchQuery" @bind:event="oninput" />
+                                @if (!string.IsNullOrEmpty(SearchQuery))
+                                {
+                                    <button type="button" class="btn-clear-search" @onclick='() => SearchQuery = string.Empty' title="Clear search">&times;</button>
+                                }
+                            </div>
                             <button type="button" class="btn-add-primary" @onclick="OpenAddForm" disabled="@IsSubmitting">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                                 Add Mapping
@@ -465,63 +461,62 @@ else
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach (var vp in VendorProducts)
+                                        @if (!FilteredVendorProducts.Any())
                                         {
-                                            var currentVp = vp;
-                                            bool isActive = string.Equals(currentVp.Status, "Active", StringComparison.OrdinalIgnoreCase);
-                                            string vendorName = GetVendorName(currentVp.VendorID);
-                                            string productName = GetProductName(currentVp.ProductID);
-
-                                            <tr class="mapping-row @(SelectedMappingDetails?.VendorProductID == currentVp.VendorProductID ? "row-selected" : "")">
-                                                <td class="td-vendor">
-                                                    <span class="vendor-name-link" @onclick="() => OpenDetailsDrawer(currentVp)" title="Click to view details">
-                                                        @vendorName
-                                                    </span>
-                                                </td>
-                                                <td class="td-prod">@productName</td>
-                                                <td class="td-price">Rs. @currentVp.UnitPrice.ToString("N2")</td>
-                                                <td class="td-deliv">@currentVp.EstimatedDeliveryDays day@(currentVp.EstimatedDeliveryDays == 1 ? "" : "s")</td>
-                                                <td class="td-status">
-                                                    <span class="status-indicator">
-                                                        <span class="status-dot"></span>
-                                                        @(string.IsNullOrWhiteSpace(currentVp.Status) ? "Active" : currentVp.Status)
-                                                    </span>
-                                                </td>
-                                                <td class="td-actions">
-                                                    <div class="action-btn-group">
-                                                        <button type="button" class="btn-edit-action" @onclick="() => OpenEditForm(currentVp)" title="Edit mapping" disabled="@IsSubmitting">
-                                                            Edit
-                                                        </button>
-                                                        @if (isActive)
-                                                        {
-                                                            <button type="button" class="btn-deactivate-action" @onclick="() => HandleDeactivateVendorProduct(currentVp.VendorProductID)" title="Deactivate mapping" disabled="@IsSubmitting">
-                                                                Deactivate
-                                                            </button>
-                                                        }
-                                                        else
-                                                        {
-                                                            <button type="button" class="btn-activate-action" @onclick="() => HandleActivateVendorProduct(currentVp.VendorProductID)" title="Activate mapping" disabled="@IsSubmitting">
-                                                                Activate
-                                                            </button>
-                                                        }
-                                                    </div>
+                                            <tr>
+                                                <td colspan="6" class="text-center py-4 text-muted">
+                                                    No vendor product mappings match your search "@SearchQuery"
                                                 </td>
                                             </tr>
                                         }
+                                        else
+                                        {
+                                            @foreach (var vp in FilteredVendorProducts)
+                                            {
+                                                var currentVp = vp;
+                                                bool isActive = string.Equals(currentVp.Status, "Active", StringComparison.OrdinalIgnoreCase);
+                                                string vendorName = GetVendorName(currentVp.VendorID);
+                                                string productName = GetProductName(currentVp.ProductID);
+
+                                                <tr class="mapping-row @(SelectedMappingDetails?.VendorProductID == currentVp.VendorProductID ? "row-selected" : "")">
+                                                    <td class="td-vendor">
+                                                        <span class="vendor-name-link" @onclick="() => OpenDetailsDrawer(currentVp)" title="Click to view details">
+                                                            @vendorName
+                                                        </span>
+                                                    </td>
+                                                    <td class="td-prod">@productName</td>
+                                                    <td class="td-price">Rs. @currentVp.UnitPrice.ToString("N2")</td>
+                                                    <td class="td-deliv">@currentVp.EstimatedDeliveryDays day@(currentVp.EstimatedDeliveryDays == 1 ? "" : "s")</td>
+                                                    <td class="td-status">
+                                                        <span class="status-indicator">
+                                                            <span class="status-dot"></span>
+                                                            @(string.IsNullOrWhiteSpace(currentVp.Status) ? "Active" : currentVp.Status)
+                                                        </span>
+                                                    </td>
+                                                    <td class="td-actions">
+                                                        <div class="action-btn-group">
+                                                            <button type="button" class="btn-edit-action" @onclick="() => OpenEditForm(currentVp)" title="Edit mapping" disabled="@IsSubmitting">
+                                                                Edit
+                                                            </button>
+                                                            @if (isActive)
+                                                            {
+                                                                <button type="button" class="btn-deactivate-action" @onclick="() => HandleDeactivateVendorProduct(currentVp.VendorProductID)" title="Deactivate mapping" disabled="@IsSubmitting">
+                                                                    Deactivate
+                                                                </button>
+                                                            }
+                                                            else
+                                                            {
+                                                                <button type="button" class="btn-activate-action" @onclick="() => HandleActivateVendorProduct(currentVp.VendorProductID)" title="Activate mapping" disabled="@IsSubmitting">
+                                                                    Activate
+                                                                </button>
+                                                            }
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        }
                                     </tbody>
                                 </table>
-                            </div>
-
-                            <!-- TABLE FOOTER -->
-                            <div class="table-pagination-footer">
-                                <span class="pagination-info">
-                                    Showing 1 to @VendorProducts.Count of @VendorProducts.Count mappings
-                                </span>
-                                <div class="pagination-controls">
-                                    <button class="page-btn page-arrow" disabled title="Previous page">&lsaquo;</button>
-                                    <button class="page-btn page-number active">1</button>
-                                    <button class="page-btn page-arrow" disabled title="Next page">&rsaquo;</button>
-                                </div>
                             </div>
                         </div>
                     }

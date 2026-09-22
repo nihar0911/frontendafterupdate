@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,6 +13,24 @@ public partial class AdminTaxRates : ComponentBase
     private bool IsLoading { get; set; } = true;
     private bool HasError { get; set; } = false;
     private List<TaxRateDto> TaxRates { get; set; } = new();
+    private string SearchQuery { get; set; } = string.Empty;
+
+    private IEnumerable<TaxRateDto> FilteredTaxRates
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(SearchQuery))
+                return TaxRates;
+
+            var q = SearchQuery.Trim();
+            return TaxRates.Where(t =>
+                (!string.IsNullOrWhiteSpace(t.TaxName) && t.TaxName.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                t.Percentage.ToString("F2").Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                t.Percentage.ToString().Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                (!string.IsNullOrWhiteSpace(t.Status) && t.Status.Contains(q, StringComparison.OrdinalIgnoreCase))
+            );
+        }
+    }
 
     private bool IsAddModalOpen { get; set; } = false;
     private string AddTaxName { get; set; } = string.Empty;

@@ -15,6 +15,25 @@ public partial class AdminOutlets : ComponentBase
     private List<OutletDto> Outlets { get; set; } = new();
     private List<OrganizationDto> Organizations { get; set; } = new();
     private Dictionary<int, string> OrgNames { get; set; } = new();
+    private string SearchQuery { get; set; } = string.Empty;
+
+    private IEnumerable<OutletDto> FilteredOutlets
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(SearchQuery))
+                return Outlets;
+
+            var q = SearchQuery.Trim();
+            return Outlets.Where(o =>
+                (!string.IsNullOrWhiteSpace(o.OutletName) && o.OutletName.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrWhiteSpace(o.Address) && o.Address.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrWhiteSpace(GetOrgName(o.OrganizationID)) && GetOrgName(o.OrganizationID).Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrWhiteSpace(o.PurchaseOrderApproverRole) && o.PurchaseOrderApproverRole.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrWhiteSpace(o.Status) && o.Status.Contains(q, StringComparison.OrdinalIgnoreCase))
+            );
+        }
+    }
 
     private bool IsAddModalOpen { get; set; } = false;
     private OutletDto? EditingOutlet { get; set; }

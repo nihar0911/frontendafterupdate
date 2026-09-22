@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,6 +15,25 @@ public partial class AdminProducts : ComponentBase
     private List<ProductDto> Products { get; set; } = new();
     private List<TaxRateDto> TaxRates { get; set; } = new();
     private Dictionary<int, TaxRateDto> TaxRateMap { get; set; } = new();
+    private string SearchQuery { get; set; } = string.Empty;
+
+    private IEnumerable<ProductDto> FilteredProducts
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(SearchQuery))
+                return Products;
+
+            var q = SearchQuery.Trim();
+            return Products.Where(p =>
+                (!string.IsNullOrWhiteSpace(p.ProductName) && p.ProductName.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrWhiteSpace(p.Category) && p.Category.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrWhiteSpace(p.Unit) && p.Unit.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrWhiteSpace(p.Status) && p.Status.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                GetTaxRateDisplay(p.TaxRateID).Contains(q, StringComparison.OrdinalIgnoreCase)
+            );
+        }
+    }
 
     private bool IsAddModalOpen { get; set; } = false;
     private ProductDto? EditingProduct { get; set; }

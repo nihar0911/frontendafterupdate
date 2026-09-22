@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -21,6 +21,25 @@ public partial class AdminVendorProducts : ComponentBase
     private Dictionary<int, ProductDto> ProductMap { get; set; } = new();
     private Dictionary<int, string> VendorNameMap { get; set; } = new();
     private Dictionary<int, string> ProductNameMap { get; set; } = new();
+
+    private string SearchQuery { get; set; } = string.Empty;
+
+    private IEnumerable<VendorProductDto> FilteredVendorProducts
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(SearchQuery))
+                return VendorProducts;
+
+            var q = SearchQuery.Trim();
+            return VendorProducts.Where(vp =>
+                GetVendorName(vp.VendorID).Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                GetProductName(vp.ProductID).Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                vp.UnitPrice.ToString("N2").Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                (!string.IsNullOrWhiteSpace(vp.Status) && vp.Status.Contains(q, StringComparison.OrdinalIgnoreCase))
+            );
+        }
+    }
 
     private bool IsFormOpen { get; set; } = false;
     private bool FormSubmitted { get; set; } = false;

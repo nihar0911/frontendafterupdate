@@ -17,12 +17,12 @@
         </div>
     </div>
 }
-else if (!Auth.IsOrgManager && !Auth.IsAdmin)
+else if (!Auth.IsOrgManager && !Auth.IsAdmin && !Auth.IsOutletManager && !Auth.IsPurchaseManager)
 {
     <div class="unauth-container">
         <div class="unauth-card">
             <h4 class="unauth-title text-danger">Access Denied</h4>
-            <p class="unauth-desc">You do not have Organization Manager privileges to view contracts.</p>
+            <p class="unauth-desc">You do not have privileges to view contracts.</p>
             <button class="btn-login-redirect" @onclick='() => Nav.NavigateTo("/")'>Return to Home</button>
         </div>
     </div>
@@ -255,9 +255,11 @@ else
                             <p class="page-sub-heading">Active procurement contracts across all outlets in @OrganizationName</p>
                         </div>
 
-                        <button type="button" class="btn-start-procure-header" @onclick='() => Nav.NavigateTo("/contract/create")'>
-                            <span>Add Contract</span>
-                        </button>
+                        <div class="header-action-buttons-group">
+                            <button type="button" class="btn-start-procure-header" @onclick='() => Nav.NavigateTo("/contract/create")'>
+                                <span>Add Contract</span>
+                            </button>
+                        </div>
                     </div>
 
                     @if (IsLoading)
@@ -794,4 +796,7 @@ else
         </div>
     </div>
 }
+
+}
+
 

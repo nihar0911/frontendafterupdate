@@ -8,7 +8,7 @@ using VenodorManagementFrontend.Services;
 
 namespace VenodorManagementFrontend.Components.Pages.AdminProfile;
 
-public partial class AdminProfile : ComponentBase
+public partial class AdminProfile : ComponentBase, IDisposable
 {
     private string Name { get; set; } = string.Empty;
     private string Email { get; set; } = string.Empty;
@@ -50,13 +50,45 @@ public partial class AdminProfile : ComponentBase
         ActiveTab = tab;
     }
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
+    {
+        Auth.OnAuthStateChanged += HandleAuthStateChanged;
+        LoadUserData();
+
+        if (Auth.IsAuthenticated)
+        {
+            try
+            {
+                var result = await Api.GetMyProfileAsync();
+                if (result.Success && result.Data != null)
+                {
+                    Auth.SetUser(result.Data);
+                    LoadUserData();
+                    StateHasChanged();
+                }
+            }
+            catch { }
+        }
+    }
+
+    private void HandleAuthStateChanged()
+    {
+        LoadUserData();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void LoadUserData()
     {
         if (Auth.IsAuthenticated && Auth.CurrentUser != null)
         {
             Name = Auth.CurrentUser.Name ?? Auth.UserName ?? string.Empty;
             Email = Auth.CurrentUser.Email ?? string.Empty;
         }
+    }
+
+    public void Dispose()
+    {
+        Auth.OnAuthStateChanged -= HandleAuthStateChanged;
     }
 
     private void HandleCancel()

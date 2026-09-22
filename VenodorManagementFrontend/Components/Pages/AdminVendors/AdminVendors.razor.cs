@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,6 +13,26 @@ public partial class AdminVendors : ComponentBase
     private bool IsLoading { get; set; } = true;
     private bool HasError { get; set; } = false;
     private List<VendorDto> Vendors { get; set; } = new();
+    private string SearchQuery { get; set; } = string.Empty;
+
+    private IEnumerable<VendorDto> FilteredVendors
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(SearchQuery))
+                return Vendors;
+
+            var q = SearchQuery.Trim();
+            return Vendors.Where(v =>
+                (!string.IsNullOrWhiteSpace(v.VendorName) && v.VendorName.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrWhiteSpace(v.Email) && v.Email.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrWhiteSpace(v.Phone) && v.Phone.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrWhiteSpace(v.Address) && v.Address.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrWhiteSpace(v.GSTIN) && v.GSTIN.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrWhiteSpace(v.Status) && v.Status.Contains(q, StringComparison.OrdinalIgnoreCase))
+            );
+        }
+    }
 
     private bool IsAddModalOpen { get; set; } = false;
     private VendorDto? EditingVendor { get; set; }

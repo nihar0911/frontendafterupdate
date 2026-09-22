@@ -260,16 +260,8 @@ else
             <main class="org-main-content">
                 <div class="content-container">
 
-                    <!-- TOP ACTION ROW (Back Button & Org/Purchase Manager Badge) -->
-                    <div class="top-action-row">
-                        <button type="button" class="btn-back-dashboard" @onclick='() => Nav.NavigateTo(Auth.IsPurchaseManager ? "/purchase-manager" : "/org-dashboard")'>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="19" y1="12" x2="5" y2="12"></line>
-                                <polyline points="12 19 5 12 12 5"></polyline>
-                            </svg>
-                            <span>Back to Dashboard</span>
-                        </button>
-
+                    <!-- TOP ACTION ROW (Org/Purchase Manager Badge) -->
+                    <div class="top-action-row justify-content-end">
                         <div class="org-role-badge">
                             <span>@(Auth.IsPurchaseManager ? "Purchase Manager" : (Auth.IsAdmin ? "Admin" : "Org Manager")): @(string.IsNullOrWhiteSpace(Auth.UserName) ? (Auth.CurrentUser?.Name ?? (Auth.IsPurchaseManager ? "Purchase Manager" : "Organization Manager")) : Auth.UserName)</span>
                         </div>
@@ -278,7 +270,6 @@ else
                     <!-- PAGE TITLE SECTION -->
                     <div class="page-title-section">
                         <h1 class="page-main-heading">Quotations</h1>
-                        <p class="page-sub-heading">@(Auth.IsPurchaseManager ? "Review vendor quotations submitted for your outlet's purchase requests." : "Review vendor quotations submitted for your organization's purchase requests.")</p>
                     </div>
 
                     <!-- SEARCH & FILTER TOOLBAR -->

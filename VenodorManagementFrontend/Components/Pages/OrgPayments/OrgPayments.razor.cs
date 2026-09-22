@@ -267,7 +267,7 @@ public partial class OrgPayments : ComponentBase
                 decimal amountPaid = SelectedInvoiceForPayment.TotalAmount;
                 CloseMakePaymentModal();
 
-                PaymentSuccessMessage = $"Payment of Rs. {amountPaid:N2} for Invoice INV-{paidInvoiceId} was successfully recorded.";
+                PaymentSuccessMessage = $"Payment of ₹{amountPaid:N2} for Invoice INV-{paidInvoiceId} was successfully recorded.";
                 await LoadDataAsync();
                 ActiveTab = "history";
             }

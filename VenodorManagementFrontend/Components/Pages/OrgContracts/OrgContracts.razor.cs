@@ -170,6 +170,11 @@ public partial class OrgContracts : ComponentBase
             }
 
             AllOrgContracts = orgContracts;
+
+            if (Auth.IsOutletManager && Auth.OutletID.HasValue && Auth.OutletID.Value > 0)
+            {
+                SelectedOutletId = Auth.OutletID.Value;
+            }
         }
         catch (Exception ex)
         {

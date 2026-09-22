@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -975,39 +975,26 @@ public partial class Procurement : ComponentBase, IDisposable
         }
     }
 
-    private void SelectVendorForAiItem(int itemIndex, VendorRecommendationDto vendor)
+    private void ToggleVendorForAiItem(ParsedProcurementItemDto item, VendorRecommendationDto vendorRec)
     {
-        // Purchase Manager explicitly chooses this vendor
-        AiSelectedVendors[itemIndex] = vendor;
-        StateHasChanged();
-    }
+        if (!item.ProductID.HasValue || item.ProductID.Value <= 0 || vendorRec == null || vendorRec.VendorID <= 0) return;
 
-    private void AddAiItemToCart(int itemIndex, ParsedProcurementItemDto item)
-    {
-        if (!item.ProductID.HasValue || item.ProductID.Value <= 0) return;
-        if (!AiSelectedVendors.TryGetValue(itemIndex, out var selectedVendor) || selectedVendor == null) return;
-        if (item.Quantity <= 0) return;
-
-        var existing = CartItems.FirstOrDefault(i =>
-            i.ProductID == item.ProductID.Value);
+        var existing = CartItems.FirstOrDefault(c =>
+            c.ProductID == item.ProductID.Value &&
+            c.VendorID == vendorRec.VendorID);
 
         if (existing != null)
         {
-            existing.Quantity = item.Quantity;
-            existing.Unit = item.Unit;
-            existing.VendorID = selectedVendor.VendorID;
-            existing.VendorName = selectedVendor.VendorName;
-            existing.UnitPrice = selectedVendor.UnitPrice;
-            existing.EstimatedDeliveryDays = selectedVendor.EstimatedDeliveryDays;
-            existing.AverageRating = selectedVendor.AverageRating;
-            existing.TotalFeedbackCount = selectedVendor.TotalFeedbackCount;
-            existing.AverageQualityRating = selectedVendor.AverageQualityRating;
-            existing.SmartBadge = selectedVendor.SmartBadge;
-            existing.HasActiveContract = selectedVendor.HasActiveContract;
-            existing.RemainingQuantity = selectedVendor.RemainingQuantity;
+            // Toggle off: remove this specific vendor for this product from cart
+            CartItems.Remove(existing);
+            if (EditingCartItemKey == existing.ItemKey)
+            {
+                CancelEditCartItem();
+            }
         }
         else
         {
+            // Add new vendor-product combination to cart
             string category = "General";
             var prod = AllProducts.FirstOrDefault(p => p.ProductID == item.ProductID.Value);
             if (prod != null && !string.IsNullOrWhiteSpace(prod.Category))
@@ -1015,30 +1002,32 @@ public partial class Procurement : ComponentBase, IDisposable
                 category = prod.Category;
             }
 
+            decimal qty = item.Quantity > 0 ? item.Quantity : 10;
+            string unit = !string.IsNullOrWhiteSpace(item.Unit) ? item.Unit : (prod?.Unit ?? "units");
+
             CartItems.Add(new ProcurementItem
             {
                 ProductID = item.ProductID.Value,
-                ProductName = item.ProductName ?? item.SpokenProductName,
+                ProductName = item.ProductName ?? item.SpokenProductName ?? (prod?.ProductName ?? "Item"),
                 Category = category,
-                Quantity = item.Quantity,
-                Unit = item.Unit,
-                VendorID = selectedVendor.VendorID,
-                VendorName = selectedVendor.VendorName,
-                UnitPrice = selectedVendor.UnitPrice,
-                EstimatedDeliveryDays = selectedVendor.EstimatedDeliveryDays,
-                AverageRating = selectedVendor.AverageRating,
-                TotalFeedbackCount = selectedVendor.TotalFeedbackCount,
-                AverageQualityRating = selectedVendor.AverageQualityRating,
-                SmartBadge = selectedVendor.SmartBadge,
-                HasActiveContract = selectedVendor.HasActiveContract,
-                RemainingQuantity = selectedVendor.RemainingQuantity
+                Quantity = qty,
+                Unit = unit,
+                VendorID = vendorRec.VendorID,
+                VendorName = vendorRec.VendorName,
+                UnitPrice = vendorRec.UnitPrice,
+                EstimatedDeliveryDays = vendorRec.EstimatedDeliveryDays,
+                AverageRating = vendorRec.AverageRating,
+                TotalFeedbackCount = vendorRec.TotalFeedbackCount,
+                AverageQualityRating = vendorRec.AverageQualityRating,
+                SmartBadge = vendorRec.SmartBadge,
+                HasActiveContract = vendorRec.HasActiveContract,
+                RemainingQuantity = vendorRec.RemainingQuantity
             });
         }
 
-        AiItemAddedToCartKeys.Add(itemIndex);
+        CartValidationMessage = string.Empty;
         StateHasChanged();
     }
-
     private async Task SelectAmbiguousMatchAsync(int itemIndex, ParsedProcurementItemDto item, string chosenMatchName)
     {
         if (AllProducts.Count == 0)
@@ -1077,6 +1066,14 @@ public partial class Procurement : ComponentBase, IDisposable
         if (newQty > 0)
         {
             item.Quantity = newQty;
+            if (item.ProductID.HasValue)
+            {
+                var matchingCartItems = CartItems.Where(i => i.ProductID == item.ProductID.Value).ToList();
+                foreach (var cartItem in matchingCartItems)
+                {
+                    cartItem.Quantity = newQty;
+                }
+            }
             if (item.ResolutionStatus == "InvalidQuantity" && item.ProductID.HasValue)
             {
                 item.ResolutionStatus = "Resolved";
@@ -1364,7 +1361,7 @@ public partial class Procurement : ComponentBase, IDisposable
             }
             return $"{pr.Items.Count} Items";
         }
-        return "—";
+        return "â€”";
     }
 
     private string GetPrVendorDisplay(PurchaseRequestDto pr)

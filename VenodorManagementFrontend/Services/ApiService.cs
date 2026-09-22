@@ -434,6 +434,11 @@ namespace VenodorManagementFrontend.Services
             try
             {
                 command.UserID = id;
+                if (string.IsNullOrWhiteSpace(command.Password))
+                {
+                    command.Password = null;
+                }
+
                 var response = await _httpClient.PutAsJsonAsync($"api/users/{id}", command);
                 if (response.IsSuccessStatusCode)
                 {
@@ -456,12 +461,16 @@ namespace VenodorManagementFrontend.Services
 
                     if (userObj == null)
                     {
+                        int fallbackRoleId = command.RoleID.HasValue && command.RoleID.Value > 0
+                            ? command.RoleID.Value
+                            : (command.Role == "Organization Manager" ? 2 : command.Role == "Outlet Manager" ? 3 : command.Role == "Vendor Manager" ? 4 : command.Role == "Purchase Manager" ? 5 : 1);
+
                         userObj = new UserDto
                         {
                             UserID = id,
                             Name = command.Name,
                             Email = command.Email,
-                            RoleID = command.RoleID.HasValue && command.RoleID.Value > 0 ? command.RoleID.Value : (command.Role == "Organization Manager" ? 2 : command.Role == "Outlet Manager" ? 3 : command.Role == "Vendor Manager" ? 4 : 1),
+                            RoleID = fallbackRoleId,
                             RoleName = command.Role,
                             OrganizationID = command.OrganizationID,
                             OutletID = command.OutletID,
@@ -498,35 +507,361 @@ namespace VenodorManagementFrontend.Services
             }
         }
 
+        public async Task<ApiResult<LoginResponse>> GetMyProfileAsync()
+        {
+            SetAuthHeader();
+            try
+            {
+                var response = await _httpClient.GetAsync("api/users/me");
+                var raw = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    LoginResponse? profile = null;
+                    try
+                    {
+                        var result = JsonSerializer.Deserialize<GetMyProfileResponse>(raw, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                        if (result?.Profile != null)
+                        {
+                            profile = result.Profile;
+                        }
+                        else if (result?.User != null)
+                        {
+                            profile = new LoginResponse
+                            {
+                                Token = _authService.Token ?? string.Empty,
+                                UserID = result.User.UserID,
+                                Name = result.User.Name,
+                                Email = result.User.Email,
+                                Role = result.User.RoleName ?? _authService.Role,
+                                OrganizationID = result.User.OrganizationID ?? _authService.OrganizationID,
+                                OutletID = result.User.OutletID ?? _authService.OutletID,
+                                VendorID = result.User.VendorID ?? _authService.VendorID
+                            };
+                        }
+                        else if (result != null && (result.UserID > 0 || !string.IsNullOrWhiteSpace(result.Email)))
+                        {
+                            profile = new LoginResponse
+                            {
+                                Token = _authService.Token ?? string.Empty,
+                                UserID = result.UserID,
+                                Name = result.Name,
+                                Email = result.Email,
+                                Role = !string.IsNullOrWhiteSpace(result.Role) ? result.Role : _authService.Role,
+                                OrganizationID = result.OrganizationID ?? _authService.OrganizationID,
+                                OutletID = result.OutletID ?? _authService.OutletID,
+                                VendorID = result.VendorID ?? _authService.VendorID
+                            };
+                        }
+                    }
+                    catch { }
+
+                    if (profile == null)
+                    {
+                        try
+                        {
+                            profile = JsonSerializer.Deserialize<LoginResponse>(raw, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                        }
+                        catch { }
+                    }
+
+                    if (profile == null)
+                    {
+                        try
+                        {
+                            var userDto = JsonSerializer.Deserialize<UserDto>(raw, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                            if (userDto != null && userDto.UserID > 0)
+                            {
+                                profile = new LoginResponse
+                                {
+                                    Token = _authService.Token ?? string.Empty,
+                                    UserID = userDto.UserID,
+                                    Name = userDto.Name,
+                                    Email = userDto.Email,
+                                    Role = userDto.RoleName ?? _authService.Role,
+                                    OrganizationID = userDto.OrganizationID ?? _authService.OrganizationID,
+                                    OutletID = userDto.OutletID ?? _authService.OutletID,
+                                    VendorID = userDto.VendorID ?? _authService.VendorID
+                                };
+                            }
+                        }
+                        catch { }
+                    }
+
+                    if (profile != null)
+                    {
+                        if (string.IsNullOrWhiteSpace(profile.Token))
+                        {
+                            profile.Token = _authService.Token ?? string.Empty;
+                        }
+                        if (string.IsNullOrWhiteSpace(profile.Role) && !string.IsNullOrWhiteSpace(_authService.Role))
+                        {
+                            profile.Role = _authService.Role;
+                        }
+                        if (!profile.OrganizationID.HasValue && _authService.OrganizationID.HasValue)
+                        {
+                            profile.OrganizationID = _authService.OrganizationID;
+                        }
+                        if (!profile.OutletID.HasValue && _authService.OutletID.HasValue)
+                        {
+                            profile.OutletID = _authService.OutletID;
+                        }
+                        if (!profile.VendorID.HasValue && _authService.VendorID.HasValue)
+                        {
+                            profile.VendorID = _authService.VendorID;
+                        }
+                        return new ApiResult<LoginResponse> { Success = true, Data = profile };
+                    }
+
+                    return new ApiResult<LoginResponse> { Success = false, ErrorMessage = "Failed to parse profile response." };
+                }
+
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    return new ApiResult<LoginResponse> { Success = false, ErrorMessage = "Your session has expired. Please log in again." };
+                }
+
+                if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                {
+                    return new ApiResult<LoginResponse> { Success = false, ErrorMessage = "You do not have permission to view this profile." };
+                }
+
+                string errorText = ExtractErrorMessageFromJson(raw, "Unable to load profile.");
+                return new ApiResult<LoginResponse> { Success = false, ErrorMessage = errorText };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ApiService] GetMyProfileAsync error: {ex.Message}");
+                return new ApiResult<LoginResponse> { Success = false, ErrorMessage = ex.Message };
+            }
+        }
+
         public async Task<ApiResult<LoginResponse>> UpdateMyProfileAsync(UpdateMyProfileCommand command)
         {
             SetAuthHeader();
             try
             {
-                var response = await _httpClient.PutAsJsonAsync("api/users/me", command);
+                var payload = new UpdateMyProfileCommand
+                {
+                    Name = command.Name?.Trim() ?? string.Empty,
+                    Email = command.Email?.Trim() ?? string.Empty,
+                    NewPassword = !string.IsNullOrWhiteSpace(command.NewPassword) ? command.NewPassword : null
+                };
+
+                Console.WriteLine($"[ApiService] Sending PUT api/users/me (Name: {payload.Name}, Email: {payload.Email})");
+                var response = await _httpClient.PutAsJsonAsync("api/users/me", payload);
+                var raw = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"[ApiService] PUT api/users/me returned {(int)response.StatusCode}: {raw}");
+
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<UpdateMyProfileResponse>();
-                    return new ApiResult<LoginResponse> { Success = true, Data = result?.Profile };
-                }
-
-                string errorText = "Unable to update profile.";
-                try
-                {
-                    var errObj = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
-                    if (errObj != null && errObj.TryGetValue("message", out var msg) && !string.IsNullOrWhiteSpace(msg))
+                    LoginResponse? updatedProfile = null;
+                    try
                     {
-                        errorText = msg;
+                        var result = JsonSerializer.Deserialize<UpdateMyProfileResponse>(raw, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                        updatedProfile = result?.Profile;
                     }
-                }
-                catch { }
+                    catch { }
 
+                    if (updatedProfile == null)
+                    {
+                        try
+                        {
+                            var result = JsonSerializer.Deserialize<GetMyProfileResponse>(raw, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                            if (result?.Profile != null)
+                            {
+                                updatedProfile = result.Profile;
+                            }
+                            else if (result?.User != null)
+                            {
+                                updatedProfile = new LoginResponse
+                                {
+                                    Token = _authService.Token ?? string.Empty,
+                                    UserID = result.User.UserID,
+                                    Name = result.User.Name,
+                                    Email = result.User.Email,
+                                    Role = result.User.RoleName ?? _authService.Role,
+                                    OrganizationID = result.User.OrganizationID ?? _authService.OrganizationID,
+                                    OutletID = result.User.OutletID ?? _authService.OutletID,
+                                    VendorID = result.User.VendorID ?? _authService.VendorID
+                                };
+                            }
+                            else if (result != null && (result.UserID > 0 || !string.IsNullOrWhiteSpace(result.Email)))
+                            {
+                                updatedProfile = new LoginResponse
+                                {
+                                    Token = _authService.Token ?? string.Empty,
+                                    UserID = result.UserID,
+                                    Name = result.Name,
+                                    Email = result.Email,
+                                    Role = !string.IsNullOrWhiteSpace(result.Role) ? result.Role : _authService.Role,
+                                    OrganizationID = result.OrganizationID ?? _authService.OrganizationID,
+                                    OutletID = result.OutletID ?? _authService.OutletID,
+                                    VendorID = result.VendorID ?? _authService.VendorID
+                                };
+                            }
+                        }
+                        catch { }
+                    }
+
+                    if (updatedProfile == null)
+                    {
+                        try
+                        {
+                            updatedProfile = JsonSerializer.Deserialize<LoginResponse>(raw, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                        }
+                        catch { }
+                    }
+
+                    if (updatedProfile == null)
+                    {
+                        try
+                        {
+                            var userDto = JsonSerializer.Deserialize<UserDto>(raw, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                            if (userDto != null && userDto.UserID > 0)
+                            {
+                                updatedProfile = new LoginResponse
+                                {
+                                    Token = _authService.Token ?? string.Empty,
+                                    UserID = userDto.UserID,
+                                    Name = userDto.Name,
+                                    Email = userDto.Email,
+                                    Role = userDto.RoleName ?? _authService.Role,
+                                    OrganizationID = userDto.OrganizationID ?? _authService.OrganizationID,
+                                    OutletID = userDto.OutletID ?? _authService.OutletID,
+                                    VendorID = userDto.VendorID ?? _authService.VendorID
+                                };
+                            }
+                        }
+                        catch { }
+                    }
+
+                    if (updatedProfile == null)
+                    {
+                        var curr = _authService.CurrentUser;
+                        updatedProfile = new LoginResponse
+                        {
+                            Token = curr?.Token ?? _authService.Token ?? string.Empty,
+                            UserID = curr?.UserID ?? _authService.UserID,
+                            Name = payload.Name,
+                            Email = payload.Email,
+                            Role = curr?.Role ?? _authService.Role,
+                            OrganizationID = curr?.OrganizationID ?? _authService.OrganizationID,
+                            OutletID = curr?.OutletID ?? _authService.OutletID,
+                            VendorID = curr?.VendorID ?? _authService.VendorID
+                        };
+                    }
+
+                    if (string.IsNullOrWhiteSpace(updatedProfile.Token))
+                    {
+                        updatedProfile.Token = _authService.Token ?? string.Empty;
+                    }
+                    if (string.IsNullOrWhiteSpace(updatedProfile.Role) && !string.IsNullOrWhiteSpace(_authService.Role))
+                    {
+                        updatedProfile.Role = _authService.Role;
+                    }
+                    if (!updatedProfile.OrganizationID.HasValue && _authService.OrganizationID.HasValue)
+                    {
+                        updatedProfile.OrganizationID = _authService.OrganizationID;
+                    }
+                    if (!updatedProfile.OutletID.HasValue && _authService.OutletID.HasValue)
+                    {
+                        updatedProfile.OutletID = _authService.OutletID;
+                    }
+                    if (!updatedProfile.VendorID.HasValue && _authService.VendorID.HasValue)
+                    {
+                        updatedProfile.VendorID = _authService.VendorID;
+                    }
+
+                    return new ApiResult<LoginResponse> { Success = true, Data = updatedProfile };
+                }
+
+                if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+                {
+                    string conflictMsg = ExtractErrorMessageFromJson(raw, "This email address is already in use by another account.");
+                    if (string.Equals(conflictMsg, "An unexpected error occurred.", StringComparison.OrdinalIgnoreCase) || string.IsNullOrWhiteSpace(conflictMsg))
+                    {
+                        conflictMsg = "This email address is already in use by another account.";
+                    }
+                    return new ApiResult<LoginResponse> { Success = false, ErrorMessage = conflictMsg };
+                }
+
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    return new ApiResult<LoginResponse> { Success = false, ErrorMessage = "Your session has expired. Please log in again." };
+                }
+
+                if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                {
+                    return new ApiResult<LoginResponse> { Success = false, ErrorMessage = "You do not have permission to update this profile." };
+                }
+
+                string errorText = ExtractErrorMessageFromJson(raw, "Unable to update profile.");
                 return new ApiResult<LoginResponse> { Success = false, ErrorMessage = errorText };
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"[ApiService] UpdateMyProfileAsync error: {ex.Message}");
                 return new ApiResult<LoginResponse> { Success = false, ErrorMessage = ex.Message };
             }
+        }
+
+        private static string ExtractErrorMessageFromJson(string raw, string fallback = "An unexpected error occurred.")
+        {
+            if (string.IsNullOrWhiteSpace(raw)) return fallback;
+            try
+            {
+                using var doc = JsonDocument.Parse(raw);
+                var root = doc.RootElement;
+                if (root.ValueKind == JsonValueKind.Object)
+                {
+                    if (root.TryGetProperty("message", out var msgProp) && !string.IsNullOrWhiteSpace(msgProp.GetString()))
+                    {
+                        return msgProp.GetString()!;
+                    }
+                    if (root.TryGetProperty("error", out var errProp) && !string.IsNullOrWhiteSpace(errProp.GetString()))
+                    {
+                        return errProp.GetString()!;
+                    }
+                    if (root.TryGetProperty("errors", out var errsProp) && errsProp.ValueKind == JsonValueKind.Object)
+                    {
+                        var errList = new List<string>();
+                        foreach (var prop in errsProp.EnumerateObject())
+                        {
+                            if (prop.Value.ValueKind == JsonValueKind.Array)
+                            {
+                                foreach (var item in prop.Value.EnumerateArray())
+                                {
+                                    var s = item.GetString();
+                                    if (!string.IsNullOrWhiteSpace(s)) errList.Add(s);
+                                }
+                            }
+                            else if (prop.Value.ValueKind == JsonValueKind.String)
+                            {
+                                var s = prop.Value.GetString();
+                                if (!string.IsNullOrWhiteSpace(s)) errList.Add(s);
+                            }
+                        }
+                        if (errList.Count > 0)
+                        {
+                            return string.Join(" ", errList);
+                        }
+                    }
+                    if (root.TryGetProperty("title", out var titleProp) && !string.IsNullOrWhiteSpace(titleProp.GetString()))
+                    {
+                        return titleProp.GetString()!;
+                    }
+                }
+                else if (!raw.TrimStart().StartsWith("<"))
+                {
+                    return raw.Trim('\"');
+                }
+            }
+            catch
+            {
+                if (!raw.TrimStart().StartsWith("<")) return raw;
+            }
+            return fallback;
         }
 
         public async Task<List<TaxRateDto>> GetTaxRatesAsync()
@@ -927,8 +1262,13 @@ namespace VenodorManagementFrontend.Services
         public async Task<List<ContractDto>> GetContractsByOutletAsync(int outletId)
         {
             SetAuthHeader();
-            var response = await _httpClient.GetFromJsonAsync<GetContractsResponse>($"api/contract/outlet/{outletId}");
-            return response?.Contracts ?? new List<ContractDto>();
+            try { var response = await _httpClient.GetFromJsonAsync<GetContractsResponse>($"api/contract/outlet/{outletId}"); return response?.Contracts ?? new List<ContractDto>(); } catch { return new List<ContractDto>(); }
+        }
+
+        public async Task<List<ContractDto>> GetMyOutletContractsAsync()
+        {
+            SetAuthHeader();
+            try { var response = await _httpClient.GetFromJsonAsync<GetContractsResponse>("api/contract/outlet/my"); return response?.Contracts ?? new List<ContractDto>(); } catch { return new List<ContractDto>(); }
         }
 
         public async Task<ContractDto?> CreateContractAsync(CreateContractCommand command)

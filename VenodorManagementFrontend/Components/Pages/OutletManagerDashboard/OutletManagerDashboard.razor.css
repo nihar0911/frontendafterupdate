@@ -461,6 +461,18 @@
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
     display: flex;
     flex-direction: column;
+    text-align: left;
+    width: 100%;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.om-metric-card:hover,
+.om-metric-card:focus-visible {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    border-color: #CBD5E1;
+    outline: none;
 }
 
 .om-metric-header {
@@ -1302,6 +1314,24 @@
     align-items: center;
     gap: 1.15rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    text-align: left;
+    width: 100%;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.om-po-stat-card:hover,
+.om-po-stat-card:focus-visible {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    border-color: #CBD5E1;
+    outline: none;
+}
+
+.om-po-stat-card.active {
+    border-color: #174F45;
+    box-shadow: 0 0 0 1.5px #174F45;
+    background-color: #F8FAF9;
 }
 
 .om-po-stat-icon-box {
@@ -1866,3 +1896,318 @@
     }
 }
 
+
+/* =============================================================================
+   12. OUTLET MANAGER "MY CONTRACTS" STYLING & MODALS
+   ============================================================================= */
+
+.om-contracts-page-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.om-contracts-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+
+@media (max-width: 992px) {
+    .om-contracts-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 576px) {
+    .om-contracts-kpi-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.om-kpi-pill {
+    background: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    padding: 0.85rem 1.15rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.om-kpi-pill:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
+}
+
+.om-kpi-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.om-kpi-value {
+    font-size: 1.45rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.om-contract-badge {
+    display: inline-flex;
+    align-items: center;
+    background-color: #EBF5F1;
+    color: #174F45;
+    font-weight: 700;
+    font-size: 0.82rem;
+    padding: 0.25rem 0.55rem;
+    border-radius: 6px;
+    border: 1px solid rgba(23, 79, 69, 0.15);
+    letter-spacing: 0.02em;
+}
+
+.om-payment-pill {
+    display: inline-block;
+    background-color: #F3F4F6;
+    color: #374151;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.25rem 0.6rem;
+    border-radius: 6px;
+    border: 1px solid #E5E7EB;
+}
+
+.om-status-pill {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.25rem 0.65rem;
+    border-radius: 9999px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.om-status-pill.status-active {
+    background-color: #DCFCE7;
+    color: #15803D;
+    border: 1px solid #BBF7D0;
+}
+
+.om-status-pill.status-expired {
+    background-color: #FEF3C7;
+    color: #B45309;
+    border: 1px solid #FDE68A;
+}
+
+.om-status-pill.status-ended {
+    background-color: #FEE2E2;
+    color: #B91C1C;
+    border: 1px solid #FECACA;
+}
+
+.om-status-pill.status-inactive {
+    background-color: #F3F4F6;
+    color: #6B7280;
+    border: 1px solid #E5E7EB;
+}
+
+.om-progress-bar {
+    height: 6px;
+    background-color: #E5E7EB;
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.om-btn-details {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background-color: #FFFFFF;
+    color: #174F45;
+    border: 1px solid #D1D5DB;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 6px;
+    transition: all 0.15s ease-in-out;
+}
+
+.om-btn-details:hover {
+    background-color: #174F45;
+    color: #FFFFFF;
+    border-color: #174F45;
+    box-shadow: 0 2px 4px rgba(23, 79, 69, 0.15);
+}
+
+/* =============================================================================
+   13. OUTLET MANAGER MODAL DIALOGS
+   ============================================================================= */
+
+.om-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(3px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+    padding: 1rem;
+    animation: omFadeIn 0.2s ease-out;
+}
+
+.om-modal-dialog {
+    background: #FFFFFF;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    width: 100%;
+    max-width: 780px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: omScaleIn 0.2s ease-out;
+}
+
+@keyframes omFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes omScaleIn {
+    from { transform: scale(0.96); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.om-modal-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #E5E7EB;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #F9FAFB;
+}
+
+.om-modal-icon-box {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background-color: #EBF5F1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.om-modal-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.om-modal-subtitle {
+    font-size: 0.8rem;
+    color: #6B7280;
+}
+
+.om-btn-close-modal {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    line-height: 1;
+    color: #9CA3AF;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    transition: color 0.15s ease, background 0.15s ease;
+}
+
+.om-btn-close-modal:hover {
+    color: #111827;
+    background-color: #E5E7EB;
+}
+
+.om-modal-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.om-modal-section {
+    background-color: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+}
+
+.om-section-heading {
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #174F45;
+    margin-bottom: 0.85rem;
+}
+
+.om-detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.om-detail-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #6B7280;
+    text-transform: uppercase;
+}
+
+.om-detail-val {
+    font-size: 0.9rem;
+    color: #111827;
+}
+
+.om-modal-table {
+    font-size: 0.85rem;
+    background-color: #FFFFFF;
+}
+
+.om-modal-table thead th {
+    background-color: #F3F4F6;
+    color: #4B5563;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.6rem 0.75rem;
+}
+
+.om-modal-table tbody td {
+    padding: 0.65rem 0.75rem;
+    color: #1F2937;
+    vertical-align: middle;
+}
+
+.om-modal-notice {
+    background-color: #F8FAFC;
+    border: 1px dashed #CBD5E1;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+}
+
+.om-modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #E5E7EB;
+    display: flex;
+    justify-content: flex-end;
+    background-color: #F9FAFB;
+}

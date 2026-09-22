@@ -18,6 +18,15 @@ public partial class CreateContract : ComponentBase
     [SupplyParameterFromQuery(Name = "quotationId")]
     public int? QueryQuotationId { get; set; }
 
+    [SupplyParameterFromQuery(Name = "productId")]
+    public int? QueryProductId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "outletId")]
+    public int? QueryOutletId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "vendorId")]
+    public int? QueryVendorId { get; set; }
+
     private bool IsLoading { get; set; } = true;
     private bool IsProcessing { get; set; } = false;
     private bool IsSidebarCollapsed { get; set; } = false;
@@ -315,8 +324,13 @@ public partial class CreateContract : ComponentBase
                     .ToList();
             }
 
-            // Pre-select user's outlet if valid, otherwise single outlet if only 1 exists
-            if (Auth.OutletID.HasValue && OrganizationOutlets.Any(o => o.OutletID == Auth.OutletID.Value))
+            // Pre-select outlet: prefer QueryOutletId if provided, then user's outlet, then single outlet
+            if (QueryOutletId.HasValue && OrganizationOutlets.Any(o => o.OutletID == QueryOutletId.Value))
+            {
+                SelectedOutletId = QueryOutletId.Value;
+                OutletName = OrganizationOutlets.First(o => o.OutletID == SelectedOutletId).OutletName;
+            }
+            else if (Auth.OutletID.HasValue && OrganizationOutlets.Any(o => o.OutletID == Auth.OutletID.Value))
             {
                 SelectedOutletId = Auth.OutletID.Value;
                 OutletName = OrganizationOutlets.First(o => o.OutletID == SelectedOutletId).OutletName;
@@ -349,6 +363,36 @@ public partial class CreateContract : ComponentBase
             StartDate = DateTime.Today;
             EndDate = DateTime.Today.AddDays(30);
             PaymentMethod = "Bank Transfer";
+
+            // If a product was passed via query parameter, add it and pre-select vendor
+            if (QueryProductId.HasValue && QueryProductId.Value > 0)
+            {
+                var queryProd = AvailableProducts.FirstOrDefault(p => p.ProductID == QueryProductId.Value);
+                if (queryProd != null)
+                {
+                    var line = new ProductContractLine
+                    {
+                        ProductID = queryProd.ProductID,
+                        ProductName = queryProd.ProductName,
+                        ProductCategory = !string.IsNullOrWhiteSpace(queryProd.Category) ? queryProd.Category : "Produce",
+                        Unit = !string.IsNullOrWhiteSpace(queryProd.Unit) ? queryProd.Unit : "Kg",
+                        ContractQuantity = 100, // Pre-fill sensible default quantity for user review
+                        SelectedVendorID = 0
+                    };
+                    ProductLines.Add(line);
+                    await LoadEligibleVendorsForProductLineAsync(line);
+
+                    if (QueryVendorId.HasValue && QueryVendorId.Value > 0)
+                    {
+                        var targetVendor = line.EligibleVendors.FirstOrDefault(v => v.VendorID == QueryVendorId.Value);
+                        if (targetVendor != null)
+                        {
+                            line.SelectedVendorID = targetVendor.VendorID;
+                            line.SelectedVendorName = targetVendor.VendorName;
+                        }
+                    }
+                }
+            }
         }
         catch (Exception ex)
         {

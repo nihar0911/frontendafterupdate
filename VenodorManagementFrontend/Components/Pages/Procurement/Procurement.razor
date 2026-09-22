@@ -1,4 +1,4 @@
-@page "/procurement"
+﻿@page "/procurement"
 @rendermode InteractiveServer
 @inject ApiService Api
 @inject AuthService Auth
@@ -260,40 +260,8 @@ else
                         }
                     </div>
 
-                    <!-- User Profile Dropdown -->
-                    <div class="profile-wrapper">
-                        <button class="profile-pill-btn" @onclick="ToggleProfileDropdown">
-                            <div class="profile-avatar">@UserInitial</div>
-                            <div class="profile-info">
-                                <span class="profile-name">@Auth.UserName</span>
-                                <span class="profile-role">Purchase Manager</span>
-                            </div>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                        </button>
-
-                        @if (IsProfileDropdownOpen)
-                        {
-                            <div class="profile-dropdown-menu">
-                                <button class="profile-menu-item" @onclick="OpenProfileModal">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                        <circle cx="12" cy="7" r="4"></circle>
-                                    </svg>
-                                    <span>My Profile</span>
-                                </button>
-                                <button class="profile-menu-item logout" @onclick="HandleLogout">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                                        <polyline points="16 17 21 12 16 7"></polyline>
-                                        <line x1="21" y1="12" x2="9" y2="12"></line>
-                                    </svg>
-                                    <span>Logout</span>
-                                </button>
-                            </div>
-                        }
-                    </div>
+                    <!-- User Profile Dropdown Menu -->
+                    <ProfileMenu />
                 </div>
             </header>
 
@@ -1268,13 +1236,11 @@ else
                                                     {
                                                         var currentIdx = itemIdx;
                                                         var currentItem = AiResponse.Items[currentIdx];
-                                                        bool isAddedToCart = AiItemAddedToCartKeys.Contains(currentIdx);
-                                                        bool hasSelectedVendor = AiSelectedVendors.TryGetValue(currentIdx, out var chosenVendor) && chosenVendor != null;
                                                         bool isLoadingRecs = AiItemLoadingStates.TryGetValue(currentIdx, out bool loading) && loading;
                                                         AiItemErrorStates.TryGetValue(currentIdx, out string? itemError);
                                                         AiItemRecommendations.TryGetValue(currentIdx, out var recList);
 
-                                                        <div class="ai-item-card p-3 rounded border mb-3 @(isAddedToCart ? "border-success bg-success-subtle bg-opacity-10" : "bg-white")">
+                                                        <div class="ai-item-card p-3 rounded border mb-3 bg-white">
                                                             <!-- Item Header -->
                                                             <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 pb-2 mb-2 border-bottom">
                                                                 <div class="d-flex align-items-center gap-2">
@@ -1421,9 +1387,9 @@ else
                                                                         @foreach (var rec in sortedRecList)
                                                                         {
                                                                             var vendorRec = rec;
-                                                                            bool isThisVendorSelected = hasSelectedVendor && chosenVendor?.VendorID == vendorRec.VendorID;
+                                                                            bool isThisVendorSelected = currentItem.ProductID.HasValue && CartItems.Any(c => c.ProductID == currentItem.ProductID.Value && c.VendorID == vendorRec.VendorID);
 
-                                                                            <div class="vendor-rec-card compact-card @(isThisVendorSelected ? "selected" : "")" @onclick="() => SelectVendorForAiItem(currentIdx, vendorRec)">
+                                                                            <div class="vendor-rec-card compact-card @(isThisVendorSelected ? "selected" : "")" @onclick="() => ToggleVendorForAiItem(currentItem, vendorRec)">
                                                                                 <div class="d-flex align-items-start justify-content-between flex-wrap gap-2">
                                                                                     <div>
                                                                                         <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -1465,7 +1431,7 @@ else
                                                                                             </div>
                                                                                             <div class="small text-muted" style="font-size: 0.72rem;">/ @currentItem.Unit</div>
                                                                                         </div>
-                                                                                        <button type="button" class="btn btn-sm @(isThisVendorSelected ? "btn-success" : "btn-outline-success") fw-bold px-3 py-1.5" @onclick="() => SelectVendorForAiItem(currentIdx, vendorRec)" @onclick:stopPropagation="true">
+                                                                                        <button type="button" class="btn btn-sm @(isThisVendorSelected ? "btn-success" : "btn-outline-success") fw-bold px-3 py-1.5" @onclick="() => ToggleVendorForAiItem(currentItem, vendorRec)" @onclick:stopPropagation="true">
                                                                                             @(isThisVendorSelected ? "Selected" : "Select Vendor")
                                                                                         </button>
                                                                                     </div>
@@ -1506,44 +1472,6 @@ else
                                                                                 }
                                                                             </div>
                                                                         }
-                                                                    </div>
-
-                                                                    <!-- Action Bar For This Resolved AI Item -->
-                                                                    <div class="d-flex align-items-center justify-content-between pt-2.5 mt-2.5 border-top flex-wrap gap-2 bg-light p-2.5 rounded">
-                                                                        <div>
-                                                                            @if (hasSelectedVendor)
-                                                                            {
-                                                                                <span class="small text-dark">
-                                                                                    Chosen: <strong class="text-success">@chosenVendor!.VendorName</strong> @@ ₹@chosenVendor.UnitPrice.ToString("N0")/@currentItem.Unit
-                                                                                    (Est. ₹@((chosenVendor.UnitPrice * currentItem.Quantity).ToString("N0")))
-                                                                                </span>
-                                                                            }
-                                                                            else
-                                                                            {
-                                                                                <span class="small text-muted">
-                                                                                    Select a vendor above to add to cart.
-                                                                                </span>
-                                                                            }
-                                                                        </div>
-                                                                        <div>
-                                                                            @if (isAddedToCart)
-                                                                            {
-                                                                                <div class="d-flex align-items-center gap-2">
-                                                                                    <span class="badge bg-success-subtle text-success border border-success-subtle py-1.5 px-3 fw-bold">
-                                                                                        Added to Cart
-                                                                                    </span>
-                                                                                    <button type="button" class="btn btn-sm btn-outline-secondary fw-semibold" @onclick="() => AddAiItemToCart(currentIdx, currentItem)" disabled="@(!hasSelectedVendor)">
-                                                                                        Update
-                                                                                    </button>
-                                                                                </div>
-                                                                            }
-                                                                            else
-                                                                            {
-                                                                                <button type="button" class="btn-primary-action px-3 py-1.5 fw-bold" @onclick="() => AddAiItemToCart(currentIdx, currentItem)" disabled="@(!hasSelectedVendor)">
-                                                                                    Add to Cart
-                                                                                </button>
-                                                                            }
-                                                                        </div>
                                                                     </div>
                                                                 }
                                                             }

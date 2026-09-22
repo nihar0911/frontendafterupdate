@@ -13,6 +13,25 @@ public partial class AdminOrganizations : ComponentBase
     private bool IsLoading { get; set; } = true;
     private bool HasError { get; set; } = false;
     private List<OrganizationDto> Organizations { get; set; } = new();
+    private string SearchQuery { get; set; } = string.Empty;
+
+    private IEnumerable<OrganizationDto> FilteredOrganizations
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(SearchQuery))
+                return Organizations;
+
+            var q = SearchQuery.Trim();
+            return Organizations.Where(o =>
+                (!string.IsNullOrWhiteSpace(o.OrganizationName) && o.OrganizationName.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrWhiteSpace(o.Address) && o.Address.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrWhiteSpace(o.Phone) && o.Phone.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrWhiteSpace(o.Email) && o.Email.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrWhiteSpace(o.Status) && o.Status.Contains(q, StringComparison.OrdinalIgnoreCase))
+            );
+        }
+    }
 
     private bool IsAddModalOpen { get; set; } = false;
     private string AddOrgName { get; set; } = string.Empty;

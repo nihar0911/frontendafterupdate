@@ -211,14 +211,10 @@ public partial class VendorDashboard : ComponentBase
             {
                 try
                 {
-                    var users = await Api.GetUsersAsync();
-                    var me = users?.FirstOrDefault(u => u.UserID == Auth.UserID || string.Equals(u.Email, Auth.CurrentUser?.Email, StringComparison.OrdinalIgnoreCase));
-                    if (me != null && me.VendorID.HasValue && me.VendorID.Value > 0)
+                    var profileRes = await Api.GetMyProfileAsync();
+                    if (profileRes.Success && profileRes.Data != null)
                     {
-                        if (Auth.CurrentUser != null)
-                        {
-                            Auth.CurrentUser.VendorID = me.VendorID.Value;
-                        }
+                        Auth.SetUser(profileRes.Data);
                     }
                 }
                 catch { }

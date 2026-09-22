@@ -284,6 +284,11 @@ else
                                         <span class="detail-label">Quantity</span>
                                         <span class="detail-value">@Opportunity.RequestedQuantity.ToString("0.##") @Opportunity.Unit</span>
                                     </div>
+
+                                    <div class="detail-item">
+                                        <span class="detail-label">Total Amount</span>
+                                        <span class="detail-value">@CurrencyHelper.Format(Opportunity.RequestedQuantity * Opportunity.UnitPrice)</span>
+                                    </div>
                                 </div>
 
                                 <!-- REGISTERED SUPPLY TERMS -->
@@ -369,7 +374,6 @@ else
                                 <div class="procurement-card">
                                     <div class="card-section-header">
                                         <h5 class="card-section-title">Prepare &amp; Submit Quotation</h5>
-                                        <span class="status-pill status-pill-accepted">Unlocked</span>
                                     </div>
 
                                     @if (!string.IsNullOrEmpty(FormError))
