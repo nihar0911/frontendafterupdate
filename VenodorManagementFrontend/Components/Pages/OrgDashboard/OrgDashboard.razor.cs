@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -36,6 +36,13 @@ public partial class OrgDashboard : ComponentBase
 
     private List<NotificationDto> Notifications { get; set; } = new();
     private int UnreadNotificationCount => Notifications.Count(n => !n.IsRead);
+    private bool HasUnreadPurchaseOrderActivity => Notifications != null && Notifications.Any(n => !n.IsRead && (
+        n.NotificationType.StartsWith("PurchaseOrder", StringComparison.OrdinalIgnoreCase) ||
+        n.Title.Contains("Purchase Order", StringComparison.OrdinalIgnoreCase) ||
+        n.Title.Contains("PO-", StringComparison.OrdinalIgnoreCase) ||
+        n.Title.Contains("Delivery", StringComparison.OrdinalIgnoreCase) ||
+        (n.Message != null && (n.Message.Contains("Purchase Order", StringComparison.OrdinalIgnoreCase) || n.Message.Contains("PO-", StringComparison.OrdinalIgnoreCase)))
+    ));
     private bool ShowNotificationDropdown { get; set; } = false;
 
     private void ToggleSidebar()

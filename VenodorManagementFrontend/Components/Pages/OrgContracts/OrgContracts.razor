@@ -1,4 +1,4 @@
-﻿@page "/org/contracts"
+@page "/org/contracts"
 @page "/organization/contracts"
 @rendermode InteractiveServer
 @inject ApiService Api
@@ -202,36 +202,26 @@ else
 
             <!-- TOP HEADER -->
             <header class="org-top-header">
-                <button class="menu-toggle-btn" @onclick="ToggleSidebar" title="Toggle Menu">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="3" y1="12" x2="21" y2="12"></line>
-                        <line x1="3" y1="6" x2="21" y2="6"></line>
-                        <line x1="3" y1="18" x2="21" y2="18"></line>
-                    </svg>
-                </button>
+                <div class="header-left">
+                    <button class="menu-toggle-btn" @onclick="ToggleSidebar" title="Toggle Menu">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <div>
+                        <h1 class="page-heading">Contracts</h1>
+                        <p class="page-subheading">Active procurement contracts across outlets</p>
+                    </div>
+                </div>
 
                 <div class="header-right">
-                    <div class="profile-capsule-wrapper">
-                        <div class="profile-capsule" @onclick="ToggleProfileDropdown">
-                            <div class="profile-avatar">@GetUserInitial()</div>
-                            <div class="profile-meta">
-                                <span class="profile-name">@(string.IsNullOrWhiteSpace(Auth.UserName) ? (Auth.CurrentUser?.Name ?? "Organization Manager") : Auth.UserName)</span>
-                                <span class="profile-role">Organization Manager</span>
-                            </div>
-                            <svg class="dropdown-arrow @(IsProfileDropdownOpen ? "open" : "")" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                        </div>
-                    </div>
-
-                    <button class="header-logout-btn" @onclick="HandleLogout" title="Sign out">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                            <polyline points="16 17 21 12 16 7"></polyline>
-                            <line x1="21" y1="12" x2="9" y2="12"></line>
-                        </svg>
-                        <span>Logout</span>
-                    </button>
+                    @if (!string.IsNullOrEmpty(OrganizationName))
+                    {
+                        <span class="topbar-org-badge">@OrganizationName</span>
+                    }
+                    <ProfileMenu OrganizationName="@OrganizationName" />
                 </div>
             </header>
 
@@ -239,20 +229,14 @@ else
             <main class="org-main-content">
                 <div class="content-container">
 
-                    <!-- BREADCRUMB ROW -->
-                    <div class="top-breadcrumb-row">
-                        <div class="breadcrumb-links">
-                            <a href="/org-dashboard" class="bc-link">Dashboard</a>
-                            <span class="bc-sep">&rsaquo;</span>
-                            <span class="bc-current">Contracts</span>
-                        </div>
-                    </div>
-
-                    <!-- PAGE MAIN HEADING ROW (WITH + ADD CONTRACT ACTION) -->
-                    <div class="page-header-action-row">
-                        <div>
-                            <h1 class="page-main-heading">Active Organization Contracts</h1>
-                            <p class="page-sub-heading">Active procurement contracts across all outlets in @OrganizationName</p>
+                    <!-- BREADCRUMB & ACTIONS ROW -->
+                    <div class="page-header-action-row align-items-center mb-3">
+                        <div class="top-breadcrumb-row mb-0">
+                            <div class="breadcrumb-links">
+                                <a href="/org-dashboard" class="bc-link">Dashboard</a>
+                                <span class="bc-sep">&rsaquo;</span>
+                                <span class="bc-current">Contracts</span>
+                            </div>
                         </div>
 
                         <div class="header-action-buttons-group">

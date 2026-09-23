@@ -37,7 +37,7 @@ else
         <!-- ===================================================================
              1. DARK GREEN SIDEBAR (#174F45)
              =================================================================== -->
-        <aside class="om-sidebar">
+        <aside class="om-sidebar @(IsSidebarCollapsed ? "collapsed" : "")">
             
             <div class="om-sidebar-top">
                 <!-- SIDEBAR BRAND -->
@@ -88,9 +88,9 @@ else
                             <circle cx="18.5" cy="18.5" r="2.5"></circle>
                         </svg>
                         <span>Purchase Orders</span>
-                        @if (ActiveOrdersCount > 0)
+                        @if (HasUnreadPurchaseOrderActivity)
                         {
-                            <span class="badge bg-danger ms-auto om-nav-badge">@ActiveOrdersCount</span>
+                            <span class="badge bg-danger ms-auto om-nav-badge">1</span>
                         }
                     </button>
 
@@ -143,17 +143,58 @@ else
             
             <!-- TOP HEADER -->
             <header class="om-top-header">
-                <div class="om-header-left">
-                    @if (ActiveTab == "Dashboard")
-                    {
-                        <h1 class="om-welcome-title">@GetGreeting(), @OutletManagerName</h1>
-                        <p class="om-welcome-subtitle">
-                            Outlet: <span class="om-accent-text">@OutletNameDisplay</span> | Organization: @OrganizationNameDisplay
-                        </p>
-                    }
+                <div class="header-left om-header-left">
+                    <button class="menu-toggle-btn" @onclick="ToggleSidebar" title="Toggle Menu">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <div>
+                        @if (ActiveTab == "Dashboard")
+                        {
+                            <h1 class="page-heading">Dashboard</h1>
+                            <p class="page-subheading">Outlet: <span class="om-accent-text">@OutletNameDisplay</span> • @OrganizationNameDisplay</p>
+                        }
+                        else if (ActiveTab == "MyRequests")
+                        {
+                            <h1 class="page-heading">Purchase Requests</h1>
+                            <p class="page-subheading">Manage and track outlet requisition orders</p>
+                        }
+                        else if (ActiveTab == "PurchaseOrders")
+                        {
+                            <h1 class="page-heading">Purchase Orders</h1>
+                            <p class="page-subheading">Track fulfillments, deliveries and vendor shipments</p>
+                        }
+                        else if (ActiveTab == "MyContracts")
+                        {
+                            <h1 class="page-heading">My Contracts</h1>
+                            <p class="page-subheading">Active procurement contracts assigned to @OutletNameDisplay</p>
+                        }
+                        else if (ActiveTab == "MyOutlet")
+                        {
+                            <h1 class="page-heading">My Outlet</h1>
+                            <p class="page-subheading">Branch details and operational settings</p>
+                        }
+                        else if (ActiveTab == "MyProfile")
+                        {
+                            <h1 class="page-heading">My Profile</h1>
+                            <p class="page-subheading">Account details and security settings</p>
+                        }
+                        else
+                        {
+                            <h1 class="page-heading">Outlet Manager Portal</h1>
+                            <p class="page-subheading">@OutletNameDisplay</p>
+                        }
+                    </div>
                 </div>
 
-                <div class="om-header-right">
+                <div class="header-right om-header-right">
+                    @if (!string.IsNullOrEmpty(OutletNameDisplay))
+                    {
+                        <span class="topbar-org-badge">@OutletNameDisplay</span>
+                    }
                     
                     <!-- NOTIFICATIONS POPUP -->
                     <div class="om-notif-container">
@@ -248,9 +289,10 @@ else
                 </div>
             </header>
 
-            @if (IsLoading)
-            {
-                <div class="om-loading-state">
+            <div class="om-page-body">
+                @if (IsLoading)
+                {
+                    <div class="om-loading-state">
                     <div class="spinner-border text-success" role="status">
                         <span class="visually-hidden">Loading...</span>
                     </div>
@@ -1413,6 +1455,7 @@ else
                 }
 
             }
+            </div>
 
         </main>
 

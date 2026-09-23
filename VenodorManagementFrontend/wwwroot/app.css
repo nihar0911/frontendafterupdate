@@ -896,3 +896,223 @@ a:hover, .btn-link:hover {
     border-color: #DC2626;
     color: #991B1B;
 }
+
+/* ==========================================================================
+   12. STANDARDIZED GLOBAL TOP HEADER SYSTEM ACROSS ALL 5 ROLES
+   Admin, Organization Manager, Outlet Manager, Purchase Manager, Vendor Manager
+   ========================================================================== */
+
+.admin-top-header,
+.org-top-header,
+.org-top-bar,
+.org-page-header,
+.om-top-header,
+.pm-topbar,
+.vd-top-header,
+.svms-global-header {
+    height: 56px !important;
+    min-height: 56px !important;
+    max-height: 56px !important;
+    padding: 0 1.5rem !important;
+    background-color: #FFFFFF !important;
+    border-bottom: 1px solid #E5E7EB !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 100 !important;
+    box-sizing: border-box !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+    width: 100% !important;
+    margin: 0 !important;
+}
+
+/* Left Section: Menu Toggle + Title & Subtitle */
+.header-left,
+.topbar-left,
+.om-header-left,
+.vd-header-left,
+.svms-header-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.85rem !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+}
+
+/* Hamburger / Sidebar Menu Toggle Control */
+.menu-toggle-btn,
+.topbar-menu-toggle,
+.om-menu-btn,
+.vd-menu-btn,
+.svms-menu-btn {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
+    border-radius: 6px !important;
+    border: 1px solid #E5E7EB !important;
+    background-color: #FFFFFF !important;
+    color: #4B5563 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+    padding: 0 !important;
+    transition: all 0.15s ease !important;
+}
+
+.menu-toggle-btn:hover,
+.topbar-menu-toggle:hover,
+.om-menu-btn:hover,
+.vd-menu-btn:hover,
+.svms-menu-btn:hover {
+    background-color: #F9FAFB !important;
+    border-color: #D1D5DB !important;
+    color: #111827 !important;
+}
+
+/* Header Title Stack */
+.header-title-box,
+.topbar-title-box,
+.svms-title-box {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    min-width: 0 !important;
+}
+
+.page-heading,
+.topbar-title,
+.topbar-page-title,
+.om-welcome-title,
+.vd-welcome-title,
+.svms-topbar-title {
+    font-size: 1.125rem !important;
+    font-weight: 700 !important;
+    color: #111827 !important;
+    margin: 0 !important;
+    line-height: 1.25 !important;
+    letter-spacing: -0.01em !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.page-subheading,
+.topbar-subtitle,
+.om-welcome-subtitle,
+.vd-welcome-subtitle,
+.svms-topbar-subtitle {
+    font-size: 0.775rem !important;
+    color: #64748B !important;
+    margin: 0.1rem 0 0 0 !important;
+    line-height: 1.25 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* Right Section: Notifications + Role Selectors + Profile */
+.header-right,
+.topbar-right,
+.om-header-right,
+.vd-header-right,
+.svms-header-right {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    flex-shrink: 0 !important;
+    margin-left: auto !important;
+}
+
+/* Unified 34px Height for all Header Action Pills */
+.header-notif-btn,
+.om-notif-pill,
+.vd-notif-pill,
+.notification-btn,
+.topbar-context-pill,
+.topbar-org-badge,
+.vd-vendor-pill,
+.vd-header-pill,
+.profile-pill-btn {
+    height: 34px !important;
+    min-height: 34px !important;
+    max-height: 34px !important;
+    box-sizing: border-box !important;
+    border-radius: 6px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+}
+
+/* Notification Trigger Button */
+.header-notif-btn,
+.om-notif-pill,
+.vd-notif-pill,
+.notification-btn {
+    padding: 0 0.85rem !important;
+    background-color: #FFFFFF !important;
+    border: 1px solid #E5E7EB !important;
+    color: #374151 !important;
+    font-size: 0.82rem !important;
+    font-weight: 600 !important;
+    gap: 0.45rem !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+}
+
+.header-notif-btn:hover,
+.om-notif-pill:hover,
+.vd-notif-pill:hover,
+.notification-btn:hover {
+    background-color: #F9FAFB !important;
+    border-color: #D1D5DB !important;
+    color: #111827 !important;
+}
+
+/* Notification Badge */
+.notification-badge,
+.om-notif-badge,
+.vd-notif-badge {
+    background-color: #EF4444 !important;
+    color: #FFFFFF !important;
+    border-radius: 10px !important;
+    font-size: 0.7rem !important;
+    font-weight: 700 !important;
+    padding: 0.1rem 0.45rem !important;
+    line-height: 1 !important;
+    margin-left: 2px !important;
+}
+
+/* Role-Specific Context Pill / Selector (Vendor, Org, Outlet) */
+.topbar-context-pill,
+.topbar-org-badge,
+.vd-vendor-pill {
+    padding: 0 0.85rem !important;
+    background-color: #EAF4ED !important;
+    border: 1px solid #D1E0D9 !important;
+    color: #174F45 !important;
+    font-size: 0.82rem !important;
+    font-weight: 700 !important;
+    gap: 0.45rem !important;
+    white-space: nowrap !important;
+    cursor: default !important;
+}
+
+@media (max-width: 768px) {
+    .page-subheading,
+    .topbar-subtitle,
+    .om-welcome-subtitle,
+    .vd-welcome-subtitle {
+        display: none !important;
+    }
+    .admin-top-header,
+    .org-top-header,
+    .om-top-header,
+    .pm-topbar,
+    .vd-top-header {
+        padding: 0 1rem !important;
+    }
+}

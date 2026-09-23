@@ -191,28 +191,31 @@
 }
 
 .org-top-header {
-    height: 64px;
+    height: 56px;
+    min-height: 56px;
+    max-height: 56px;
     background-color: #FFFFFF;
     border-bottom: 1px solid #D9E2DD;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 1.75rem;
+    padding: 0 1.5rem;
     position: sticky;
     top: 0;
     z-index: 50;
+    box-sizing: border-box;
 }
 
 .menu-toggle-btn {
     background: transparent;
-    border: none;
+    border: 1px solid #E5E7EB;
     color: #4B5563;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 4px;
+    width: 34px;
+    height: 34px;
+    border-radius: 6px;
     cursor: pointer;
     transition: background-color 0.15s;
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,6 +19,12 @@ public partial class OutletManagerDashboard : ComponentBase
 
     private string ActiveTab { get; set; } = "Dashboard";
     private bool IsLoading { get; set; } = true;
+    private bool IsSidebarCollapsed { get; set; } = false;
+
+    private void ToggleSidebar()
+    {
+        IsSidebarCollapsed = !IsSidebarCollapsed;
+    }
 
     private int UserOutletId { get; set; }
     private int UserOrgId { get; set; }
@@ -70,7 +76,16 @@ public partial class OutletManagerDashboard : ComponentBase
     private int ApprovedRequestsCount { get; set; } = 0;
     private int RejectedRequestsCount { get; set; } = 0;
     private int ActiveContractsCount { get; set; } = 0;
-    private int ActiveOrdersCount => OrdersForMyOutlet.Count(p => p.Status == "Dispatched" || p.Status == "Accepted");
+    private bool HasUnreadPurchaseOrderActivity =>
+        ActiveTab != "PurchaseOrders" &&
+        Notifications != null &&
+        Notifications.Any(n => !n.IsRead && (
+            n.NotificationType.StartsWith("PurchaseOrder", StringComparison.OrdinalIgnoreCase) ||
+            n.Title.Contains("Purchase Order", StringComparison.OrdinalIgnoreCase) ||
+            n.Title.Contains("PO-", StringComparison.OrdinalIgnoreCase) ||
+            n.Title.Contains("Delivery", StringComparison.OrdinalIgnoreCase) ||
+            (n.Message != null && (n.Message.Contains("Purchase Order", StringComparison.OrdinalIgnoreCase) || n.Message.Contains("PO-", StringComparison.OrdinalIgnoreCase)))
+        ));
 
     // PO Dashboard 3-Card Metrics
     private int PendingOrdersCount => OrdersForMyOutlet.Count(p => string.Equals(p.Status, "Pending", StringComparison.OrdinalIgnoreCase));
@@ -287,9 +302,14 @@ public partial class OutletManagerDashboard : ComponentBase
                 ActiveTab = QueryTab;
             }
         }
-        else if (string.IsNullOrWhiteSpace(ActiveTab))
+        if (string.IsNullOrWhiteSpace(ActiveTab))
         {
             ActiveTab = "Dashboard";
+        }
+
+        if (ActiveTab == "PurchaseOrders")
+        {
+            _ = ClearUnreadPoActivity();
         }
 
         if (QueryPoId.HasValue && QueryPoId.Value > 0 && SelectedPurchaseOrder?.PurchaseOrderID != QueryPoId.Value && !IsLoading)
@@ -430,6 +450,10 @@ public partial class OutletManagerDashboard : ComponentBase
             if (!string.IsNullOrWhiteSpace(QueryTab))
             {
                 ActiveTab = QueryTab;
+            }
+            if (ActiveTab == "PurchaseOrders")
+            {
+                await ClearUnreadPoActivity();
             }
             if (QueryPoId.HasValue && QueryPoId.Value > 0)
             {
@@ -602,9 +626,40 @@ public partial class OutletManagerDashboard : ComponentBase
         }
     }
 
+    private async Task ClearUnreadPoActivity()
+    {
+        if (Notifications == null || Notifications.Count == 0) return;
+
+        var unreadPoNotifs = Notifications.Where(n => !n.IsRead && (
+            n.NotificationType.StartsWith("PurchaseOrder", StringComparison.OrdinalIgnoreCase) ||
+            n.Title.Contains("Purchase Order", StringComparison.OrdinalIgnoreCase) ||
+            n.Title.Contains("PO-", StringComparison.OrdinalIgnoreCase) ||
+            n.Title.Contains("Delivery", StringComparison.OrdinalIgnoreCase) ||
+            (n.Message != null && (n.Message.Contains("Purchase Order", StringComparison.OrdinalIgnoreCase) || n.Message.Contains("PO-", StringComparison.OrdinalIgnoreCase)))
+        )).ToList();
+
+        if (unreadPoNotifs.Count > 0)
+        {
+            foreach (var n in unreadPoNotifs)
+            {
+                n.IsRead = true;
+                try
+                {
+                    await Api.MarkNotificationReadAsync(n.NotificationID);
+                }
+                catch { }
+            }
+            StateHasChanged();
+        }
+    }
+
     private void SetActiveTab(string tabName)
     {
         ActiveTab = tabName;
+        if (ActiveTab == "PurchaseOrders")
+        {
+            _ = ClearUnreadPoActivity();
+        }
     }
 
     private void NavigateToRequests(string status = "All")

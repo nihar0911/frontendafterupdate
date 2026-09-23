@@ -1,4 +1,4 @@
-﻿@page "/procurement"
+@page "/procurement"
 @rendermode InteractiveServer
 @inject ApiService Api
 @inject AuthService Auth
@@ -193,18 +193,21 @@ else
         <div class="pm-main-wrapper">
             <!-- Topbar -->
             <header class="pm-topbar">
-                <div class="topbar-left">
-                    <button class="topbar-menu-toggle" @onclick="ToggleSidebar" title="Toggle Sidebar">
+                <div class="header-left topbar-left">
+                    <button class="menu-toggle-btn topbar-menu-toggle" @onclick="ToggleSidebar" title="Toggle Sidebar">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="3" y1="12" x2="21" y2="12"></line>
                             <line x1="3" y1="6" x2="21" y2="6"></line>
                             <line x1="3" y1="18" x2="21" y2="18"></line>
                         </svg>
                     </button>
-                    <h1 class="topbar-title">Purchase Manager Portal</h1>
+                    <div>
+                        <h1 class="page-heading">Procurement Sourcing</h1>
+                        <p class="page-subheading">Vendor quotations, AI matching and purchase requisitions</p>
+                    </div>
                 </div>
 
-                <div class="topbar-right">
+                <div class="header-right topbar-right">
                     <!-- Notifications -->
                     <div class="notification-wrapper">
                         <button class="notification-btn" @onclick="ToggleNotifications" title="Notifications">
@@ -260,8 +263,13 @@ else
                         }
                     </div>
 
+                    @if (!string.IsNullOrEmpty(ConfirmedOutletName))
+                    {
+                        <span class="topbar-org-badge">@ConfirmedOutletName</span>
+                    }
+
                     <!-- User Profile Dropdown Menu -->
-                    <ProfileMenu />
+                    <ProfileMenu OutletName="@ConfirmedOutletName" />
                 </div>
             </header>
 

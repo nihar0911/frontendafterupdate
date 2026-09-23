@@ -178,23 +178,26 @@ else
 
             <!-- TOP HEADER -->
             <header class="vd-top-header">
-                <div class="vd-header-left">
+                <div class="header-left vd-header-left">
+                    <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 me-2" @onclick='() => Nav.NavigateTo("/vendor-dashboard")'>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="19" y1="12" x2="5" y2="12"></line>
+                            <polyline points="12 19 5 12 12 5"></polyline>
+                        </svg>
+                        Back
+                    </button>
                     <div>
-                        <h1 class="vd-welcome-title">Spoilage Advice Settings</h1>
-                        <p class="vd-welcome-subtitle">Configure the business rules used to evaluate historical spoilage, trends, and risk levels.</p>
+                        <h1 class="page-heading">Spoilage Advice Settings</h1>
+                        <p class="page-subheading">Historical spoilage evaluations, trends and risk thresholds</p>
                     </div>
                 </div>
 
-                <div class="vd-header-right">
-                    <!-- TOP HEADER LOGOUT BUTTON -->
-                    <button type="button" class="vd-header-pill vd-logout-header-pill" @onclick="HandleLogout" title="Logout">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                            <polyline points="16 17 21 12 16 7"></polyline>
-                            <line x1="21" y1="12" x2="9" y2="12"></line>
-                        </svg>
-                        <span>Logout</span>
-                    </button>
+                <div class="header-right vd-header-right">
+                    @if (!string.IsNullOrEmpty(DisplayName))
+                    {
+                        <span class="topbar-org-badge">@DisplayName</span>
+                    }
+                    <ProfileMenu VendorName="@DisplayName" />
                 </div>
             </header>
 

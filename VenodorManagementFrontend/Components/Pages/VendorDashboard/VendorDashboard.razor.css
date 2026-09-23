@@ -191,7 +191,11 @@
 .vd-top-header {
     background-color: #FFFFFF;
     border-bottom: 1px solid #E5E7EB;
-    padding: 1.1rem 2rem;
+    height: 56px;
+    min-height: 56px;
+    max-height: 56px;
+    padding: 0 1.5rem;
+    box-sizing: border-box;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -204,18 +208,21 @@
     display: flex;
     align-items: center;
     gap: 1rem;
+    min-width: 0;
 }
 
 .vd-menu-btn {
     background: transparent;
     border: none;
     color: #4B5563;
-    padding: 0.35rem;
+    width: 34px;
+    height: 34px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     border-radius: 6px;
+    flex-shrink: 0;
 }
 
 .vd-menu-btn:hover {
@@ -224,17 +231,25 @@
 }
 
 .vd-welcome-title {
-    font-size: 1.35rem;
-    font-weight: 800;
+    font-size: 1.125rem;
+    font-weight: 700;
     color: #111827;
     margin: 0;
+    line-height: 1.25;
     letter-spacing: -0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .vd-welcome-subtitle {
-    font-size: 0.82rem;
-    color: #6B7280;
-    margin: 0.15rem 0 0 0;
+    font-size: 0.775rem;
+    color: #64748B;
+    margin: 0.1rem 0 0 0;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .vd-accent-text {
@@ -246,14 +261,20 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    flex-shrink: 0;
+    margin-left: auto;
 }
 
 .vd-header-pill {
     display: inline-flex;
     align-items: center;
     gap: 0.45rem;
-    padding: 0.5rem 0.9rem;
-    border-radius: 4px;
+    padding: 0 0.85rem;
+    height: 34px;
+    min-height: 34px;
+    max-height: 34px;
+    box-sizing: border-box;
+    border-radius: 6px;
     border: 1px solid #E5E7EB;
     font-size: 0.82rem;
     font-weight: 600;
@@ -277,7 +298,7 @@
 .vd-notif-badge {
     background-color: #EF4444;
     color: #FFFFFF;
-    border-radius: 4px;
+    border-radius: 10px;
     font-size: 0.7rem;
     font-weight: 700;
     padding: 1px 6px;
@@ -1173,5 +1194,351 @@
 
 .vd-multi-product-card {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* ==========================================================================
+   PERFORMANCE & REVIEWS VIEW STYLES
+   Clean, Soft, Professional, Business-Oriented Design System
+   ========================================================================== */
+
+.vd-perf-container {
+    background: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.vd-perf-header {
+    border-bottom: 1px solid #F1F5F9;
+}
+
+.vd-perf-header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 6px;
+    background-color: #ECFDF5;
+    border: 1px solid #D1FAE5;
+    color: #059669;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.vd-perf-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #111827;
+    letter-spacing: -0.01em;
+    margin: 0;
+}
+
+.vd-perf-subtitle {
+    font-size: 0.82rem;
+    color: #64748B;
+    margin: 0.2rem 0 0 0;
+    line-height: 1.4;
+}
+
+/* 4 KPI Cards Grid */
+.vd-perf-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+
+.vd-perf-kpi-card {
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 6px;
+    padding: 1.1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 110px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+    transition: all 0.15s ease;
+}
+
+.vd-perf-kpi-card:hover {
+    border-color: #CBD5E1;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.vd-perf-kpi-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.vd-perf-kpi-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #64748B;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.vd-perf-kpi-icon-mini {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.85;
+}
+
+.vd-perf-kpi-value-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    margin-bottom: 0.25rem;
+}
+
+.vd-perf-kpi-value {
+    font-size: 1.85rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.02em;
+}
+
+.vd-perf-kpi-scale {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: #94A3B8;
+}
+
+.vd-perf-kpi-hint {
+    font-size: 0.73rem;
+    color: #94A3B8;
+    line-height: 1.2;
+}
+
+/* Feedback History Section */
+.vd-perf-section-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #111827;
+    letter-spacing: -0.01em;
+}
+
+.vd-perf-count-badge {
+    background-color: #F1F5F9;
+    color: #475569;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    border: 1px solid #E2E8F0;
+}
+
+.vd-perf-empty-state {
+    text-align: center;
+    padding: 3rem 1.5rem;
+    background-color: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 6px;
+    color: #64748B;
+}
+
+.vd-perf-empty-icon {
+    color: #94A3B8;
+    margin-bottom: 0.75rem;
+}
+
+.vd-perf-empty-title {
+    font-size: 0.98rem;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 0.35rem;
+}
+
+.vd-perf-empty-desc {
+    font-size: 0.82rem;
+    color: #64748B;
+    margin: 0;
+    max-width: 440px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Reviews List & Cards */
+.vd-review-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.vd-review-card {
+    background: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 6px;
+    padding: 1.15rem 1.25rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.vd-review-card:hover {
+    border-color: #CBD5E1;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+}
+
+.vd-review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.vd-review-header-left {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.vd-po-badge {
+    background-color: #ECFDF5;
+    color: #065F46;
+    border: 1px solid #A7F3D0;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.2rem 0.55rem;
+    border-radius: 4px;
+    letter-spacing: 0.02em;
+}
+
+.vd-review-outlet {
+    font-weight: 700;
+    font-size: 0.92rem;
+    color: #111827;
+}
+
+.vd-review-divider {
+    color: #CBD5E1;
+    font-size: 0.85rem;
+}
+
+.vd-review-product {
+    font-size: 0.84rem;
+    color: #4B5563;
+    font-weight: 500;
+}
+
+.vd-review-header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.vd-review-score-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background-color: #F8FAFC;
+    color: #0F172A;
+    border: 1px solid #E2E8F0;
+    font-weight: 700;
+    font-size: 0.8rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+}
+
+.vd-star-icon {
+    color: #F59E0B;
+}
+
+.vd-review-date {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.78rem;
+    color: #64748B;
+    font-weight: 500;
+}
+
+/* Metrics Row */
+.vd-review-metrics-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.82rem;
+}
+
+.vd-review-metric-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.vd-review-metric-label {
+    color: #64748B;
+    font-weight: 500;
+}
+
+.vd-review-metric-value {
+    color: #111827;
+    font-weight: 700;
+}
+
+.vd-review-metric-scale {
+    color: #94A3B8;
+    font-weight: 500;
+    font-size: 0.75rem;
+}
+
+.vd-review-reviewer {
+    color: #174F45;
+}
+
+.vd-review-metric-sep {
+    color: #E2E8F0;
+    font-size: 0.75rem;
+}
+
+/* Comment Box */
+.vd-review-comment-box {
+    background-color: #F8FAFC;
+    border: 1px solid #F1F5F9;
+    border-radius: 4px;
+    padding: 0.75rem 0.95rem;
+}
+
+.vd-review-comment-text {
+    font-size: 0.83rem;
+    color: #334155;
+    line-height: 1.5;
+    margin: 0;
+    font-style: normal;
+}
+
+/* Modal specific enhancement */
+.vd-modal-info-card {
+    background-color: #F8FAFC;
+    border: 1px solid #E2E8F0;
+}
+
+@media (max-width: 992px) {
+    .vd-perf-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 576px) {
+    .vd-perf-kpi-grid {
+        grid-template-columns: 1fr;
+    }
+    .vd-review-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .vd-review-header-right {
+        width: 100%;
+        justify-content: space-between;
+    }
 }
 

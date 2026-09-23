@@ -1,4 +1,4 @@
-﻿@page "/organization/invoices"
+@page "/organization/invoices"
 @page "/organization/invoices/{InvoiceId:int}"
 @namespace VenodorManagementFrontend.Components.Pages.OrgInvoices
 
@@ -228,57 +228,68 @@ else
             <main class="org-main-content">
             
                 <!-- TOP APP BAR -->
-            <header class="org-top-bar">
-                <div class="top-bar-left">
+            <header class="org-top-header">
+                <div class="header-left">
+                    <button class="menu-toggle-btn" @onclick="ToggleSidebar" title="Toggle Menu">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
                     @if (Auth.IsPurchaseManager)
                     {
                         @if (IsViewingDetails)
                         {
-                            <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 me-3" @onclick="BackToInvoiceList">
+                            <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 me-2" @onclick="BackToInvoiceList">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <line x1="19" y1="12" x2="5" y2="12"></line>
                                     <polyline points="12 19 5 12 12 5"></polyline>
                                 </svg>
-                                Back to Invoices
+                                Back
                             </button>
                             <div>
-                                <h1 class="page-title mb-0">Purchase Manager Portal</h1>
-                                <p class="page-subtitle mb-0">Invoice INV-@SelectedInvoice?.InvoiceID • Review against purchase order &amp; delivery records</p>
+                                <h1 class="page-heading">Invoice INV-@SelectedInvoice?.InvoiceID</h1>
+                                <p class="page-subheading">Review against purchase order &amp; delivery records</p>
                             </div>
                         }
                         else
                         {
                             <div>
-                                <h1 class="page-title mb-0">Purchase Manager Portal</h1>
+                                <h1 class="page-heading">Invoices &amp; Billing</h1>
+                                <p class="page-subheading">Purchase Manager Portal • Invoice management</p>
                             </div>
                         }
                     }
                     else if (IsViewingDetails)
                     {
-                        <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 me-3" @onclick="BackToInvoiceList">
+                        <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 me-2" @onclick="BackToInvoiceList">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <line x1="19" y1="12" x2="5" y2="12"></line>
                                 <polyline points="12 19 5 12 12 5"></polyline>
                             </svg>
-                            Back to Invoices
+                            Back
                         </button>
                         <div>
-                            <h1 class="page-title mb-0">Invoice INV-@SelectedInvoice?.InvoiceID</h1>
-                            <p class="page-subtitle mb-0">Review against purchase order &amp; delivery records</p>
+                            <h1 class="page-heading">Invoice INV-@SelectedInvoice?.InvoiceID</h1>
+                            <p class="page-subheading">Review against purchase order &amp; delivery records</p>
                         </div>
                     }
                     else
                     {
-                        <h1 class="page-title">Invoices &amp; Billing</h1>
-                        <p class="page-subtitle">Verify delivery records and manage vendor invoices for @OrganizationName</p>
+                        <div>
+                            <h1 class="page-heading">Invoices &amp; Billing</h1>
+                            <p class="page-subheading">Verify delivery records and manage vendor invoices</p>
+                        </div>
                     }
                 </div>
 
-                <div class="top-bar-right">
-                    <div class="org-badge">
-                        <span class="dot-indicator"></span>
-                        <span>@(Auth.IsPurchaseManager && !string.IsNullOrEmpty(OutletDisplayName) ? OutletDisplayName : OrganizationName)</span>
-                    </div>
+                <div class="header-right">
+                    @if (!string.IsNullOrEmpty(OrganizationName))
+                    {
+                        <span class="topbar-org-badge">@(Auth.IsPurchaseManager && !string.IsNullOrEmpty(OutletDisplayName) ? OutletDisplayName : OrganizationName)</span>
+                    }
+                    <ProfileMenu OrganizationName="@OrganizationName" />
                 </div>
             </header>
 

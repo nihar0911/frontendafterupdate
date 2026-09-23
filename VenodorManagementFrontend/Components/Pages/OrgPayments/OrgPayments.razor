@@ -1,4 +1,4 @@
-﻿@page "/organization/payments"
+@page "/organization/payments"
 @page "/org/payments"
 @page "/organization/payments/{InvoiceId:int}"
 @namespace VenodorManagementFrontend.Components.Pages.OrgPayments
@@ -195,17 +195,35 @@ else
         <main class="org-main-viewport">
             
             <!-- Page Header -->
-            <header class="org-page-header">
+            <header class="org-top-header">
                 <div class="header-left">
-                    @if (Auth.IsPurchaseManager)
+                    <button class="menu-toggle-btn" @onclick="ToggleSidebar" title="Toggle Menu">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <div>
+                        @if (Auth.IsPurchaseManager)
+                        {
+                            <h1 class="page-heading">Payments &amp; Settlements</h1>
+                            <p class="page-subheading">Purchase Manager Portal • Settlement history</p>
+                        }
+                        else
+                        {
+                            <h1 class="page-heading">Payments &amp; Settlements</h1>
+                            <p class="page-subheading">Record payments for approved invoices and inspect settlement history</p>
+                        }
+                    </div>
+                </div>
+
+                <div class="header-right">
+                    @if (!string.IsNullOrEmpty(OrganizationName))
                     {
-                        <h1 class="page-title mb-0">Purchase Manager Portal</h1>
+                        <span class="topbar-org-badge">@OrganizationName</span>
                     }
-                    else
-                    {
-                        <h1 class="page-title">Payments & Settlements</h1>
-                        <p class="page-subtitle">Record payments for approved invoices and inspect complete settlement audit history.</p>
-                    }
+                    <ProfileMenu OrganizationName="@OrganizationName" />
                 </div>
             </header>
 

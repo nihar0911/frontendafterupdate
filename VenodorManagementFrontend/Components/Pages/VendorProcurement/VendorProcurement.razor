@@ -150,25 +150,26 @@ else
 
             <!-- TOP HEADER -->
             <header class="vd-top-header">
-                <div class="vd-header-left">
-                    <button type="button" class="vd-back-btn" @onclick='() => Nav.NavigateTo("/vendor-dashboard")'>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <div class="header-left vd-header-left">
+                    <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 me-2" @onclick='() => Nav.NavigateTo("/vendor-dashboard")'>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="19" y1="12" x2="5" y2="12"></line>
                             <polyline points="12 19 5 12 12 5"></polyline>
                         </svg>
-                        <span>Back to Dashboard</span>
+                        Back
                     </button>
+                    <div>
+                        <h1 class="page-heading">Procurement Opportunity PR-@RequestId</h1>
+                        <p class="page-subheading">Review specifications and submit quotation</p>
+                    </div>
                 </div>
 
-                <div class="vd-header-right">
-                    <div class="vd-vendor-pill">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"></path>
-                            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
-                            <path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"></path>
-                        </svg>
-                        <span>@VendorName</span>
-                    </div>
+                <div class="header-right vd-header-right">
+                    @if (!string.IsNullOrEmpty(VendorName))
+                    {
+                        <span class="topbar-org-badge">@VendorName</span>
+                    }
+                    <ProfileMenu VendorName="@VendorName" />
                 </div>
             </header>
 
@@ -202,13 +203,6 @@ else
                 }
                 else
                 {
-                    <!-- PAGE HEADING -->
-                    <div class="vd-page-heading-row">
-                        <div>
-                            <h1 class="vd-page-title">Procurement Opportunity — PR-@RequestId</h1>
-                            <p class="vd-page-subtitle">Review purchase request specifications and manage quotation response</p>
-                        </div>
-                    </div>
 
                     @if (!string.IsNullOrWhiteSpace(ResponseFeedbackMessage))
                     {

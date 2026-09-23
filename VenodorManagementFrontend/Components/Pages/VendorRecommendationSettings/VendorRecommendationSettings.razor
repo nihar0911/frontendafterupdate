@@ -208,21 +208,21 @@ else
         <main class="pm-main-content">
             <!-- TOP BAR -->
             <header class="pm-topbar">
-                <div class="topbar-left">
-                    <button class="topbar-menu-toggle" @onclick="ToggleSidebar" title="Toggle Sidebar">
+                <div class="header-left topbar-left">
+                    <button class="menu-toggle-btn topbar-menu-toggle" @onclick="ToggleSidebar" title="Toggle Sidebar">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="3" y1="12" x2="21" y2="12"></line>
                             <line x1="3" y1="6" x2="21" y2="6"></line>
                             <line x1="3" y1="18" x2="21" y2="18"></line>
                         </svg>
                     </button>
-                    <div class="topbar-title-block">
-                        <span class="topbar-breadcrumb">Dashboard / Configuration</span>
-                        <h1 class="topbar-heading">Vendor Recommendation Settings</h1>
+                    <div>
+                        <h1 class="page-heading">Recommendation Settings</h1>
+                        <p class="page-subheading">Scoring algorithms, weights and threshold rules</p>
                     </div>
                 </div>
 
-                <div class="topbar-right">
+                <div class="header-right topbar-right">
                     <ProfileMenu />
                 </div>
             </header>

@@ -135,10 +135,6 @@ else
                             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                         </svg>
                         <span>Performance &amp; Reviews</span>
-                        @if (MyReviews.Count > 0)
-                        {
-                            <span class="badge bg-success ms-auto vd-nav-badge">@MyReviews.Count</span>
-                        }
                     </button>
 
                     <button type="button" 
@@ -1471,112 +1467,185 @@ else
                         <!-- =======================================================
                              PERFORMANCE & REVIEWS VIEW
                              ======================================================= -->
-                        <div class="vd-card p-4 mb-4">
-                            <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom flex-wrap gap-3">
+                        <div class="vd-card vd-perf-container p-4 mb-4">
+                            <!-- HEADER -->
+                            <div class="vd-perf-header mb-4 pb-3">
                                 <div class="d-flex align-items-center gap-3">
-                                    <div class="vd-metric-icon-lg bg-light-green text-green">
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <div class="vd-perf-header-icon">
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                                         </svg>
                                     </div>
                                     <div>
-                                        <h3 class="fw-bold mb-0 text-dark">Customer Ratings &amp; Reviews</h3>
-                                        <p class="text-muted small mb-0">Verified performance reviews from delivered purchase orders for @VendorName</p>
+                                        <h2 class="vd-perf-title">Customer Ratings &amp; Reviews</h2>
+                                        <p class="vd-perf-subtitle">Verified performance reviews from delivered purchase orders for @VendorName</p>
                                     </div>
                                 </div>
-
-                                <button type="button" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2 fw-semibold px-3 py-2 rounded-3" @onclick='() => SetSidebarNav("Dashboard")'>
-                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <line x1="19" y1="12" x2="5" y2="12"></line>
-                                        <polyline points="12 19 5 12 12 5"></polyline>
-                                    </svg>
-                                    <span>Back to Dashboard</span>
-                                </button>
                             </div>
 
-                            <!-- PERFORMANCE METRICS ROW -->
-                            <div class="row g-3 mb-4">
-                                <div class="col-md-3 col-sm-6">
-                                    <div class="p-3 bg-light rounded-3 border text-center">
-                                        <span class="text-muted small fw-semibold d-block">OVERALL AVERAGE</span>
-                                        <div class="fs-2 fw-bold text-success mt-1">
+                            <!-- PERFORMANCE METRICS ROW (4 KPI CARDS) -->
+                            <div class="vd-perf-kpi-grid mb-4">
+                                <!-- OVERALL AVERAGE -->
+                                <div class="vd-perf-kpi-card">
+                                    <div class="vd-perf-kpi-header">
+                                        <span class="vd-perf-kpi-label">OVERALL AVERAGE</span>
+                                        <div class="vd-perf-kpi-icon-mini text-success">
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="vd-perf-kpi-value-row">
+                                        <span class="vd-perf-kpi-value text-success">
                                             @(MyPerformance != null && MyPerformance.HasReviewHistory && MyPerformance.AverageRating.HasValue ? $"{MyPerformance.AverageRating.Value:0.0}" : "N/A")
-                                            <span class="fs-6 text-muted font-normal">/ 5</span>
+                                        </span>
+                                        <span class="vd-perf-kpi-scale">/ 5.0</span>
+                                    </div>
+                                    <span class="vd-perf-kpi-hint">Aggregated customer rating</span>
+                                </div>
+
+                                <!-- PRODUCT QUALITY -->
+                                <div class="vd-perf-kpi-card">
+                                    <div class="vd-perf-kpi-header">
+                                        <span class="vd-perf-kpi-label">PRODUCT QUALITY</span>
+                                        <div class="vd-perf-kpi-icon-mini text-dark">
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                                            </svg>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="col-md-3 col-sm-6">
-                                    <div class="p-3 bg-light rounded-3 border text-center">
-                                        <span class="text-muted small fw-semibold d-block">PRODUCT QUALITY</span>
-                                        <div class="fs-2 fw-bold text-dark mt-1">
+                                    <div class="vd-perf-kpi-value-row">
+                                        <span class="vd-perf-kpi-value text-dark">
                                             @(MyPerformance != null && MyPerformance.HasReviewHistory && MyPerformance.AverageQualityRating.HasValue ? $"{MyPerformance.AverageQualityRating.Value:0.0}" : "N/A")
-                                            <span class="fs-6 text-muted font-normal">/ 5</span>
+                                        </span>
+                                        <span class="vd-perf-kpi-scale">/ 5.0</span>
+                                    </div>
+                                    <span class="vd-perf-kpi-hint">Condition &amp; specification match</span>
+                                </div>
+
+                                <!-- DELIVERY PUNCTUALITY -->
+                                <div class="vd-perf-kpi-card">
+                                    <div class="vd-perf-kpi-header">
+                                        <span class="vd-perf-kpi-label">DELIVERY PUNCTUALITY</span>
+                                        <div class="vd-perf-kpi-icon-mini text-dark">
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="12" cy="12" r="10"></circle>
+                                                <polyline points="12 6 12 12 16 14"></polyline>
+                                            </svg>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="col-md-3 col-sm-6">
-                                    <div class="p-3 bg-light rounded-3 border text-center">
-                                        <span class="text-muted small fw-semibold d-block">DELIVERY PUNCTUALITY</span>
-                                        <div class="fs-2 fw-bold text-dark mt-1">
+                                    <div class="vd-perf-kpi-value-row">
+                                        <span class="vd-perf-kpi-value text-dark">
                                             @(MyPerformance != null && MyPerformance.HasReviewHistory && MyPerformance.AverageDeliveryRating.HasValue ? $"{MyPerformance.AverageDeliveryRating.Value:0.0}" : "N/A")
-                                            <span class="fs-6 text-muted font-normal">/ 5</span>
-                                        </div>
+                                        </span>
+                                        <span class="vd-perf-kpi-scale">/ 5.0</span>
                                     </div>
+                                    <span class="vd-perf-kpi-hint">On-time fulfillment reliability</span>
                                 </div>
-                                <div class="col-md-3 col-sm-6">
-                                    <div class="p-3 bg-light rounded-3 border text-center">
-                                        <span class="text-muted small fw-semibold d-block">TOTAL REVIEWS</span>
-                                        <div class="fs-2 fw-bold text-primary mt-1">
-                                            @MyReviews.Count
+
+                                <!-- TOTAL REVIEWS -->
+                                <div class="vd-perf-kpi-card">
+                                    <div class="vd-perf-kpi-header">
+                                        <span class="vd-perf-kpi-label">TOTAL REVIEWS</span>
+                                        <div class="vd-perf-kpi-icon-mini text-primary">
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                            </svg>
                                         </div>
                                     </div>
+                                    <div class="vd-perf-kpi-value-row">
+                                        <span class="vd-perf-kpi-value text-dark">
+                                            @MyReviews.Count
+                                        </span>
+                                        <span class="vd-perf-kpi-scale">recorded</span>
+                                    </div>
+                                    <span class="vd-perf-kpi-hint">Customer feedback submissions</span>
                                 </div>
                             </div>
 
                             <!-- REVIEWS LIST -->
-                            <h5 class="fw-bold text-dark mb-3">Customer Feedback History</h5>
+                            <div class="vd-perf-section-head d-flex justify-content-between align-items-center mb-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <h3 class="vd-perf-section-title mb-0">Customer Feedback History</h3>
+                                    <span class="vd-perf-count-badge">@MyReviews.Count @(MyReviews.Count == 1 ? "review" : "reviews")</span>
+                                </div>
+                            </div>
+
                             @if (MyReviews == null || MyReviews.Count == 0)
                             {
-                                <div class="p-4 text-center border rounded-3 bg-light text-muted">
-                                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="mb-2 text-secondary">
-                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                                    </svg>
-                                    <p class="mb-0 fw-semibold">No reviews received yet.</p>
-                                    <small>Reviews submitted by organization outlets upon order delivery will appear here.</small>
+                                <div class="vd-perf-empty-state">
+                                    <div class="vd-perf-empty-icon">
+                                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                        </svg>
+                                    </div>
+                                    <h4 class="vd-perf-empty-title">No reviews received yet</h4>
+                                    <p class="vd-perf-empty-desc">Verified feedback submitted by organization outlets upon purchase order delivery will appear here.</p>
                                 </div>
                             }
                             else
                             {
-                                <div class="d-flex flex-column gap-3">
+                                <div class="vd-review-list">
                                     @foreach (var rev in MyReviews)
                                     {
-                                        <div class="p-3 border rounded-3 bg-white shadow-sm hover-shadow" style="cursor: pointer;" @onclick="() => OpenReviewDetails(rev)">
-                                            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
-                                                <div>
-                                                    <span class="badge bg-success bg-opacity-10 text-success fw-bold px-2 py-1 me-2">PO-@rev.PurchaseOrderID</span>
-                                                    <strong class="text-dark">@rev.OutletName</strong>
-                                                    <span class="text-muted small ms-2">&bull; @rev.ProductName</span>
+                                        <div class="vd-review-card" @onclick="() => OpenReviewDetails(rev)" role="button" tabindex="0">
+                                            <!-- TOP HEADER: PO Ref, Outlet, Product | Score Badge, Date -->
+                                            <div class="vd-review-header">
+                                                <div class="vd-review-header-left">
+                                                    <span class="vd-po-badge">PO-@rev.PurchaseOrderID</span>
+                                                    <span class="vd-review-outlet">@rev.OutletName</span>
+                                                    <span class="vd-review-divider" aria-hidden="true">&bull;</span>
+                                                    <span class="vd-review-product">@rev.ProductName</span>
                                                 </div>
-                                                <div class="d-flex align-items-center gap-2">
-                                                    <span class="badge bg-dark text-white px-2 py-1">Score: @rev.Rating.ToString("0.0") / 5</span>
-                                                    <span class="text-muted small">@rev.FeedbackDate.ToIst("dd MMM yyyy")</span>
+
+                                                <div class="vd-review-header-right">
+                                                    <span class="vd-review-score-badge">
+                                                        <svg class="vd-star-icon" width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                                                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                                        </svg>
+                                                        <span>@rev.Rating.ToString("0.0") / 5</span>
+                                                    </span>
+                                                    <span class="vd-review-date">
+                                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                                                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                                                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                                                        </svg>
+                                                        <span>@rev.FeedbackDate.ToIst("dd MMM yyyy")</span>
+                                                    </span>
                                                 </div>
                                             </div>
 
-                                            <div class="d-flex gap-3 my-2 small text-muted">
-                                                <span>Product Quality: <strong class="text-dark">@rev.ProductQualityRating.ToString("0.0")/5</strong></span>
-                                                <span>Delivery: <strong class="text-dark">@rev.DeliveryRating.ToString("0.0")/5</strong></span>
+                                            <!-- METRICS ROW: Product Quality, Delivery, Reviewed by -->
+                                            <div class="vd-review-metrics-row">
+                                                <div class="vd-review-metric-item">
+                                                    <span class="vd-review-metric-label">Product Quality:</span>
+                                                    <span class="vd-review-metric-value">@rev.ProductQualityRating.ToString("0.0")<span class="vd-review-metric-scale">/5</span></span>
+                                                </div>
+                                                <div class="vd-review-metric-sep" aria-hidden="true">|</div>
+                                                <div class="vd-review-metric-item">
+                                                    <span class="vd-review-metric-label">Delivery:</span>
+                                                    <span class="vd-review-metric-value">@rev.DeliveryRating.ToString("0.0")<span class="vd-review-metric-scale">/5</span></span>
+                                                </div>
                                                 @if (!string.IsNullOrWhiteSpace(rev.RatedByUserName))
                                                 {
-                                                    <span>Reviewed by: <strong class="text-dark">@rev.RatedByUserName</strong></span>
+                                                    <div class="vd-review-metric-sep" aria-hidden="true">|</div>
+                                                    <div class="vd-review-metric-item">
+                                                        <span class="vd-review-metric-label">Reviewed by:</span>
+                                                        <span class="vd-review-metric-value vd-review-reviewer">@rev.RatedByUserName</span>
+                                                    </div>
                                                 }
                                             </div>
 
+                                            <!-- REVIEW COMMENT -->
                                             @if (!string.IsNullOrWhiteSpace(rev.Review))
                                             {
-                                                <p class="mb-0 text-secondary small bg-light p-2.5 rounded-2 mt-2" style="font-style: normal;">
-                                                    "@rev.Review"
-                                                </p>
+                                                <div class="vd-review-comment-box">
+                                                    <p class="vd-review-comment-text">"@rev.Review"</p>
+                                                </div>
                                             }
                                         </div>
                                     }
@@ -2057,9 +2126,9 @@ else
                         <div class="vd-modal-header">
                             <div>
                                 <h3 class="vd-modal-title">Review Details</h3>
-                                <p class="vd-modal-subtitle">Verified feedback from delivered order</p>
+                                <p class="vd-modal-subtitle text-muted mb-0">Verified feedback from delivered order</p>
                             </div>
-                            <button type="button" class="btn-close" @onclick="CloseReviewDetailsModal"></button>
+                            <button type="button" class="btn-close" @onclick="CloseReviewDetailsModal" aria-label="Close"></button>
                         </div>
 
                         <div class="vd-modal-body p-4">
@@ -2072,9 +2141,9 @@ else
                             else if (SelectedReviewDetails != null)
                             {
                                 <div class="d-flex flex-column gap-3">
-                                    <div class="p-3 border rounded bg-light">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <span class="badge bg-secondary">PO-@SelectedReviewDetails.PurchaseOrderID</span>
+                                    <div class="vd-modal-info-card p-3 rounded-2">
+                                        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                                            <span class="vd-po-badge">PO-@SelectedReviewDetails.PurchaseOrderID</span>
                                             <span class="text-muted small">@SelectedReviewDetails.FeedbackDate.ToIst("dd MMM yyyy")</span>
                                         </div>
                                         <div class="row g-2">
@@ -2090,34 +2159,50 @@ else
                                                 <span class="text-muted small d-block">Product:</span>
                                                 <span class="fw-semibold text-dark">@SelectedReviewDetails.ProductName</span>
                                             </div>
+                                            @if (!string.IsNullOrWhiteSpace(SelectedReviewDetails.RatedByUserName))
+                                            {
+                                                <div class="col-sm-12">
+                                                    <span class="text-muted small d-block">Reviewed by:</span>
+                                                    <span class="fw-semibold text-dark">@SelectedReviewDetails.RatedByUserName</span>
+                                                </div>
+                                            }
                                         </div>
                                     </div>
 
-                                    <div class="d-flex gap-2">
-                                        <div class="flex-fill p-2 border rounded text-center bg-light">
-                                            <div class="text-muted small">Overall Rating</div>
-                                            <div class="fw-bold text-success fs-5">@SelectedReviewDetails.Rating.ToString("0.0") / 5</div>
+                                    <div class="row g-2">
+                                        <div class="col-4">
+                                            <div class="p-2 border rounded-2 text-center bg-light">
+                                                <div class="text-muted small" style="font-size: 0.72rem; font-weight: 600;">Overall Rating</div>
+                                                <div class="fw-bold text-success fs-5">@SelectedReviewDetails.Rating.ToString("0.0") <span class="fs-6 text-muted font-normal">/ 5</span></div>
+                                            </div>
                                         </div>
-                                        <div class="flex-fill p-2 border rounded text-center bg-light">
-                                            <div class="text-muted small">Product Quality</div>
-                                            <div class="fw-bold text-dark fs-5">@SelectedReviewDetails.ProductQualityRating.ToString("0.0") / 5</div>
+                                        <div class="col-4">
+                                            <div class="p-2 border rounded-2 text-center bg-light">
+                                                <div class="text-muted small" style="font-size: 0.72rem; font-weight: 600;">Product Quality</div>
+                                                <div class="fw-bold text-dark fs-5">@SelectedReviewDetails.ProductQualityRating.ToString("0.0") <span class="fs-6 text-muted font-normal">/ 5</span></div>
+                                            </div>
                                         </div>
-                                        <div class="flex-fill p-2 border rounded text-center bg-light">
-                                            <div class="text-muted small">Delivery Rating</div>
-                                            <div class="fw-bold text-dark fs-5">@SelectedReviewDetails.DeliveryRating.ToString("0.0") / 5</div>
+                                        <div class="col-4">
+                                            <div class="p-2 border rounded-2 text-center bg-light">
+                                                <div class="text-muted small" style="font-size: 0.72rem; font-weight: 600;">Delivery Rating</div>
+                                                <div class="fw-bold text-dark fs-5">@SelectedReviewDetails.DeliveryRating.ToString("0.0") <span class="fs-6 text-muted font-normal">/ 5</span></div>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div class="p-3 border rounded">
-                                        <span class="text-muted small d-block mb-1">Review Comments:</span>
-                                        <p class="mb-0 text-dark">@SelectedReviewDetails.Review</p>
-                                    </div>
+                                    @if (!string.IsNullOrWhiteSpace(SelectedReviewDetails.Review))
+                                    {
+                                        <div class="p-3 border rounded-2 bg-white">
+                                            <span class="text-muted small d-block mb-1 fw-semibold">Review Comments:</span>
+                                            <p class="mb-0 text-dark small" style="line-height: 1.5;">@SelectedReviewDetails.Review</p>
+                                        </div>
+                                    }
                                 </div>
                             }
                         </div>
 
                         <div class="vd-modal-footer">
-                            <button type="button" class="btn btn-secondary" @onclick="CloseReviewDetailsModal">Close</button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm px-3" @onclick="CloseReviewDetailsModal">Close</button>
                         </div>
                     </div>
                 </div>

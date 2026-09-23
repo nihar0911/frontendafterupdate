@@ -398,10 +398,11 @@ public partial class OrgPurchaseOrders : ComponentBase
 
             SyncApproverRoleFromSelectedOutlet();
 
-            // Load notifications
+            // Load notifications and clear unread PO activity on page view
             try
             {
                 Notifications = await Api.GetMyNotificationsAsync();
+                await ClearUnreadPoActivity();
             }
             catch
             {
@@ -1499,6 +1500,35 @@ public partial class OrgPurchaseOrders : ComponentBase
         {
             IsSubmittingDelivery = false;
             StateHasChanged();
+        }
+    }
+
+    private async Task ClearUnreadPoActivity()
+    {
+        if (Notifications == null || !Notifications.Any()) return;
+
+        var unreadPoNotifs = Notifications.Where(n => !n.IsRead && (
+            n.NotificationType.StartsWith("PurchaseOrder", StringComparison.OrdinalIgnoreCase) ||
+            n.Title.Contains("Purchase Order", StringComparison.OrdinalIgnoreCase) ||
+            n.Title.Contains("PO-", StringComparison.OrdinalIgnoreCase) ||
+            n.Title.Contains("Delivery", StringComparison.OrdinalIgnoreCase) ||
+            (n.Message != null && (n.Message.Contains("Purchase Order", StringComparison.OrdinalIgnoreCase) || n.Message.Contains("PO-", StringComparison.OrdinalIgnoreCase)))
+        )).ToList();
+
+        if (unreadPoNotifs.Any())
+        {
+            foreach (var n in unreadPoNotifs)
+            {
+                n.IsRead = true;
+                try
+                {
+                    await Api.MarkNotificationReadAsync(n.NotificationID);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[OrgPurchaseOrders] Error marking notification {n.NotificationID} as read: {ex.Message}");
+                }
+            }
         }
     }
 }

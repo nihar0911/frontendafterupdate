@@ -12,14 +12,16 @@
 .profile-pill-btn {
     display: flex;
     align-items: center;
-    gap: 0.65rem;
-    background: transparent;
+    gap: 0.55rem;
+    background: #FFFFFF;
     border: 1px solid #E5E7EB;
-    padding: 0.35rem 0.65rem;
-    border-radius: 30px;
+    height: 34px;
+    padding: 0 0.75rem 0 0.35rem;
+    border-radius: 6px;
     cursor: pointer;
     transition: background-color 0.15s, border-color 0.15s;
     user-select: none;
+    box-sizing: border-box;
 }
 
 .profile-pill-btn:hover {
@@ -34,13 +36,13 @@
 
 /* Avatar Circle */
 .profile-avatar {
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
     background-color: #174F45;
     color: #FFFFFF;
     font-weight: 700;
-    font-size: 0.8rem;
+    font-size: 0.72rem;
     display: flex;
     align-items: center;
     justify-content: center;
