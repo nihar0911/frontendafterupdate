@@ -1027,7 +1027,7 @@ public partial class VendorDashboard : ComponentBase
     private double GetRemainingPercent(ContractDto c)
     {
         if (c.TotalQuantity <= 0) return 100;
-        var rem = c.TotalQuantity - c.UsedQuantity;
+        var rem = Math.Max(0m, c.TotalQuantity - c.UsedQuantity);
         var pct = (double)(rem / c.TotalQuantity) * 100;
         return Math.Min(100, Math.Max(0, Math.Round(pct, 0)));
     }

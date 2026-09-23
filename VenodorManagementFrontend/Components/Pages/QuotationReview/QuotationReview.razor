@@ -1,4 +1,4 @@
-@page "/quotation-review"
+﻿@page "/quotation-review"
 @page "/quotation-review/{QuotationId:int}"
 @rendermode InteractiveServer
 @inject ApiService Api
@@ -328,17 +328,17 @@ else
                         @if (Auth.IsPurchaseManager)
                         {
                             <h1 class="page-heading">Quotation Review</h1>
-                            <p class="page-subheading">Purchase Manager Portal • Quotation evaluation</p>
+                            <p class="page-subheading">Purchase Manager Portal â€¢ Quotation evaluation</p>
                         }
                         else if (Auth.IsOutletManager)
                         {
                             <h1 class="page-heading">Quotation Review</h1>
-                            <p class="page-subheading">Outlet Manager Workspace • Quotation evaluation</p>
+                            <p class="page-subheading">Outlet Manager Workspace â€¢ Quotation evaluation</p>
                         }
                         else
                         {
                             <h1 class="page-heading">Quotation Review</h1>
-                            <p class="page-subheading">Organization Portal • Quotation evaluation</p>
+                            <p class="page-subheading">Organization Portal â€¢ Quotation evaluation</p>
                         }
                     </div>
                 </div>
@@ -483,11 +483,11 @@ else
                                         </div>
                                         <div class="keyval-row">
                                             <span class="keyval-label">Email</span>
-                                            <span class="keyval-value">@(string.IsNullOrWhiteSpace(VendorInfo?.Email) ? "—" : VendorInfo.Email)</span>
+                                            <span class="keyval-value">@(string.IsNullOrWhiteSpace(VendorInfo?.Email) ? "â€”" : VendorInfo.Email)</span>
                                         </div>
                                         <div class="keyval-row">
                                             <span class="keyval-label">GSTIN</span>
-                                            <span class="keyval-value">@(string.IsNullOrWhiteSpace(VendorInfo?.GSTIN) ? "—" : VendorInfo.GSTIN)</span>
+                                            <span class="keyval-value">@(string.IsNullOrWhiteSpace(VendorInfo?.GSTIN) ? "â€”" : VendorInfo.GSTIN)</span>
                                         </div>
                                         <div class="keyval-row">
                                             <span class="keyval-label">Address</span>
@@ -620,34 +620,60 @@ else
                                         <div class="contract-ready-card">
                                             @if (Auth.IsPurchaseManager)
                                             {
-                                                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 w-100 p-2">
-                                                    <div class="d-flex align-items-center gap-2 text-success fw-semibold">
-                                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                                            <polyline points="20 6 9 17 4 12"></polyline>
-                                                        </svg>
-                                                        <span>Quotation Accepted — Submit a purchase order for manager approval</span>
+                                                @if (!HasPurchaseOrder)
+                                                {
+                                                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 w-100 p-2">
+                                                        <div class="d-flex align-items-center gap-2 text-success fw-semibold">
+                                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                                            </svg>
+                                                            <span>Quotation Accepted — Submit a purchase order for manager approval</span>
+                                                        </div>
+                                                        @if (Auth.IsPurchaseManager || Auth.IsAdmin)
+                                                        {
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                <button type="button" class="btn-create-contract" style="background-color: #174F45;"
+                                                                        @onclick='() => Nav.NavigateTo("/organization/purchase-orders")'>
+                                                                    <span>Submit Purchase Order</span>
+                                                                </button>
+                                                                <button type="button" class="btn-back-dashboard" @onclick="NavigateBack">
+                                                                    <span>@(Auth.IsOutletManager ? "Back to Purchase Request" : "Back to Quotations")</span>
+                                                                </button>
+                                                            </div>
+                                                        }
+                                                        else
+                                                        {
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                <button type="button" class="btn-back-dashboard" @onclick="NavigateBack">
+                                                                    <span>@(Auth.IsOutletManager ? "Back to Purchase Request" : "Back to Quotations")</span>
+                                                                </button>
+                                                            </div>
+                                                        }
                                                     </div>
-                                                    @if (Auth.IsPurchaseManager || Auth.IsAdmin)
-                                                    {
+                                                }
+                                                else
+                                                {
+                                                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 w-100 p-2">
+                                                        <div class="d-flex flex-column gap-1">
+                                                            <div class="d-flex align-items-center gap-2 text-success fw-semibold">
+                                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                                </svg>
+                                                                <span>Quotation Accepted — Purchase Order Already Submitted</span>
+                                                            </div>
+                                                            <div class="d-flex align-items-center gap-2 text-muted small ps-4">
+                                                                <span><strong>PO Reference:</strong> PO-@(ExistingPurchaseOrderId ?? Quotation?.ExistingPurchaseOrderID)</span>
+                                                                <span>•</span>
+                                                                <span><strong>Status:</strong> <span class="badge @GetPoStatusBadgeClass(ExistingPurchaseOrderStatus ?? Quotation?.ExistingPurchaseOrderStatus)">@(ExistingPurchaseOrderStatus ?? Quotation?.ExistingPurchaseOrderStatus ?? "Submitted")</span></span>
+                                                            </div>
+                                                        </div>
                                                         <div class="d-flex align-items-center gap-2">
-                                                            <button type="button" class="btn-create-contract" style="background-color: #174F45;"
-                                                                    @onclick='() => Nav.NavigateTo("/organization/purchase-orders")'>
-                                                                <span>Submit Purchase Order</span>
-                                                            </button>
                                                             <button type="button" class="btn-back-dashboard" @onclick="NavigateBack">
                                                                 <span>@(Auth.IsOutletManager ? "Back to Purchase Request" : "Back to Quotations")</span>
                                                             </button>
                                                         </div>
-                                                    }
-                                                    else
-                                                    {
-                                                        <div class="d-flex align-items-center gap-2">
-                                                            <button type="button" class="btn-back-dashboard" @onclick="NavigateBack">
-                                                                <span>@(Auth.IsOutletManager ? "Back to Purchase Request" : "Back to Quotations")</span>
-                                                            </button>
-                                                        </div>
-                                                    }
-                                                </div>
+                                                    </div>
+                                                }
                                             }
                                             else if (Auth.IsPurchaseManager || Auth.IsAdmin)
                                             {

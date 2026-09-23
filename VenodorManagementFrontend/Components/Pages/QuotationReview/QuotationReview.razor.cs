@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -47,6 +47,23 @@ public partial class QuotationReview : ComponentBase
     private bool IsActionable => Quotation != null && (string.Equals(Quotation.Status, "Submitted", StringComparison.OrdinalIgnoreCase) || string.Equals(Quotation.Status, "Pending", StringComparison.OrdinalIgnoreCase));
     private bool IsAccepted => Quotation != null && string.Equals(Quotation.Status, "Accepted", StringComparison.OrdinalIgnoreCase);
     private bool IsRejected => Quotation != null && string.Equals(Quotation.Status, "Rejected", StringComparison.OrdinalIgnoreCase);
+
+    private bool HasPurchaseOrder => Quotation != null && (Quotation.HasPurchaseOrder || Quotation.ExistingPurchaseOrderID.HasValue);
+    private int? ExistingPurchaseOrderId => Quotation?.ExistingPurchaseOrderID;
+    private string? ExistingPurchaseOrderStatus => Quotation?.ExistingPurchaseOrderStatus;
+
+    private string GetPoStatusBadgeClass(string? status)
+    {
+        return status?.ToLowerInvariant() switch
+        {
+            "delivered" => "bg-success text-white",
+            "accepted" or "approved" => "bg-success text-white",
+            "pending" or "awaiting approval" or "pending approval" => "bg-warning text-dark",
+            "dispatched" => "bg-primary text-white",
+            "rejected" or "cancelled" => "bg-danger text-white",
+            _ => "bg-secondary text-white"
+        };
+    }
 
     private void ToggleSidebar()
     {

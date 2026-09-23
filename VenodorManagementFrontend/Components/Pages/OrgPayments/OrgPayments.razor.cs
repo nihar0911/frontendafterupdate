@@ -302,4 +302,20 @@ public partial class OrgPayments : ComponentBase
             Console.WriteLine($"[OrgPayments] DownloadInvoicePdf error: {ex.Message}");
         }
     }
+    protected async Task DownloadPaymentReceiptPdf(int paymentId)
+    {
+        try
+        {
+            var bytes = await Api.DownloadPaymentReceiptPdfAsync(paymentId);
+            if (bytes != null && bytes.Length > 0)
+            {
+                var base64 = Convert.ToBase64String(bytes);
+                await JS.InvokeVoidAsync("downloadFileFromBase64", $"PaymentReceipt-PAY-{paymentId}.pdf", "application/pdf", base64);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[OrgPayments] DownloadPaymentReceiptPdf error: {ex.Message}");
+        }
+    }
 }

@@ -778,7 +778,7 @@ else
                                     </div>
                                 </div>
                                 <div class="col-md-3">
-                                    <span class="text-muted small fw-bold text-uppercase d-block mb-1" style="font-size: 0.72rem; letter-spacing: 0.04em;">ALLOCATED QUANTITY</span>
+                                    <span class="text-muted small fw-bold text-uppercase d-block mb-1" style="font-size: 0.72rem; letter-spacing: 0.04em;">CONTRACTED QUANTITY</span>
                                     <div class="fw-bold text-dark fs-6">@SelectedContract.TotalQuantity.ToString("N2") @GetContractUnit(SelectedContract)</div>
                                 </div>
                                 <div class="col-md-3">
@@ -793,64 +793,110 @@ else
                             <!-- LEFT: PRODUCT & FULFILLMENT -->
                             <div class="col-lg-6">
                                 <div class="vd-card h-100 p-4">
-                                    <div class="d-flex align-items-center gap-2.5 mb-3 pb-2">
-                                        <div class="vd-section-icon-box bg-light-green text-green">
-                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                                                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-                                            </svg>
+                                    <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                                        <div class="d-flex align-items-center gap-2.5">
+                                            <div class="vd-section-icon-box bg-light-green text-green">
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                                </svg>
+                                            </div>
+                                            <h5 class="fw-bold text-dark mb-0 fs-6">Products / Contract Tracking</h5>
                                         </div>
-                                        <h5 class="fw-bold text-dark mb-0 fs-6">Product &amp; Supply Details</h5>
+                                        @if (SelectedContract.ContractProducts != null && SelectedContract.ContractProducts.Count > 1)
+                                        {
+                                            <span class="badge bg-light text-dark fw-bold border">@SelectedContract.ContractProducts.Count Products</span>
+                                        }
                                     </div>
 
-                                    @if (SelectedContract.ContractProducts != null && SelectedContract.ContractProducts.Count > 1)
-                                    {
-                                        <div class="table-responsive mt-2">
-                                            <table class="table table-sm table-borderless align-middle mb-0" style="font-size: 0.85rem;">
-                                                <thead>
-                                                    <tr class="text-muted border-bottom" style="font-size: 0.72rem; letter-spacing: 0.03em;">
-                                                        <th>PRODUCT</th>
-                                                        <th class="text-end">CONTRACTED</th>
-                                                        <th class="text-end">FULFILLED</th>
-                                                        <th class="text-end">REMAINING</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm align-middle mb-0" style="font-size: 0.85rem;">
+                                            <thead>
+                                                <tr class="text-muted border-bottom" style="font-size: 0.72rem; letter-spacing: 0.03em;">
+                                                    <th>PRODUCT</th>
+                                                    <th class="text-center">UNIT PRICE</th>
+                                                    <th class="text-center">CONTRACTED</th>
+                                                    <th class="text-center">PURCHASED</th>
+                                                    <th class="text-center">REMAINING</th>
+                                                    <th class="text-center">EXTRA ORDER</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @if (SelectedContract.ContractProducts != null && SelectedContract.ContractProducts.Count > 0)
+                                                {
                                                     @foreach (var p in SelectedContract.ContractProducts)
                                                     {
                                                         string pUnit = string.IsNullOrWhiteSpace(p.Unit) ? GetContractUnit(SelectedContract) : p.Unit;
-                                                        <tr class="border-bottom">
-                                                            <td class="fw-semibold text-dark">@p.ProductName</td>
-                                                            <td class="text-end text-success fw-bold">@p.ContractQuantity.ToString("N2") @pUnit</td>
-                                                            <td class="text-end text-dark">@p.PurchasedQuantity.ToString("N2") @pUnit</td>
-                                                            <td class="text-end text-success fw-bold">@p.RemainingQuantity.ToString("N2") @pUnit</td>
+                                                        decimal pUnitPrice = (p.UnitPrice.HasValue && p.UnitPrice.Value > 0) ? p.UnitPrice.Value : SelectedContract.UnitPrice;
+                                                        <tr>
+                                                            <td><strong class="text-dark">@p.ProductName</strong></td>
+                                                            <td class="text-center">@(pUnitPrice > 0 ? $"Rs. {pUnitPrice:N2}" : "-")</td>
+                                                            <td class="text-center text-success fw-bold">@p.ContractQuantity.ToString("N2") @pUnit</td>
+                                                            <td class="text-center fw-bold text-dark">@p.PurchasedQuantity.ToString("N2") @pUnit</td>
+                                                            <td class="text-center text-success fw-bold">@p.RemainingQuantity.ToString("N2") @pUnit</td>
+                                                            <td class="text-center">
+                                                                @if (p.ExtraOrderQuantity > 0)
+                                                                {
+                                                                    <span class="text-warning fw-bold" style="color: #D97706 !important;">+@p.ExtraOrderQuantity.ToString("N2") @pUnit</span>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <span class="text-muted small">0.00 @pUnit</span>
+                                                                }
+                                                            </td>
                                                         </tr>
                                                     }
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                                }
+                                                else
+                                                {
+                                                    var sUnit = GetContractUnit(SelectedContract);
+                                                    var sRem = Math.Max(0m, SelectedContract.TotalQuantity - SelectedContract.UsedQuantity);
+                                                    var sExtra = Math.Max(0m, SelectedContract.UsedQuantity - SelectedContract.TotalQuantity);
+                                                    <tr>
+                                                        <td><strong class="text-dark">@GetContractProductName(SelectedContract)</strong></td>
+                                                        <td class="text-center">@(SelectedContract.UnitPrice > 0 ? $"Rs. {SelectedContract.UnitPrice:N2}" : "-")</td>
+                                                        <td class="text-center text-success fw-bold">@SelectedContract.TotalQuantity.ToString("N2") @sUnit</td>
+                                                        <td class="text-center fw-bold text-dark">@SelectedContract.UsedQuantity.ToString("N2") @sUnit</td>
+                                                        <td class="text-center text-success fw-bold">@sRem.ToString("N2") @sUnit</td>
+                                                        <td class="text-center">
+                                                            @if (sExtra > 0)
+                                                            {
+                                                                <span class="text-warning fw-bold" style="color: #D97706 !important;">+@sExtra.ToString("N2") @sUnit</span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="text-muted small">0.00 @sUnit</span>
+                                                            }
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <!-- CONTRACT-LEVEL SUMMARY BAR -->
+                                    @{
+                                        var summaryUnit = GetContractUnit(SelectedContract);
+                                        var totalRem = Math.Max(0m, SelectedContract.TotalQuantity - SelectedContract.UsedQuantity);
+                                        var totalExtra = Math.Max(0m, SelectedContract.UsedQuantity - SelectedContract.TotalQuantity);
                                     }
-                                    else
-                                    {
-                                        <div class="d-flex flex-column gap-3">
-                                            <div class="d-flex justify-content-between align-items-center py-2.5 border-bottom">
-                                                <span class="text-muted small">Procured Product</span>
-                                                <strong class="text-dark">@GetContractProductName(SelectedContract)</strong>
-                                            </div>
-                                            <div class="d-flex justify-content-between align-items-center py-2.5 border-bottom">
-                                                <span class="text-muted small">Agreed Unit Price</span>
-                                                <strong class="text-dark">Rs. @SelectedContract.UnitPrice.ToString("N2") / @GetContractUnit(SelectedContract)</strong>
-                                            </div>
-                                            <div class="d-flex justify-content-between align-items-center py-2.5 border-bottom">
-                                                <span class="text-muted small">Fulfilled / Used Quantity</span>
-                                                <span class="text-dark">@SelectedContract.UsedQuantity.ToString("N2") @GetContractUnit(SelectedContract) (@GetUsedPercent(SelectedContract)%)</span>
-                                            </div>
-                                            <div class="d-flex justify-content-between align-items-center py-2.5">
-                                                <span class="text-muted small">Remaining Allocation</span>
-                                                <strong style="color: #047857;">@((SelectedContract.TotalQuantity - SelectedContract.UsedQuantity).ToString("N2")) @GetContractUnit(SelectedContract) (@GetRemainingPercent(SelectedContract)%)</strong>
-                                            </div>
+                                    <div class="mt-3 pt-3 border-top d-flex justify-content-between align-items-center flex-wrap gap-2" style="font-size: 0.8rem;">
+                                        <span class="text-muted">
+                                            Contract Summary (@(SelectedContract.ContractProducts?.Count ?? 1) @(SelectedContract.ContractProducts?.Count == 1 ? "Product" : "Products")):
+                                        </span>
+                                        <div class="d-flex align-items-center gap-3 flex-wrap">
+                                            <span>Total Contracted: <strong class="text-success">@SelectedContract.TotalQuantity.ToString("N2") @summaryUnit</strong></span>
+                                            <span class="text-muted">&bull;</span>
+                                            <span>Total Purchased: <strong>@SelectedContract.UsedQuantity.ToString("N2") @summaryUnit</strong></span>
+                                            <span class="text-muted">&bull;</span>
+                                            <span>Total Remaining: <strong class="text-success">@totalRem.ToString("N2") @summaryUnit</strong></span>
+                                            @if (totalExtra > 0)
+                                            {
+                                                <span class="text-muted">&bull;</span>
+                                                <span>Total Extra: <strong class="text-warning" style="color: #D97706 !important;">+@totalExtra.ToString("N2") @summaryUnit</strong></span>
+                                            }
                                         </div>
-                                    }
+                                    </div>
                                 </div>
                             </div>
 
@@ -982,9 +1028,10 @@ else
                                             <tr>
                                                 <th>Outlet</th>
                                                 <th>Product</th>
-                                                <th>Allocated Quantity</th>
-                                                <th>Used Quantity</th>
+                                                <th>Contracted Qty</th>
+                                                <th>Purchased Qty</th>
                                                 <th>Remaining</th>
+                                                <th>Extra Order</th>
                                                 <th>Status</th>
                                                 <th class="text-end">Action</th>
                                             </tr>
@@ -992,7 +1039,8 @@ else
                                         <tbody>
                                             @foreach (var c in FilteredContractsList)
                                             {
-                                                var rem = c.TotalQuantity - c.UsedQuantity;
+                                                var rem = Math.Max(0m, c.TotalQuantity - c.UsedQuantity);
+                                                var extraOrder = Math.Max(0m, c.UsedQuantity - c.TotalQuantity);
                                                 var usedPct = GetUsedPercent(c);
                                                 var remPct = GetRemainingPercent(c);
                                                 var unit = GetContractUnit(c);
@@ -1021,6 +1069,16 @@ else
                                                             <div class="vd-progress-fill-green" style="width: @(remPct)%;"></div>
                                                         </div>
                                                         <span class="vd-pct-label text-success">@remPct%</span>
+                                                    </td>
+                                                    <td>
+                                                        @if (extraOrder > 0)
+                                                        {
+                                                            <span class="text-warning fw-bold" style="color: #D97706 !important;">+@extraOrder.ToString("N2") @unit</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-muted small">0.00 @unit</span>
+                                                        }
                                                     </td>
                                                     <td>
                                                         <span class="vd-status-pill status-approved">
@@ -1467,9 +1525,8 @@ else
                         <!-- =======================================================
                              PERFORMANCE & REVIEWS VIEW
                              ======================================================= -->
-                        <div class="vd-card vd-perf-container p-4 mb-4">
-                            <!-- HEADER -->
-                            <div class="vd-perf-header mb-4 pb-3">
+                        <div class="vd-card p-4 mb-4">
+                            <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom flex-wrap gap-3">
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="vd-perf-header-icon">
                                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">

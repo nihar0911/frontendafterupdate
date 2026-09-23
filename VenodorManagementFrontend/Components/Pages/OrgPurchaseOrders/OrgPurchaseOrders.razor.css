@@ -576,6 +576,20 @@
 .po-status-rejected { background: #FEE2E2; color: #B91C1C; }
 .po-status-neutral { background: #F3F4F6; color: #4B5563; }
 
+.delivery-performance-badge {
+    white-space: normal !important;
+    word-break: normal;
+    overflow-wrap: break-word;
+    display: inline-block;
+    max-width: 100%;
+    line-height: 1.35;
+    text-align: left;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 4px;
+}
+
 /* MODAL */
 .modal-backdrop-custom {
     position: fixed;

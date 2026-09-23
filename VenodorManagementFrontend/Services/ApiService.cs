@@ -2398,6 +2398,25 @@ namespace VenodorManagementFrontend.Services
             }
         }
 
+                public async Task<byte[]?> DownloadPaymentReceiptPdfAsync(int paymentId)
+        {
+            SetAuthHeader();
+            try
+            {
+                var response = await _httpClient.GetAsync($"api/invoice/payments/{paymentId}/receipt");
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadAsByteArrayAsync();
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ApiService] DownloadPaymentReceiptPdfAsync error: {ex.Message}");
+                return null;
+            }
+        }
+
         public async Task<List<PaymentDto>> GetPaymentsAsync()
         {
             SetAuthHeader();
