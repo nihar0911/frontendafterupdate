@@ -10,8 +10,6 @@ public class OutletDto
     public string OrganizationName { get; set; } = string.Empty;
     public string OutletName { get; set; } = string.Empty;
     public string? Address { get; set; }
-    public decimal? Latitude { get; set; }
-    public decimal? Longitude { get; set; }
     public string PurchaseOrderApproverRole { get; set; } = "Organization Manager";
     public string Status { get; set; } = "Active";
 }

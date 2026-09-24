@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -164,8 +164,6 @@ public partial class OrgOutlets : ComponentBase
                 OrganizationID = SelectedOutlet.OrganizationID,
                 OutletName = SelectedOutlet.OutletName,
                 Address = SelectedOutlet.Address,
-                Latitude = SelectedOutlet.Latitude,
-                Longitude = SelectedOutlet.Longitude,
                 PurchaseOrderApproverRole = selected
             });
 

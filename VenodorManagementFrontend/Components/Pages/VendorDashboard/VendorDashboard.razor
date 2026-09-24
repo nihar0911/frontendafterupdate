@@ -402,19 +402,12 @@ else
                                     @if (string.Equals(SelectedQuotation.Status, "Accepted", StringComparison.OrdinalIgnoreCase))
                                     {
                                         <span class="vd-status-pill status-approved fs-6 px-3 py-1.5">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                                <polyline points="20 6 9 17 4 12"></polyline>
-                                            </svg>
                                             <span>Accepted</span>
                                         </span>
                                     }
                                     else if (string.Equals(SelectedQuotation.Status, "Rejected", StringComparison.OrdinalIgnoreCase))
                                     {
                                         <span class="vd-status-pill status-rejected fs-6 px-3 py-1.5">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                                <line x1="6" y1="6" x2="18" y2="18"></line>
-                                            </svg>
                                             <span>Rejected</span>
                                         </span>
                                     }
@@ -677,19 +670,12 @@ else
                                                         @if (string.Equals(q.Status, "Accepted", StringComparison.OrdinalIgnoreCase))
                                                         {
                                                             <span class="vd-status-pill status-approved">
-                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                                                </svg>
                                                                 <span>Accepted</span>
                                                             </span>
                                                         }
                                                         else if (string.Equals(q.Status, "Rejected", StringComparison.OrdinalIgnoreCase))
                                                         {
                                                             <span class="vd-status-pill status-rejected">
-                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                                                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                                                                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                                                                </svg>
                                                                 <span>Rejected</span>
                                                             </span>
                                                         }
@@ -757,9 +743,6 @@ else
 
                                 <div>
                                     <span class="vd-status-pill status-approved fs-6 px-3 py-1.5">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                            <polyline points="20 6 9 17 4 12"></polyline>
-                                        </svg>
                                         <span>@(string.IsNullOrWhiteSpace(SelectedContract.Status) ? "Active" : SelectedContract.Status)</span>
                                     </span>
                                 </div>
@@ -1082,9 +1065,6 @@ else
                                                     </td>
                                                     <td>
                                                         <span class="vd-status-pill status-approved">
-                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                                                <polyline points="20 6 9 17 4 12"></polyline>
-                                                            </svg>
                                                             <span>@(string.IsNullOrWhiteSpace(c.Status) ? "Active" : c.Status)</span>
                                                         </span>
                                                     </td>
@@ -1197,9 +1177,6 @@ else
                                                         else if (po.Status == "Delivered")
                                                         {
                                                             <span class="vd-status-pill status-approved">
-                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="me-1">
-                                                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                                                </svg>
                                                                 <span>Delivered</span>
                                                             </span>
                                                         }
@@ -1220,9 +1197,6 @@ else
                                                                     Decline
                                                                 </button>
                                                                 <button type="button" class="btn vd-btn-dark-green btn-sm px-3" @onclick='() => RespondToPo(po.PurchaseOrderID, "Accepted")'>
-                                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="me-1">
-                                                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                                                    </svg>
                                                                     <span>Accept Order</span>
                                                                 </button>
                                                             </div>
@@ -1255,9 +1229,6 @@ else
                                                         {
                                                             <span class="text-success small fw-semibold d-inline-flex align-items-center gap-1">
                                                                 <span>Completed</span>
-                                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                                                </svg>
                                                             </span>
                                                         }
                                                     </td>
@@ -1952,19 +1923,12 @@ else
                                                         @if (opp.OpportunityStatus == "Accepted")
                                                         {
                                                             <span class="vd-status-pill status-approved">
-                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                                                </svg>
                                                                 <span>Accepted</span>
                                                             </span>
                                                         }
                                                         else if (opp.OpportunityStatus == "Rejected")
                                                         {
                                                             <span class="vd-status-pill status-rejected">
-                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                                                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                                                                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                                                                </svg>
                                                                 <span>Rejected</span>
                                                             </span>
                                                         }
@@ -1997,19 +1961,12 @@ else
 
                                                             case OpportunityQuotationState.Accepted:
                                                                 <span class="vd-status-pill status-approved">
-                                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                                                    </svg>
                                                                     <span>Accepted</span>
                                                                 </span>
                                                                 break;
 
                                                             case OpportunityQuotationState.Rejected:
                                                                 <span class="vd-status-pill status-rejected">
-                                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                                                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                                                                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                                                                    </svg>
                                                                     <span>Rejected</span>
                                                                 </span>
                                                                 break;
@@ -2018,10 +1975,6 @@ else
                                                                 @if (opp.OpportunityStatus == "Rejected")
                                                                 {
                                                                     <span class="vd-status-pill status-rejected">
-                                                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                                                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                                                                            <line x1="6" y1="6" x2="18" y2="18"></line>
-                                                                        </svg>
                                                                         <span>Rejected</span>
                                                                     </span>
                                                                 }

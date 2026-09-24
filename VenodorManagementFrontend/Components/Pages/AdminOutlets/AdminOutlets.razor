@@ -1,4 +1,4 @@
-@page "/admin/outlets"
+﻿@page "/admin/outlets"
 @rendermode InteractiveServer
 @inject ApiService Api
 @inject AuthService Auth
@@ -355,7 +355,7 @@ else
                                             <th class="th-org">ORGANIZATION</th>
                                             <th class="th-address">ADDRESS</th>
                                             <th class="th-approver">PO APPROVER</th>
-                                            <th class="th-coords">COORDINATES (LAT / LONG)</th>
+                                            
                                             <th class="th-status">STATUS</th>
                                             <th class="th-actions">ACTIONS</th>
                                         </tr>
@@ -364,7 +364,7 @@ else
                                         @if (!FilteredOutlets.Any())
                                         {
                                             <tr>
-                                                <td colspan="7" class="text-center py-4 text-muted">
+                                                <td colspan="6" class="text-center py-4 text-muted">
                                                     No outlets found matching "<strong>@SearchQuery</strong>".
                                                 </td>
                                             </tr>
@@ -388,11 +388,8 @@ else
                                                             @orgDisplay
                                                         </span>
                                                     </td>
-                                                    <td class="td-address">@(string.IsNullOrWhiteSpace(currentOutlet.Address) ? "—" : currentOutlet.Address)</td>
+                                                    <td class="td-address">@(string.IsNullOrWhiteSpace(currentOutlet.Address) ? "â€”" : currentOutlet.Address)</td>
                                                     <td class="td-approver">@(string.Equals(currentOutlet.PurchaseOrderApproverRole, "Outlet Manager", StringComparison.OrdinalIgnoreCase) ? "Outlet Manager" : "Organization Manager")</td>
-                                                    <td class="td-coords">
-                                                        @(currentOutlet.Latitude.HasValue && currentOutlet.Longitude.HasValue ? $"{currentOutlet.Latitude.Value:F4}, {currentOutlet.Longitude.Value:F4}" : "N/A")
-                                                    </td>
                                                     <td class="td-status">
                                                         <span class="status-indicator">
                                                             <span class="status-dot"></span>
@@ -517,12 +514,6 @@ else
                         <div class="detail-row">
                             <span class="detail-label">Address</span>
                             <span class="detail-value">@(string.IsNullOrWhiteSpace(selOutlet.Address) ? "Not Provided" : selOutlet.Address)</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Coordinates (Lat / Long)</span>
-                            <span class="detail-value">
-                                @(selOutlet.Latitude.HasValue && selOutlet.Longitude.HasValue ? $"{selOutlet.Latitude.Value:F4}, {selOutlet.Longitude.Value:F4}" : "N/A")
-                            </span>
                         </div>
                     </div>
 

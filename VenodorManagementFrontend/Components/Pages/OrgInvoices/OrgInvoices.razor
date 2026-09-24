@@ -365,11 +365,7 @@ else
                                     @if (string.Equals(SelectedInvoice.Status, "Pending", StringComparison.OrdinalIgnoreCase) && (Auth.IsAdmin || Auth.IsPurchaseManager))
                                     {
                                         <button type="button" class="btn btn-outline-danger d-flex align-items-center gap-1" @onclick="OpenRejectModal" disabled="@IsProcessingAction">
-                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                                <line x1="6" y1="6" x2="18" y2="18"></line>
-                                            </svg>
-                                            Reject Invoice
+                                            <span>Reject Invoice</span>
                                         </button>
 
                                         <button type="button" class="btn btn-success d-flex align-items-center gap-1 px-3" @onclick="HandleApproveInvoice" disabled="@IsProcessingAction">
@@ -380,9 +376,6 @@ else
                                             }
                                             else
                                             {
-                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                                </svg>
                                                 <span>Approve Invoice</span>
                                             }
                                         </button>

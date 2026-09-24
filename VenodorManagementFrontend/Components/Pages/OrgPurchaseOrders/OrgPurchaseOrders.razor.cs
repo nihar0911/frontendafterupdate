@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -671,7 +671,7 @@ public partial class OrgPurchaseOrders : ComponentBase
 
             bool isRecommended = hasContract && remainingQty > 0;
             string badge = isRecommended
-                ? $"Recommended (Active Contract • Remaining: {remainingQty:N0} {unit})"
+                ? $"Recommended (Active Contract â€¢ Remaining: {remainingQty:N0} {unit})"
                 : (hasContract ? "Active Contract (0 Remaining Capacity)" : "Alternative Eligible Vendor (No Active Contract)");
 
             options.Add(new QuotationPoOption
@@ -1046,8 +1046,6 @@ public partial class OrgPurchaseOrders : ComponentBase
                 OrganizationID = outlet.OrganizationID,
                 OutletName = outlet.OutletName,
                 Address = outlet.Address,
-                Latitude = outlet.Latitude,
-                Longitude = outlet.Longitude,
                 PurchaseOrderApproverRole = selected
             });
 
@@ -1082,6 +1080,92 @@ public partial class OrgPurchaseOrders : ComponentBase
         }
     }
 
+    private void UpdateLocalPurchaseOrderState(PurchaseOrderDto updatedPo)
+    {
+        var item = AllPurchaseOrders.FirstOrDefault(p => p.PurchaseOrderID == updatedPo.PurchaseOrderID);
+        if (item != null)
+        {
+            item.Status = updatedPo.Status;
+            if (!string.IsNullOrWhiteSpace(updatedPo.ApproverRole))
+            {
+                item.ApproverRole = updatedPo.ApproverRole;
+            }
+            if (!string.IsNullOrWhiteSpace(updatedPo.DeliveryStatus))
+            {
+                item.DeliveryStatus = updatedPo.DeliveryStatus;
+            }
+            if (updatedPo.ExpectedDeliveryDate.HasValue)
+            {
+                item.ExpectedDeliveryDate = updatedPo.ExpectedDeliveryDate;
+            }
+            if (updatedPo.DispatchDateTime.HasValue)
+            {
+                item.DispatchDateTime = updatedPo.DispatchDateTime;
+            }
+            if (updatedPo.ActualDeliveryDate.HasValue)
+            {
+                item.ActualDeliveryDate = updatedPo.ActualDeliveryDate;
+            }
+            if (updatedPo.OrderDate != default)
+            {
+                item.OrderDate = updatedPo.OrderDate;
+            }
+            if (updatedPo.TotalAmount > 0)
+            {
+                item.TotalAmount = updatedPo.TotalAmount;
+            }
+            if (!string.IsNullOrWhiteSpace(updatedPo.VendorName))
+            {
+                item.VendorName = updatedPo.VendorName;
+            }
+            if (updatedPo.Items != null && updatedPo.Items.Count > 0)
+            {
+                item.Items = updatedPo.Items;
+            }
+        }
+
+        if (SelectedPoForDetail != null && SelectedPoForDetail.PurchaseOrderID == updatedPo.PurchaseOrderID)
+        {
+            SelectedPoForDetail.Status = updatedPo.Status;
+            if (!string.IsNullOrWhiteSpace(updatedPo.ApproverRole))
+            {
+                SelectedPoForDetail.ApproverRole = updatedPo.ApproverRole;
+            }
+            if (!string.IsNullOrWhiteSpace(updatedPo.DeliveryStatus))
+            {
+                SelectedPoForDetail.DeliveryStatus = updatedPo.DeliveryStatus;
+            }
+            if (updatedPo.ExpectedDeliveryDate.HasValue)
+            {
+                SelectedPoForDetail.ExpectedDeliveryDate = updatedPo.ExpectedDeliveryDate;
+            }
+            if (updatedPo.DispatchDateTime.HasValue)
+            {
+                SelectedPoForDetail.DispatchDateTime = updatedPo.DispatchDateTime;
+            }
+            if (updatedPo.ActualDeliveryDate.HasValue)
+            {
+                SelectedPoForDetail.ActualDeliveryDate = updatedPo.ActualDeliveryDate;
+            }
+            if (updatedPo.OrderDate != default)
+            {
+                SelectedPoForDetail.OrderDate = updatedPo.OrderDate;
+            }
+            if (updatedPo.TotalAmount > 0)
+            {
+                SelectedPoForDetail.TotalAmount = updatedPo.TotalAmount;
+            }
+            if (!string.IsNullOrWhiteSpace(updatedPo.VendorName))
+            {
+                SelectedPoForDetail.VendorName = updatedPo.VendorName;
+            }
+            if (updatedPo.Items != null && updatedPo.Items.Count > 0)
+            {
+                SelectedPoForDetail.Items = updatedPo.Items;
+            }
+        }
+    }
+
     private async Task HandleApprovePo(int poId)
     {
         var poToApprove = SelectedPoForDetail?.PurchaseOrderID == poId
@@ -1100,17 +1184,7 @@ public partial class OrgPurchaseOrders : ComponentBase
             if (result != null)
             {
                 ActionSuccessMessage = "Purchase Order approved and placed with the vendor.";
-                if (SelectedPoForDetail != null && SelectedPoForDetail.PurchaseOrderID == poId)
-                {
-                    SelectedPoForDetail.Status = result.Status;
-                }
-                var item = AllPurchaseOrders.FirstOrDefault(p => p.PurchaseOrderID == poId);
-                if (item != null) item.Status = result.Status;
-                await LoadData();
-                if (SelectedPoForDetail != null)
-                {
-                    await OpenPoDetails(poId, updateUrl: false);
-                }
+                UpdateLocalPurchaseOrderState(result);
             }
             else
             {
@@ -1147,17 +1221,7 @@ public partial class OrgPurchaseOrders : ComponentBase
             if (result != null)
             {
                 ActionSuccessMessage = "Purchase Order rejected.";
-                if (SelectedPoForDetail != null && SelectedPoForDetail.PurchaseOrderID == poId)
-                {
-                    SelectedPoForDetail.Status = "Rejected";
-                }
-                var item = AllPurchaseOrders.FirstOrDefault(p => p.PurchaseOrderID == poId);
-                if (item != null) item.Status = "Rejected";
-                await LoadData();
-                if (SelectedPoForDetail != null)
-                {
-                    await OpenPoDetails(poId, updateUrl: false);
-                }
+                UpdateLocalPurchaseOrderState(result);
             }
             else
             {
@@ -1191,17 +1255,7 @@ public partial class OrgPurchaseOrders : ComponentBase
             if (result != null)
             {
                 ActionSuccessMessage = "Purchase Order sent to vendor successfully.";
-                if (SelectedPoForDetail != null && SelectedPoForDetail.PurchaseOrderID == poId)
-                {
-                    SelectedPoForDetail.Status = "Pending";
-                }
-                var item = AllPurchaseOrders.FirstOrDefault(p => p.PurchaseOrderID == poId);
-                if (item != null) item.Status = "Pending";
-                await LoadData();
-                if (SelectedPoForDetail != null)
-                {
-                    await OpenPoDetails(poId, updateUrl: false);
-                }
+                UpdateLocalPurchaseOrderState(result);
             }
             else
             {

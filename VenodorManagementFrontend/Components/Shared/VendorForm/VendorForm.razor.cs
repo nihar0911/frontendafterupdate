@@ -8,8 +8,7 @@ namespace VenodorManagementFrontend.Components.Shared.VendorForm;
 
 public partial class VendorForm : ComponentBase
 {
-
-[Parameter] public VendorDto? EditingVendor { get; set; }
+    [Parameter] public VendorDto? EditingVendor { get; set; }
     [Parameter] public bool IsSubmitting { get; set; }
 
     [Parameter] public EventCallback<CreateVendorCommand> OnCreate { get; set; }
@@ -20,8 +19,6 @@ public partial class VendorForm : ComponentBase
     private string Email { get; set; } = string.Empty;
     private string Phone { get; set; } = string.Empty;
     private string Address { get; set; } = string.Empty;
-    private decimal? Latitude { get; set; }
-    private decimal? Longitude { get; set; }
     private string GSTIN { get; set; } = string.Empty;
     private string Status { get; set; } = "Active";
     private string? ValidationMessage { get; set; }
@@ -36,8 +33,6 @@ public partial class VendorForm : ComponentBase
             Email = EditingVendor.Email ?? string.Empty;
             Phone = EditingVendor.Phone ?? string.Empty;
             Address = EditingVendor.Address ?? string.Empty;
-            Latitude = EditingVendor.Latitude;
-            Longitude = EditingVendor.Longitude;
             GSTIN = EditingVendor.GSTIN ?? string.Empty;
             Status = EditingVendor.Status;
         }
@@ -47,8 +42,6 @@ public partial class VendorForm : ComponentBase
             Email = string.Empty;
             Phone = string.Empty;
             Address = string.Empty;
-            Latitude = null;
-            Longitude = null;
             GSTIN = string.Empty;
             Status = "Active";
         }
@@ -84,8 +77,6 @@ public partial class VendorForm : ComponentBase
                 Email = string.IsNullOrWhiteSpace(Email) ? null : Email.Trim(),
                 Phone = string.IsNullOrWhiteSpace(Phone) ? null : Phone.Trim(),
                 Address = string.IsNullOrWhiteSpace(Address) ? null : Address.Trim(),
-                Latitude = Latitude,
-                Longitude = Longitude,
                 GSTIN = string.IsNullOrWhiteSpace(GSTIN) ? null : GSTIN.Trim(),
                 Status = Status
             };
@@ -100,8 +91,6 @@ public partial class VendorForm : ComponentBase
                 Email = string.IsNullOrWhiteSpace(Email) ? null : Email.Trim(),
                 Phone = string.IsNullOrWhiteSpace(Phone) ? null : Phone.Trim(),
                 Address = string.IsNullOrWhiteSpace(Address) ? null : Address.Trim(),
-                Latitude = Latitude,
-                Longitude = Longitude,
                 GSTIN = string.IsNullOrWhiteSpace(GSTIN) ? null : GSTIN.Trim(),
                 Status = Status
             };
@@ -113,5 +102,4 @@ public partial class VendorForm : ComponentBase
     {
         await OnCancel.InvokeAsync();
     }
-
 }

@@ -1756,6 +1756,9 @@
     align-items: center;
     justify-content: center;
     margin-bottom: 0.5rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1;
 }
 
 .om-po-step.completed .om-po-step-circle {

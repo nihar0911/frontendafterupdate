@@ -616,9 +616,6 @@ else
                                         }
                                         else
                                         {
-                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                                <polyline points="20 6 9 17 4 12"></polyline>
-                                            </svg>
                                             <span>Confirm Delivery</span>
                                         }
                                     </button>
@@ -881,16 +878,7 @@ else
                                             <!-- 1. Manager Approval -->
                                             <div class="d-flex gap-3 mb-3">
                                                 <div class="timeline-step-icon @(isAwaitingApproval ? "pending" : "completed")">
-                                                     @if (isAwaitingApproval)
-                                                     {
-                                                         <span>1</span>
-                                                     }
-                                                     else
-                                                     {
-                                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                                             <polyline points="20 6 9 17 4 12"></polyline>
-                                                         </svg>
-                                                     }
+                                                    <span>1</span>
                                                 </div>
                                                 <div>
                                                     <strong class="d-block text-dark small">Manager Approval</strong>
@@ -907,16 +895,7 @@ else
                                             <!-- 2. Order Placed -->
                                             <div class="d-flex gap-3 mb-3">
                                                 <div class="timeline-step-icon @(isPlacedWithVendor ? "completed" : "pending")">
-                                                     @if (isPlacedWithVendor)
-                                                     {
-                                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                                             <polyline points="20 6 9 17 4 12"></polyline>
-                                                         </svg>
-                                                     }
-                                                     else
-                                                     {
-                                                         <span>2</span>
-                                                     }
+                                                    <span>2</span>
                                                 </div>
                                                 <div>
                                                     <strong class="d-block text-dark small">Order Placed with Vendor</strong>
@@ -927,16 +906,7 @@ else
                                             <!-- 3. Order Accepted -->
                                             <div class="d-flex gap-3 mb-3">
                                                 <div class="timeline-step-icon @(isAccepted ? "completed" : "pending")">
-                                                     @if (isAccepted)
-                                                     {
-                                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                                             <polyline points="20 6 9 17 4 12"></polyline>
-                                                         </svg>
-                                                     }
-                                                     else
-                                                     {
-                                                         <span>3</span>
-                                                     }
+                                                    <span>3</span>
                                                 </div>
                                                 <div>
                                                     <strong class="d-block text-dark small">Order Accepted</strong>
@@ -944,19 +914,10 @@ else
                                                 </div>
                                             </div>
 
-                                            <!-- 3. Dispatched -->
+                                            <!-- 4. Dispatched -->
                                             <div class="d-flex gap-3 mb-3">
                                                 <div class="timeline-step-icon @(isDispatched ? "completed" : "pending")">
-                                                     @if (isDispatched)
-                                                     {
-                                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                                             <polyline points="20 6 9 17 4 12"></polyline>
-                                                         </svg>
-                                                     }
-                                                     else
-                                                     {
-                                                         <span>4</span>
-                                                     }
+                                                    <span>4</span>
                                                 </div>
                                                 <div>
                                                     <strong class="d-block text-dark small">Dispatched</strong>
@@ -967,16 +928,7 @@ else
                                             <!-- 5. Delivered -->
                                             <div class="d-flex gap-3">
                                                 <div class="timeline-step-icon @(isDelivered ? "completed" : "pending")">
-                                                     @if (isDelivered)
-                                                     {
-                                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                                             <polyline points="20 6 9 17 4 12"></polyline>
-                                                         </svg>
-                                                     }
-                                                     else
-                                                     {
-                                                         <span>5</span>
-                                                     }
+                                                    <span>5</span>
                                                 </div>
                                                 <div>
                                                     <strong class="d-block text-dark small">Delivered</strong>
@@ -1301,9 +1253,6 @@ else
                                         }
                                         else
                                         {
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                                <polyline points="20 6 9 17 4 12"></polyline>
-                                            </svg>
                                             <span>Submit Selected for Approval (@SelectedQuotationIds.Count)</span>
                                         }
                                     </button>
