@@ -1,4 +1,4 @@
-@page "/contract/{contractId:int}"
+﻿@page "/contract/{contractId:int}"
 @page "/contract"
 @rendermode InteractiveServer
 @inject ApiService Api
@@ -22,9 +22,6 @@ else
     <div class="org-app-layout @(IsSidebarCollapsed ? "sidebar-collapsed" : "")">
         @if (Auth.IsOutletManager)
         {
-        <!-- =======================================================================
-             LEFT SIDEBAR NAVIGATION (OUTLET MANAGER WORKSPACE - ENTERPRISE DARK GREEN)
-             ======================================================================= -->
         <aside class="org-sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-branding" @onclick='() => Nav.NavigateTo("/outlet-manager")' style="cursor: pointer;">
@@ -147,9 +144,6 @@ else
         }
         else
         {
-        <!-- =======================================================================
-             LEFT SIDEBAR NAVIGATION (ENTERPRISE DARK GREEN)
-             ======================================================================= -->
         <aside class="org-sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-branding" @onclick='() => Nav.NavigateTo("/org-dashboard")'>
@@ -285,10 +279,6 @@ else
             </nav>
         </aside>
         }
-
-        <!-- =======================================================================
-             MAIN BODY WRAPPER
-             ======================================================================= -->
         <div class="org-main-wrapper">
 
             <!-- TOP HEADER -->
@@ -369,9 +359,6 @@ else
                     }
                     else
                     {
-                        <!-- =======================================================
-                             TOP CONTRACT HERO CARD (MATCHING REFERENCE IMAGE)
-                             ======================================================= -->
                         <div class="contract-hero-card mb-4">
                             <div class="hero-left">
                                 <div class="hero-icon-box">
@@ -468,10 +455,6 @@ else
 
                         <!-- TWO COLUMN MAIN LAYOUT (MATCHING REFERENCE IMAGE) -->
                         <div class="contract-details-two-col">
-
-                            <!-- =======================================================
-                                 LEFT COLUMN: VENDOR & ALLOCATION + PRODUCT BREAKDOWN
-                                 ======================================================= -->
                             <div class="details-left-col">
 
                                 <!-- VENDOR & ALLOCATION INFORMATION CARD -->
@@ -679,10 +662,6 @@ else
                                 </div>
 
                             </div>
-
-                            <!-- =======================================================
-                                 RIGHT COLUMN: CONTRACT TERMS & FINANCIALS
-                                 ======================================================= -->
                             <div class="details-right-col">
                                 <div class="content-card h-100 d-flex flex-column justify-content-between">
                                     <div>
@@ -915,4 +894,3 @@ else
         </div>
     </div>
 }
-

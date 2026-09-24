@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 
-namespace VenodorManagementFrontend.Models.VendorRecommendationSettings
+namespace VendorManagement.Web.Models.VendorRecommendationSettings
 {
     public class VendorRecommendationSettingsDto
     {

@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Text.Json.Serialization;
 
-namespace VenodorManagementFrontend.Models;
+namespace VendorManagement.Web.Models;
 
 public class GetSpoilageAdviceResponse
 {

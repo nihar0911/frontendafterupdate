@@ -1,4 +1,4 @@
-@page "/org-dashboard"
+﻿@page "/org-dashboard"
 @rendermode InteractiveServer
 @inject ApiService Api
 @inject AuthService Auth
@@ -29,10 +29,6 @@ else if (!Auth.IsOrgManager && !Auth.IsAdmin)
 else
 {
     <div class="org-app-layout @(IsSidebarCollapsed ? "sidebar-collapsed" : "")">
-
-        <!-- =======================================================================
-             LEFT SIDEBAR NAVIGATION
-             ======================================================================= -->
         <aside class="org-sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-branding" @onclick='() => Nav.NavigateTo("/org-dashboard")'>
@@ -198,10 +194,6 @@ else
             </ul>
             </nav>
         </aside>
-
-        <!-- =======================================================================
-             MAIN BODY WRAPPER
-             ======================================================================= -->
         <div class="org-main-wrapper">
 
             <!-- TOP HEADER (No notification bell) -->
@@ -652,7 +644,6 @@ else
                             }
                         </div>
 
-
                     }
 
                 </div>
@@ -763,4 +754,3 @@ else
         </div>
     }
 }
-

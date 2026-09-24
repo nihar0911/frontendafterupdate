@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
-using VenodorManagementFrontend.Services;
+using VendorManagement.Web.Services;
 
-namespace VenodorManagementFrontend.Components.Pages.Home;
+namespace VendorManagement.Web.Components.Pages.Home;
 
 public partial class Home : ComponentBase
 {

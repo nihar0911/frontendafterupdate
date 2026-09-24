@@ -1,19 +1,22 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading.Tasks;
-using VenodorManagementFrontend.Models;
-using VenodorManagementFrontend.Models.Invoices.DTOs;
-using VenodorManagementFrontend.Models.Invoices.Requests;
-using VenodorManagementFrontend.Models.Invoices.Responses;
-using VenodorManagementFrontend.Models.Payments.DTOs;
-using VenodorManagementFrontend.Models.Payments.Commands;
-using VenodorManagementFrontend.Models.Payments.Responses;
+using VendorManagement.Web.Models;
+using VendorManagement.Web.Models.Invoices.DTOs;
+using VendorManagement.Web.Models.Invoices.Requests;
+using VendorManagement.Web.Models.Invoices.Responses;
+using VendorManagement.Web.Models.Payments.DTOs;
+using VendorManagement.Web.Models.Payments.Commands;
+using VendorManagement.Web.Models.Payments.Responses;
 
-namespace VenodorManagementFrontend.Services
+using VendorManagement.Web.Models.Deliveries.DTOs;
+using VendorManagement.Web.Models.Deliveries.Responses;
+
+namespace VendorManagement.Web.Services
 {
     public class ApiService
     {
@@ -1653,6 +1656,33 @@ namespace VenodorManagementFrontend.Services
             }
         }
 
+        public async Task<GetMyDeliveriesResponse?> GetMyDeliveriesAsync()
+        {
+            SetAuthHeader();
+            try
+            {
+                var response = await _httpClient.GetAsync("api/deliveryrecords/vendor/my");
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadFromJsonAsync<GetMyDeliveriesResponse>();
+                }
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    var fallbackResp = await _httpClient.GetAsync("api/deliveryrecords/my");
+                    if (fallbackResp.IsSuccessStatusCode)
+                    {
+                        return await fallbackResp.Content.ReadFromJsonAsync<GetMyDeliveriesResponse>();
+                    }
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ApiService] GetMyDeliveriesAsync error: {ex.Message}");
+                return null;
+            }
+        }
+
         public async Task<ContractDto?> GetContractByIdAsync(int contractId)
         {
             SetAuthHeader();
@@ -1732,7 +1762,7 @@ namespace VenodorManagementFrontend.Services
                 var response = await _httpClient.PostAsJsonAsync("api/contract/reset", payload);
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<VenodorManagementFrontend.Models.Contracts.Responses.ResetContractResponse>();
+                    var result = await response.Content.ReadFromJsonAsync<VendorManagement.Web.Models.Contracts.Responses.ResetContractResponse>();
                     return new ApiResult<ContractDto>
                     {
                         Success = true,
@@ -1781,7 +1811,7 @@ namespace VenodorManagementFrontend.Services
                 var response = await _httpClient.PostAsJsonAsync($"api/contract/{contractId}/end", payload);
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<VenodorManagementFrontend.Models.EndContractResponse>();
+                    var result = await response.Content.ReadFromJsonAsync<VendorManagement.Web.Models.EndContractResponse>();
                     return new ApiResult<ContractDto>
                     {
                         Success = true,
@@ -1829,7 +1859,7 @@ namespace VenodorManagementFrontend.Services
                 var response = await _httpClient.PostAsJsonAsync($"api/Contract/{contractId}/renew", command);
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<VenodorManagementFrontend.Models.RenewContractResponse>();
+                    var result = await response.Content.ReadFromJsonAsync<VendorManagement.Web.Models.RenewContractResponse>();
                     if (result?.Contract != null && result.Contract.ContractID > 0)
                     {
                         return new ApiResult<ContractDto>
@@ -2466,30 +2496,27 @@ namespace VenodorManagementFrontend.Services
             }
         }
 
-        // -------------------------------------------------------------
-        // VENDOR PERFORMANCE & REVIEWS
-        // -------------------------------------------------------------
-        public async Task<List<VenodorManagementFrontend.Models.VendorPerformance.VendorPerformanceSummaryDto>> GetVendorPerformanceSummariesAsync()
+        public async Task<List<VendorManagement.Web.Models.VendorPerformance.VendorPerformanceSummaryDto>> GetVendorPerformanceSummariesAsync()
         {
             SetAuthHeader();
             try
             {
-                var response = await _httpClient.GetFromJsonAsync<List<VenodorManagementFrontend.Models.VendorPerformance.VendorPerformanceSummaryDto>>("api/VendorPerformance");
-                return response ?? new List<VenodorManagementFrontend.Models.VendorPerformance.VendorPerformanceSummaryDto>();
+                var response = await _httpClient.GetFromJsonAsync<List<VendorManagement.Web.Models.VendorPerformance.VendorPerformanceSummaryDto>>("api/VendorPerformance");
+                return response ?? new List<VendorManagement.Web.Models.VendorPerformance.VendorPerformanceSummaryDto>();
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[ApiService] GetVendorPerformanceSummariesAsync error: {ex.Message}");
-                return new List<VenodorManagementFrontend.Models.VendorPerformance.VendorPerformanceSummaryDto>();
+                return new List<VendorManagement.Web.Models.VendorPerformance.VendorPerformanceSummaryDto>();
             }
         }
 
-        public async Task<VenodorManagementFrontend.Models.VendorPerformance.VendorPerformanceSummaryDto?> GetVendorPerformanceByIdAsync(int vendorId)
+        public async Task<VendorManagement.Web.Models.VendorPerformance.VendorPerformanceSummaryDto?> GetVendorPerformanceByIdAsync(int vendorId)
         {
             SetAuthHeader();
             try
             {
-                return await _httpClient.GetFromJsonAsync<VenodorManagementFrontend.Models.VendorPerformance.VendorPerformanceSummaryDto>($"api/VendorPerformance/{vendorId}");
+                return await _httpClient.GetFromJsonAsync<VendorManagement.Web.Models.VendorPerformance.VendorPerformanceSummaryDto>($"api/VendorPerformance/{vendorId}");
             }
             catch (Exception ex)
             {
@@ -2498,7 +2525,7 @@ namespace VenodorManagementFrontend.Services
             }
         }
 
-        public async Task<VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto?> GetVendorFeedbackByIdAsync(int feedbackId)
+        public async Task<VendorManagement.Web.Models.VendorPerformance.VendorReviewDto?> GetVendorFeedbackByIdAsync(int feedbackId)
         {
             SetAuthHeader();
             try
@@ -2509,7 +2536,7 @@ namespace VenodorManagementFrontend.Services
                     Console.WriteLine($"[ApiService] GetVendorFeedbackByIdAsync status: {response.StatusCode}");
                     return null;
                 }
-                return await response.Content.ReadFromJsonAsync<VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto>();
+                return await response.Content.ReadFromJsonAsync<VendorManagement.Web.Models.VendorPerformance.VendorReviewDto>();
             }
             catch (Exception ex)
             {
@@ -2518,7 +2545,7 @@ namespace VenodorManagementFrontend.Services
             }
         }
 
-        public async Task<List<VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto>> GetVendorReviewsAsync(int vendorId, int? productId = null)
+        public async Task<List<VendorManagement.Web.Models.VendorPerformance.VendorReviewDto>> GetVendorReviewsAsync(int vendorId, int? productId = null)
         {
             SetAuthHeader();
             try
@@ -2526,32 +2553,32 @@ namespace VenodorManagementFrontend.Services
                 var url = productId.HasValue && productId.Value > 0
                     ? $"api/VendorFeedback/vendor/{vendorId}?productId={productId.Value}"
                     : $"api/VendorFeedback/vendor/{vendorId}";
-                var response = await _httpClient.GetFromJsonAsync<List<VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto>>(url);
-                return response ?? new List<VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto>();
+                var response = await _httpClient.GetFromJsonAsync<List<VendorManagement.Web.Models.VendorPerformance.VendorReviewDto>>(url);
+                return response ?? new List<VendorManagement.Web.Models.VendorPerformance.VendorReviewDto>();
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[ApiService] GetVendorReviewsAsync error: {ex.Message}");
-                return new List<VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto>();
+                return new List<VendorManagement.Web.Models.VendorPerformance.VendorReviewDto>();
             }
         }
 
-        public async Task<List<VenodorManagementFrontend.Models.VendorPerformance.EligibleReviewOrderDto>> GetEligibleReviewOrdersAsync()
+        public async Task<List<VendorManagement.Web.Models.VendorPerformance.EligibleReviewOrderDto>> GetEligibleReviewOrdersAsync()
         {
             SetAuthHeader();
             try
             {
-                var response = await _httpClient.GetFromJsonAsync<List<VenodorManagementFrontend.Models.VendorPerformance.EligibleReviewOrderDto>>("api/VendorFeedback/eligible-orders");
-                return response ?? new List<VenodorManagementFrontend.Models.VendorPerformance.EligibleReviewOrderDto>();
+                var response = await _httpClient.GetFromJsonAsync<List<VendorManagement.Web.Models.VendorPerformance.EligibleReviewOrderDto>>("api/VendorFeedback/eligible-orders");
+                return response ?? new List<VendorManagement.Web.Models.VendorPerformance.EligibleReviewOrderDto>();
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[ApiService] GetEligibleReviewOrdersAsync error: {ex.Message}");
-                return new List<VenodorManagementFrontend.Models.VendorPerformance.EligibleReviewOrderDto>();
+                return new List<VendorManagement.Web.Models.VendorPerformance.EligibleReviewOrderDto>();
             }
         }
 
-        public async Task<VenodorManagementFrontend.Models.ApiResult> CreateVendorReviewAsync(VenodorManagementFrontend.Models.VendorPerformance.CreateVendorReviewRequest request)
+        public async Task<VendorManagement.Web.Models.ApiResult> CreateVendorReviewAsync(VendorManagement.Web.Models.VendorPerformance.CreateVendorReviewRequest request)
         {
             SetAuthHeader();
             try
@@ -2559,7 +2586,7 @@ namespace VenodorManagementFrontend.Services
                 var response = await _httpClient.PostAsJsonAsync("api/VendorFeedback", request);
                 if (response.IsSuccessStatusCode)
                 {
-                    return new VenodorManagementFrontend.Models.ApiResult { Success = true };
+                    return new VendorManagement.Web.Models.ApiResult { Success = true };
                 }
 
                 string errorText = "Unable to submit review.";
@@ -2592,16 +2619,16 @@ namespace VenodorManagementFrontend.Services
                 }
                 catch { }
 
-                return new VenodorManagementFrontend.Models.ApiResult { Success = false, ErrorMessage = errorText };
+                return new VendorManagement.Web.Models.ApiResult { Success = false, ErrorMessage = errorText };
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[ApiService] CreateVendorReviewAsync error: {ex.Message}");
-                return new VenodorManagementFrontend.Models.ApiResult { Success = false, ErrorMessage = ex.Message };
+                return new VendorManagement.Web.Models.ApiResult { Success = false, ErrorMessage = ex.Message };
             }
         }
 
-        public async Task<VenodorManagementFrontend.Models.VendorPerformance.VendorAiInsightsDto?> GetVendorAiInsightsAsync(int vendorId)
+        public async Task<VendorManagement.Web.Models.VendorPerformance.VendorAiInsightsDto?> GetVendorAiInsightsAsync(int vendorId)
         {
             SetAuthHeader();
             try
@@ -2609,7 +2636,7 @@ namespace VenodorManagementFrontend.Services
                 var response = await _httpClient.GetAsync($"api/vendorfeedback/vendor/{vendorId}/ai-insights");
                 if (response.IsSuccessStatusCode)
                 {
-                    return await response.Content.ReadFromJsonAsync<VenodorManagementFrontend.Models.VendorPerformance.VendorAiInsightsDto>();
+                    return await response.Content.ReadFromJsonAsync<VendorManagement.Web.Models.VendorPerformance.VendorAiInsightsDto>();
                 }
             }
             catch (Exception ex)
@@ -2619,7 +2646,7 @@ namespace VenodorManagementFrontend.Services
             return null;
         }
 
-        public async Task<VenodorManagementFrontend.Models.SpoilageAdviceSettings.SpoilageAdviceSettingsDto?> GetSpoilageAdviceSettingsAsync()
+        public async Task<VendorManagement.Web.Models.SpoilageAdviceSettings.SpoilageAdviceSettingsDto?> GetSpoilageAdviceSettingsAsync()
         {
             SetAuthHeader();
             try
@@ -2627,7 +2654,7 @@ namespace VenodorManagementFrontend.Services
                 var response = await _httpClient.GetAsync("api/spoilage-advice-settings");
                 if (response.IsSuccessStatusCode)
                 {
-                    return await response.Content.ReadFromJsonAsync<VenodorManagementFrontend.Models.SpoilageAdviceSettings.SpoilageAdviceSettingsDto>();
+                    return await response.Content.ReadFromJsonAsync<VendorManagement.Web.Models.SpoilageAdviceSettings.SpoilageAdviceSettingsDto>();
                 }
             }
             catch (Exception ex)
@@ -2637,7 +2664,7 @@ namespace VenodorManagementFrontend.Services
             return null;
         }
 
-        public async Task<(bool Success, string Message, VenodorManagementFrontend.Models.SpoilageAdviceSettings.SpoilageAdviceSettingsDto? Settings)> UpdateSpoilageAdviceSettingsAsync(VenodorManagementFrontend.Models.SpoilageAdviceSettings.SpoilageAdviceSettingsDto dto)
+        public async Task<(bool Success, string Message, VendorManagement.Web.Models.SpoilageAdviceSettings.SpoilageAdviceSettingsDto? Settings)> UpdateSpoilageAdviceSettingsAsync(VendorManagement.Web.Models.SpoilageAdviceSettings.SpoilageAdviceSettingsDto dto)
         {
             SetAuthHeader();
             try
@@ -2645,7 +2672,7 @@ namespace VenodorManagementFrontend.Services
                 var response = await _httpClient.PutAsJsonAsync("api/spoilage-advice-settings", dto);
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<VenodorManagementFrontend.Models.SpoilageAdviceSettings.SpoilageAdviceSettingsDto>();
+                    var result = await response.Content.ReadFromJsonAsync<VendorManagement.Web.Models.SpoilageAdviceSettings.SpoilageAdviceSettingsDto>();
                     return (true, "Spoilage advice settings saved successfully.", result);
                 }
                 var errorText = await response.Content.ReadAsStringAsync();
@@ -2667,7 +2694,7 @@ namespace VenodorManagementFrontend.Services
             }
         }
 
-        public async Task<VenodorManagementFrontend.Models.VendorRecommendationSettings.VendorRecommendationSettingsDto?> GetVendorRecommendationSettingsAsync()
+        public async Task<VendorManagement.Web.Models.VendorRecommendationSettings.VendorRecommendationSettingsDto?> GetVendorRecommendationSettingsAsync()
         {
             SetAuthHeader();
             try
@@ -2675,7 +2702,7 @@ namespace VenodorManagementFrontend.Services
                 var response = await _httpClient.GetAsync("api/vendor-recommendation-settings");
                 if (response.IsSuccessStatusCode)
                 {
-                    return await response.Content.ReadFromJsonAsync<VenodorManagementFrontend.Models.VendorRecommendationSettings.VendorRecommendationSettingsDto>();
+                    return await response.Content.ReadFromJsonAsync<VendorManagement.Web.Models.VendorRecommendationSettings.VendorRecommendationSettingsDto>();
                 }
             }
             catch (Exception ex)
@@ -2685,7 +2712,7 @@ namespace VenodorManagementFrontend.Services
             return null;
         }
 
-        public async Task<(bool Success, string Message, VenodorManagementFrontend.Models.VendorRecommendationSettings.VendorRecommendationSettingsDto? Settings)> UpdateVendorRecommendationSettingsAsync(VenodorManagementFrontend.Models.VendorRecommendationSettings.VendorRecommendationSettingsDto dto)
+        public async Task<(bool Success, string Message, VendorManagement.Web.Models.VendorRecommendationSettings.VendorRecommendationSettingsDto? Settings)> UpdateVendorRecommendationSettingsAsync(VendorManagement.Web.Models.VendorRecommendationSettings.VendorRecommendationSettingsDto dto)
         {
             SetAuthHeader();
             try
@@ -2693,7 +2720,7 @@ namespace VenodorManagementFrontend.Services
                 var response = await _httpClient.PutAsJsonAsync("api/vendor-recommendation-settings", dto);
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<VenodorManagementFrontend.Models.VendorRecommendationSettings.VendorRecommendationSettingsDto>();
+                    var result = await response.Content.ReadFromJsonAsync<VendorManagement.Web.Models.VendorRecommendationSettings.VendorRecommendationSettingsDto>();
                     return (true, "Vendor recommendation settings saved successfully.", result);
                 }
                 var errorText = await response.Content.ReadAsStringAsync();
@@ -2746,10 +2773,6 @@ namespace VenodorManagementFrontend.Services
                 return new ApiResult<LoginResponseWrapper> { Success = false, ErrorMessage = ex.Message };
             }
         }
-
-        // ==========================================
-        // ADMIN MASTER-DATA ACTIVATE / DEACTIVATE
-        // ==========================================
 
         // 1. Vendors
         public async Task<ApiResult<VendorDto>> ActivateVendorAsync(int vendorId)

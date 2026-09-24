@@ -1,15 +1,15 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using VenodorManagementFrontend.Models;
-using VenodorManagementFrontend.Models.Invoices.DTOs;
-using VenodorManagementFrontend.Models.Invoices.Requests;
-using VenodorManagementFrontend.Services;
+using VendorManagement.Web.Models;
+using VendorManagement.Web.Models.Invoices.DTOs;
+using VendorManagement.Web.Models.Invoices.Requests;
+using VendorManagement.Web.Services;
 
-namespace VenodorManagementFrontend.Components.Pages.VendorDashboard;
+namespace VendorManagement.Web.Components.Pages.VendorDashboard;
 
 public partial class VendorDashboard : ComponentBase
 {
@@ -29,11 +29,11 @@ public partial class VendorDashboard : ComponentBase
     private int UnreadNotificationCount => Notifications.Count(n => !n.IsRead);
 
     private string ActiveSidebarNav { get; set; } = "Dashboard";
-    private List<VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto> MyReviews = new();
+    private List<VendorManagement.Web.Models.VendorPerformance.VendorReviewDto> MyReviews = new();
     private bool ShowReviewDetailsModal { get; set; } = false;
-    private VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto? SelectedReviewDetails { get; set; }
+    private VendorManagement.Web.Models.VendorPerformance.VendorReviewDto? SelectedReviewDetails { get; set; }
     private string? ReviewLoadErrorMessage { get; set; }
-    private VenodorManagementFrontend.Models.VendorPerformance.VendorPerformanceSummaryDto? MyPerformance;
+    private VendorManagement.Web.Models.VendorPerformance.VendorPerformanceSummaryDto? MyPerformance;
     private string ActiveTab { get; set; } = "new";
     private string QuotationStatusFilter { get; set; } = "All";
     private string ContractStatusFilter { get; set; } = "Active";
@@ -42,8 +42,6 @@ public partial class VendorDashboard : ComponentBase
     private int? _lastLoadedVendorId;
     private bool _isDashboardLoaded;
     private bool ShowNotificationDropdown { get; set; } = false;
-
-
 
     // Selected Quotation for dedicated Details View
     private QuotationDto? SelectedQuotation { get; set; }
@@ -513,7 +511,6 @@ public partial class VendorDashboard : ComponentBase
         {
             ContractStatusFilter = "Active";
         }
-
 
         StateHasChanged();
     }
@@ -1642,7 +1639,7 @@ public partial class VendorDashboard : ComponentBase
         StateHasChanged();
     }
 
-    private void OpenReviewDetails(VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto rev)
+    private void OpenReviewDetails(VendorManagement.Web.Models.VendorPerformance.VendorReviewDto rev)
     {
         SelectedReviewDetails = rev;
         ReviewLoadErrorMessage = null;
@@ -1655,6 +1652,5 @@ public partial class VendorDashboard : ComponentBase
         SelectedReviewDetails = null;
         ReviewLoadErrorMessage = null;
     }
-
 
 }

@@ -1,4 +1,4 @@
-@page "/vendor-dashboard"
+﻿@page "/vendor-dashboard"
 @rendermode InteractiveServer
 @inject ApiService Api
 @inject AuthService Auth
@@ -40,10 +40,6 @@ else if (!Auth.VendorID.HasValue || Auth.VendorID.Value <= 0)
 else
 {
     <div class="vd-layout">
-
-        <!-- ===================================================================
-             1. FIXED FULL-HEIGHT DARK GREEN SIDEBAR (#174F45)
-             =================================================================== -->
         <aside class="vd-sidebar">
             <div class="vd-sidebar-top">
                 <!-- SIDEBAR BRAND -->
@@ -109,6 +105,17 @@ else
                         {
                             <span class="badge bg-danger ms-auto vd-nav-badge">@PendingPoCount</span>
                         }
+                    </button>
+
+                    <button type="button" 
+                            class="vd-nav-item"
+                            @onclick='() => Nav.NavigateTo("/vendor-manager/deliveries")'>
+                        <svg class="vd-nav-icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                        </svg>
+                        <span>My Deliveries</span>
                     </button>
 
                     <button type="button" 
@@ -188,10 +195,6 @@ else
                 </button>
             </div>
         </aside>
-
-        <!-- ===================================================================
-             2. MAIN CONTENT AREA
-             =================================================================== -->
         <main class="vd-main-canvas">
 
             <!-- TOP HEADER -->
@@ -334,19 +337,6 @@ else
                         }
                     </div>
 
-                    <!-- VENDOR CONTEXT PILL -->
-                    <div class="vd-header-pill vd-vendor-pill">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#174F45" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"></path>
-                            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
-                            <path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"></path>
-                        </svg>
-                        <span class="vd-vendor-pill-text">@VendorName</span>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                    </div>
-
                     <!-- User Profile Dropdown Menu -->
                     <ProfileMenu OnMyProfileClick='() => SetSidebarNav("MyProfile")' VendorName="@VendorName" />
                 </div>
@@ -367,9 +357,6 @@ else
 
                     @if (ActiveSidebarNav == "QuotationDetails" && SelectedQuotation != null)
                     {
-                        <!-- =======================================================
-                             DEDICATED QUOTATION DETAILS VIEW (MATCHING MOCKUP)
-                             ======================================================= -->
                         <div class="mb-3">
                             <button type="button" class="btn vd-back-btn" @onclick="CloseQuotationDetails">
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="me-1">
@@ -574,9 +561,6 @@ else
                     }
                     else if (ActiveSidebarNav == "MyQuotations")
                     {
-                        <!-- =======================================================
-                             MY QUOTATIONS PAGE (SIMPLE - NO KPI DASHBOARD CARDS)
-                             ======================================================= -->
                         
                         <!-- STATUS FILTER TABS -->
                         <div class="vd-status-tabs-row mb-4">
@@ -710,9 +694,6 @@ else
                     }
                     else if (ActiveSidebarNav == "ContractDetails" && SelectedContract != null)
                     {
-                        <!-- =======================================================
-                             DEDICATED CONTRACT DETAILS VIEW
-                             ======================================================= -->
                         <div class="mb-3">
                             <button type="button" class="btn vd-back-btn" @onclick="CloseContractDetails">
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="me-1">
@@ -920,9 +901,6 @@ else
                     }
                     else if (ActiveSidebarNav == "MyContracts")
                     {
-                        <!-- =======================================================
-                             MY CONTRACTS VIEW (CLEAN ENTERPRISE TABLE)
-                             ======================================================= -->
                         
                         <!-- STATUS TABS ROW -->
                         <div class="vd-status-tabs-row mb-4">
@@ -1087,9 +1065,6 @@ else
                     }
                     else if (ActiveSidebarNav == "PurchaseOrders")
                     {
-                        <!-- =======================================================
-                             VENDOR PURCHASE ORDERS MANAGEMENT VIEW
-                             ======================================================= -->
                         <div class="vd-card p-4">
                             <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom flex-wrap gap-2">
                                 <div class="d-flex align-items-center gap-3">
@@ -1242,9 +1217,6 @@ else
                     }
                     else if (ActiveSidebarNav == "Invoices")
                     {
-                        <!-- =======================================================
-                             INVOICES VIEW (VENDOR WORKSPACE)
-                             ======================================================= -->
                         <div class="vd-card p-4">
                             <div class="mb-4 pb-3 border-bottom">
                                 <h3 class="fw-bold mb-1 text-dark">Invoice Management</h3>
@@ -1443,9 +1415,6 @@ else
                     }
                     else if (ActiveSidebarNav == "MyProfile")
                     {
-                        <!-- =======================================================
-                             PROFILE VIEW
-                             ======================================================= -->
                         <div class="vd-card p-4">
                             <div class="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
                                 <div class="vd-metric-icon bg-light-green text-green">
@@ -1493,9 +1462,6 @@ else
                     }
                     else if (ActiveSidebarNav == "Performance")
                     {
-                        <!-- =======================================================
-                             PERFORMANCE & REVIEWS VIEW
-                             ======================================================= -->
                         <div class="vd-card p-4 mb-4">
                             <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom flex-wrap gap-3">
                                 <div class="d-flex align-items-center gap-3">
@@ -1683,11 +1649,6 @@ else
                     }
                     else
                     {
-                        <!-- =======================================================
-                             DASHBOARD TAB (OPPORTUNITIES & METRICS)
-                             ======================================================= -->
-
-
 
                         <!-- 4 SUMMARY METRIC CARDS -->
                         <div class="vd-metric-grid mb-4">
@@ -2000,13 +1961,8 @@ else
                         </div>
                     }
 
-
                 </div>
             }
-
-            <!-- =======================================================================
-                 CREATE INVOICE MODAL (3-WAY MATCH & NET BILLED RECONCILIATION)
-                 ======================================================================= -->
             @if (ShowCreateInvoiceModal && SelectedPoForInvoice != null)
             {
                 <div class="vd-modal-backdrop">
@@ -2217,10 +2173,6 @@ else
                     </div>
                 </div>
             }
-
-            <!-- =======================================================================
-                 DISPATCH ORDER MODAL WITH AI SPOILAGE & DISPATCH ADVISOR
-                 ======================================================================= -->
             @if (ShowDispatchModal && SelectedPoForDispatch != null)
             {
                 <div class="vd-modal-backdrop" @onclick="CloseDispatchModal">
@@ -2535,5 +2487,3 @@ else
 
     </div>
 }
-
-

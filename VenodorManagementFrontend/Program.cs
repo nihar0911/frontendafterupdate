@@ -1,5 +1,5 @@
-using VenodorManagementFrontend.Components;
-using VenodorManagementFrontend.Services;
+﻿using VendorManagement.Web.Components;
+using VendorManagement.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

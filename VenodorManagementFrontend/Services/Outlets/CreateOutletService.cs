@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using VenodorManagementFrontend.Models;
-using VenodorManagementFrontend.Services.Infrastructure;
+using VendorManagement.Web.Models;
+using VendorManagement.Web.Services.Infrastructure;
 
-namespace VenodorManagementFrontend.Services.Outlets
+namespace VendorManagement.Web.Services.Outlets
 {
     public class CreateOutletService
     {

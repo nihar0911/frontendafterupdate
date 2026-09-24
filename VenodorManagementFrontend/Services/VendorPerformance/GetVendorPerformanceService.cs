@@ -1,7 +1,7 @@
-using System.Collections.Generic; using System.Net.Http.Json; using System.Threading.Tasks;
-using VenodorManagementFrontend.Models.VendorPerformance;
-using VenodorManagementFrontend.Services.Infrastructure;
-namespace VenodorManagementFrontend.Services.VendorPerformance
+﻿using System.Collections.Generic; using System.Net.Http.Json; using System.Threading.Tasks;
+using VendorManagement.Web.Models.VendorPerformance;
+using VendorManagement.Web.Services.Infrastructure;
+namespace VendorManagement.Web.Services.VendorPerformance
 {
     public class GetVendorPerformanceService
     {

@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
-using VenodorManagementFrontend.Models;
+using VendorManagement.Web.Models;
 
-namespace VenodorManagementFrontend.Components.Shared.OutletForm;
+namespace VendorManagement.Web.Components.Shared.OutletForm;
 
 public partial class OutletForm : ComponentBase
 {

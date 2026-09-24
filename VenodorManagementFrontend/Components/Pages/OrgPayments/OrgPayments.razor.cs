@@ -1,15 +1,16 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using VenodorManagementFrontend.Models.Invoices.DTOs;
-using VenodorManagementFrontend.Models.Payments.Commands;
-using VenodorManagementFrontend.Models.Payments.DTOs;
-using VenodorManagementFrontend.Services;
+using VendorManagement.Web.Models;
+using VendorManagement.Web.Models.Invoices.DTOs;
+using VendorManagement.Web.Models.Payments.Commands;
+using VendorManagement.Web.Models.Payments.DTOs;
+using VendorManagement.Web.Services;
 
-namespace VenodorManagementFrontend.Components.Pages.OrgPayments;
+namespace VendorManagement.Web.Components.Pages.OrgPayments;
 
 public partial class OrgPayments : ComponentBase
 {
@@ -23,7 +24,7 @@ public partial class OrgPayments : ComponentBase
     protected bool IsLoading { get; set; } = true;
     protected bool IsSubmittingPayment { get; set; } = false;
     protected bool IsSidebarCollapsed { get; set; } = false;
-    protected string OrganizationName { get; set; } = "Organization";
+    protected string OrganizationName { get; set; } = string.Empty;
     protected string OutletDisplayName { get; set; } = string.Empty;
 
     protected List<PaymentDto> Payments { get; set; } = new();
@@ -65,7 +66,7 @@ public partial class OrgPayments : ComponentBase
             return;
         }
 
-        if (Auth.OrganizationID.HasValue)
+        if (Auth.OrganizationID.HasValue && Auth.OrganizationID.Value > 0)
         {
             try
             {
@@ -90,16 +91,58 @@ public partial class OrgPayments : ComponentBase
                         OutletDictionary[o.OutletID] = o.OutletName;
                     }
                 }
+
+                if ((Auth.IsPurchaseManager || Auth.IsOutletManager) && Auth.OutletID.HasValue && Auth.OutletID.Value > 0)
+                {
+                    var myOutlet = outlets.FirstOrDefault(o => o.OutletID == Auth.OutletID.Value);
+                    if (myOutlet != null)
+                    {
+                        if (!string.IsNullOrWhiteSpace(myOutlet.OutletName))
+                        {
+                            OutletDisplayName = myOutlet.OutletName;
+                        }
+                        if (string.IsNullOrWhiteSpace(OrganizationName) || OrganizationName == "Organization")
+                        {
+                            if (!string.IsNullOrWhiteSpace(myOutlet.OrganizationName))
+                            {
+                                OrganizationName = myOutlet.OrganizationName;
+                            }
+                            else if (myOutlet.OrganizationID > 0)
+                            {
+                                try
+                                {
+                                    var org = await Api.GetOrganizationByIdAsync(myOutlet.OrganizationID);
+                                    if (org != null && !string.IsNullOrWhiteSpace(org.OrganizationName))
+                                    {
+                                        OrganizationName = org.OrganizationName;
+                                    }
+                                }
+                                catch { }
+                            }
+                        }
+                    }
+                }
             }
         }
         catch { }
 
-        if ((Auth.IsPurchaseManager || Auth.IsOutletManager) && Auth.OutletID.HasValue && Auth.OutletID.Value > 0)
+        if (string.IsNullOrWhiteSpace(OrganizationName) || OrganizationName == "Organization")
         {
-            if (OutletDictionary.TryGetValue(Auth.OutletID.Value, out var myName) && !string.IsNullOrWhiteSpace(myName))
+            try
             {
-                OutletDisplayName = myName;
+                var orgs = await Api.GetOrganizationsAsync();
+                if (orgs != null && orgs.Count > 0)
+                {
+                    var matchedOrg = Auth.OrganizationID.HasValue
+                        ? orgs.FirstOrDefault(o => o.OrganizationID == Auth.OrganizationID.Value)
+                        : orgs.FirstOrDefault();
+                    if (matchedOrg != null && !string.IsNullOrWhiteSpace(matchedOrg.OrganizationName))
+                    {
+                        OrganizationName = matchedOrg.OrganizationName;
+                    }
+                }
             }
+            catch { }
         }
 
         await LoadDataAsync();

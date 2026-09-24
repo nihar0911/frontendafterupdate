@@ -4,11 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using VenodorManagementFrontend.Models;
-using VenodorManagementFrontend.Models.VendorPerformance;
-using VenodorManagementFrontend.Services;
+using VendorManagement.Web.Models;
+using VendorManagement.Web.Models.VendorPerformance;
+using VendorManagement.Web.Services;
 
-namespace VenodorManagementFrontend.Components.Pages.Procurement;
+namespace VendorManagement.Web.Components.Pages.Procurement;
 
 public partial class Procurement : ComponentBase, IDisposable
 {
@@ -72,7 +72,7 @@ public partial class Procurement : ComponentBase, IDisposable
     private VendorRecommendationDto? SelectedVendorForProduct { get; set; }
     private List<VendorRecommendationDto>? VendorRecommendations { get; set; }
     private bool HasActiveContractsForSelectedProduct { get; set; } = false;
-    private Dictionary<int, VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto> LatestReviewsByVendorDict { get; set; } = new();
+    private Dictionary<int, VendorManagement.Web.Models.VendorPerformance.VendorReviewDto> LatestReviewsByVendorDict { get; set; } = new();
     private string VendorSortBy { get; set; } = "Reviews";
 
     // Validation & Error Messages
@@ -1606,7 +1606,7 @@ public partial class Procurement : ComponentBase, IDisposable
     private bool IsReviewsModalOpen { get; set; } = false;
     private bool IsLoadingVendorReviews { get; set; } = false;
     private VendorRecommendationDto? SelectedVendorForReviews { get; set; }
-    private List<VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto> CurrentVendorReviews { get; set; } = new();
+    private List<VendorManagement.Web.Models.VendorPerformance.VendorReviewDto> CurrentVendorReviews { get; set; } = new();
 
     private async Task OpenVendorReviewsModal(VendorRecommendationDto vendor)
     {
@@ -1640,7 +1640,7 @@ public partial class Procurement : ComponentBase, IDisposable
         CurrentVendorReviews.Clear();
     }
 
-    private string ResolveReviewOutletName(VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto? rev)
+    private string ResolveReviewOutletName(VendorManagement.Web.Models.VendorPerformance.VendorReviewDto? rev)
     {
         if (rev == null) return string.Empty;
         if (!string.IsNullOrWhiteSpace(rev.OutletName) && !rev.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
@@ -1671,7 +1671,7 @@ public partial class Procurement : ComponentBase, IDisposable
     private decimal CurrentVendorAvgRating => CurrentVendorReviews.Count > 0 ? (decimal)Math.Round(CurrentVendorReviews.Average(r => r.Rating), 1) : 0m;
     private decimal CurrentVendorAvgQuality => CurrentVendorReviews.Count > 0 ? (decimal)Math.Round(CurrentVendorReviews.Average(r => r.ProductQualityRating), 1) : 0m;
     private decimal CurrentVendorAvgDelivery => CurrentVendorReviews.Count > 0 ? (decimal)Math.Round(CurrentVendorReviews.Average(r => r.DeliveryRating), 1) : 0m;
-    private VenodorManagementFrontend.Models.VendorPerformance.VendorReviewDto? LatestReviewInModal => CurrentVendorReviews.FirstOrDefault();
+    private VendorManagement.Web.Models.VendorPerformance.VendorReviewDto? LatestReviewInModal => CurrentVendorReviews.FirstOrDefault();
 
     private static string GetStarString(decimal rating)
     {

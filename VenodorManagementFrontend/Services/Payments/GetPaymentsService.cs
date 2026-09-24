@@ -1,8 +1,8 @@
-using System.Collections.Generic; using System.Net.Http.Json; using System.Threading.Tasks;
-using VenodorManagementFrontend.Models.Payments.DTOs;
-using VenodorManagementFrontend.Models.Payments.Responses;
-using VenodorManagementFrontend.Services.Infrastructure;
-namespace VenodorManagementFrontend.Services.Payments
+﻿using System.Collections.Generic; using System.Net.Http.Json; using System.Threading.Tasks;
+using VendorManagement.Web.Models.Payments.DTOs;
+using VendorManagement.Web.Models.Payments.Responses;
+using VendorManagement.Web.Services.Infrastructure;
+namespace VendorManagement.Web.Services.Payments
 {
     public class GetPaymentsService
     {

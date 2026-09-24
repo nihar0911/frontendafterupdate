@@ -1,14 +1,14 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
-using VenodorManagementFrontend.Models;
-using VenodorManagementFrontend.Models.VendorPerformance;
-using VenodorManagementFrontend.Helpers;
-using VenodorManagementFrontend.Services;
+using VendorManagement.Web.Models;
+using VendorManagement.Web.Models.VendorPerformance;
+using VendorManagement.Web.Helpers;
+using VendorManagement.Web.Services;
 
-namespace VenodorManagementFrontend.Components.Pages.CreateContract;
+namespace VendorManagement.Web.Components.Pages.CreateContract;
 
 public partial class CreateContract : ComponentBase
 {
@@ -59,9 +59,6 @@ public partial class CreateContract : ComponentBase
     private List<VendorProductDto> _cachedVendorProducts = new();
     private List<VendorDto> _cachedAllVendors = new();
 
-    // =========================================================================
-    // MULTI-PRODUCT & MULTI-VENDOR SPLIT ALLOCATION MODELS
-    // =========================================================================
     public class VendorSplitAllocation
     {
         public int VendorID { get; set; }
@@ -215,9 +212,6 @@ public partial class CreateContract : ComponentBase
         .OrderBy(p => p.ProductName)
         .ToList();
 
-    // =========================================================================
-    // VENDOR REVIEWS & EVALUATION METRICS
-    // =========================================================================
     private Dictionary<int, List<VendorReviewDto>> VendorReviewsDict { get; set; } = new();
 
     // Review Modal State
@@ -244,9 +238,6 @@ public partial class CreateContract : ComponentBase
         public VendorReviewDto? LatestReview { get; set; }
     }
 
-    // =========================================================================
-    // VALIDATION & SUBMISSION CRITERIA
-    // =========================================================================
     private bool CanSubmit =>
         !IsProcessing &&
         SelectedOutletId > 0 &&
@@ -422,9 +413,6 @@ public partial class CreateContract : ComponentBase
         StateHasChanged();
     }
 
-    // =========================================================================
-    // MULTI-PRODUCT LINE ACTIONS
-    // =========================================================================
     private async Task AddProductLine()
     {
         ValidationMessage = null;
@@ -739,9 +727,6 @@ public partial class CreateContract : ComponentBase
         }
     }
 
-    // =========================================================================
-    // QUOTATION MODE HANDLING
-    // =========================================================================
     private async Task LoadQuotationData(int qId)
     {
         IsLoading = true;
@@ -848,9 +833,6 @@ public partial class CreateContract : ComponentBase
         }
     }
 
-    // =========================================================================
-    // SUBMISSION LOGIC (MULTI-PRODUCT & MULTI-VENDOR SPLIT ASSIGNMENTS)
-    // =========================================================================
     private async Task SubmitContractCreation()
     {
         if (SelectedOutletId <= 0)
@@ -1011,9 +993,6 @@ public partial class CreateContract : ComponentBase
         Nav.NavigateTo("/organization/contracts");
     }
 
-    // =========================================================================
-    // VENDOR EVALUATION & REVIEWS MODAL SUPPORT
-    // =========================================================================
     private async Task OpenVendorReviewsModal(VendorRecommendationDto vendor, int productId, string productName)
     {
         SelectedVendorForReviews = vendor;

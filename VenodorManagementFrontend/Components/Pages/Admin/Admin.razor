@@ -1,4 +1,4 @@
-@page "/admin"
+﻿@page "/admin"
 @rendermode InteractiveServer
 @inject ApiService Api
 @inject AuthService Auth
@@ -29,10 +29,6 @@ else if (!Auth.IsAdmin)
 else
 {
     <div class="admin-app-layout @(IsSidebarCollapsed ? "sidebar-collapsed" : "")">
-
-        <!-- =======================================================================
-             LEFT SIDEBAR NAVIGATION
-             ======================================================================= -->
         <aside class="admin-sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-branding" @onclick='() => Nav.NavigateTo("/admin")'>
@@ -202,10 +198,6 @@ else
                 </button>
             </div>
         </aside>
-
-        <!-- =======================================================================
-             MAIN BODY AREA (TOP HEADER + DASHBOARD CONTENT)
-             ======================================================================= -->
         <div class="admin-main-wrapper">
 
             <!-- TOP HEADER BAR -->
@@ -302,8 +294,6 @@ else
             <!-- MAIN CONTENT CANVAS -->
             <main class="admin-main-content">
                 <div class="content-container">
-
-
 
                     <!-- WELCOME / SUMMARY BANNER -->
                     <div class="welcome-summary-banner">

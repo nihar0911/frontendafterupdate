@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
-using VenodorManagementFrontend.Models;
-using VenodorManagementFrontend.Services;
+using VendorManagement.Web.Models;
+using VendorManagement.Web.Services;
 
-namespace VenodorManagementFrontend.Components.Pages.AdminVendors;
+namespace VendorManagement.Web.Components.Pages.AdminVendors;
 
 public partial class AdminVendors : ComponentBase
 {

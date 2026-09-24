@@ -1,14 +1,14 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using VenodorManagementFrontend.Models;
-using VenodorManagementFrontend.Models.Invoices.DTOs;
-using VenodorManagementFrontend.Services;
+using VendorManagement.Web.Models;
+using VendorManagement.Web.Models.Invoices.DTOs;
+using VendorManagement.Web.Services;
 
-namespace VenodorManagementFrontend.Components.Pages.OrgInvoices;
+namespace VendorManagement.Web.Components.Pages.OrgInvoices;
 
 public partial class OrgInvoices : ComponentBase
 {

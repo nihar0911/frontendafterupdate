@@ -1,8 +1,8 @@
-using System.Collections.Generic; using System.Net.Http.Json; using System.Threading.Tasks;
-using VenodorManagementFrontend.Models.Invoices.DTOs;
-using VenodorManagementFrontend.Models.Invoices.Responses;
-using VenodorManagementFrontend.Services.Infrastructure;
-namespace VenodorManagementFrontend.Services.Invoices
+﻿using System.Collections.Generic; using System.Net.Http.Json; using System.Threading.Tasks;
+using VendorManagement.Web.Models.Invoices.DTOs;
+using VendorManagement.Web.Models.Invoices.Responses;
+using VendorManagement.Web.Services.Infrastructure;
+namespace VendorManagement.Web.Services.Invoices
 {
     public class GetInvoicesService
     {

@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
-using VenodorManagementFrontend.Models.VendorRecommendationSettings;
-using VenodorManagementFrontend.Services;
+using VendorManagement.Web.Models.VendorRecommendationSettings;
+using VendorManagement.Web.Services;
 
-namespace VenodorManagementFrontend.Components.Pages.VendorRecommendationSettings;
+namespace VendorManagement.Web.Components.Pages.VendorRecommendationSettings;
 
 public partial class VendorRecommendationSettings : ComponentBase
 {

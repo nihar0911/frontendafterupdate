@@ -1,6 +1,6 @@
-using VenodorManagementFrontend.Models.Invoices.DTOs;
+﻿using VendorManagement.Web.Models.Invoices.DTOs;
 
-namespace VenodorManagementFrontend.Models.Invoices.Responses;
+namespace VendorManagement.Web.Models.Invoices.Responses;
 
 public class GetInvoiceByIdResponse
 {

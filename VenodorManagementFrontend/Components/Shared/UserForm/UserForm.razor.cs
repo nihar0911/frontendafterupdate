@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
-using VenodorManagementFrontend.Models;
+using VendorManagement.Web.Models;
 
-namespace VenodorManagementFrontend.Components.Shared.UserForm;
+namespace VendorManagement.Web.Components.Shared.UserForm;
 
 public partial class UserForm : ComponentBase
 {

@@ -1,0 +1,536 @@
+/* ==========================================================================
+   MY DELIVERIES - SCOPED STYLES
+   Design System: Dark Green (#174F45), Clean White (#FFFFFF), Modern Enterprise
+   ========================================================================== */
+
+.vd-layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: #F4F7F5;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    color: #1F2933;
+}
+
+/* 1. FIXED FULL-HEIGHT DARK GREEN SIDEBAR */
+.vd-sidebar {
+    width: 220px;
+    background-color: #174F45;
+    color: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 1rem 0.7rem;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    height: 100vh;
+    min-height: 100vh;
+    z-index: 100;
+    box-shadow: 2px 0 12px rgba(19, 78, 72, 0.12);
+    box-sizing: border-box;
+}
+
+.vd-sidebar-top {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.vd-sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.15rem 0.4rem 0.85rem 0.4rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.vd-brand-icon-box {
+    width: 34px;
+    height: 34px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFFFFF;
+    flex-shrink: 0;
+}
+
+.vd-brand-text {
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: #FFFFFF;
+}
+
+.vd-nav-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 1.25rem 0;
+    flex: 1;
+}
+
+.vd-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.45rem 0.7rem;
+    border-radius: 4px;
+    color: #D1E0D9;
+    background: transparent;
+    border: none;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    width: 100%;
+}
+
+.vd-nav-item:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: #FFFFFF;
+}
+
+.vd-nav-item.active {
+    background-color: #24584D;
+    color: #FFFFFF;
+    font-weight: 700;
+}
+
+.vd-nav-icon {
+    flex-shrink: 0;
+}
+
+.vd-sidebar-bottom {
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.vd-user-profile-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+    padding: 0 0.25rem;
+}
+
+.vd-avatar-circle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #2E7D61;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFFFFF;
+    flex-shrink: 0;
+}
+
+.vd-user-info-text {
+    overflow: hidden;
+}
+
+.vd-user-name {
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: #FFFFFF;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.vd-user-role {
+    font-size: 0.75rem;
+    color: #A3C2B6;
+    margin-top: 2px;
+}
+
+.vd-logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    padding: 0.6rem 0.85rem;
+    border-radius: 4px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #D1E0D9;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.vd-logout-btn:hover {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: #EF4444;
+    color: #FCA5A5;
+}
+
+/* 2. MAIN CANVAS & TOP HEADER */
+.vd-main-canvas {
+    flex: 1;
+    margin-left: 220px;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 100vh;
+    background-color: #F4F7F5;
+}
+
+.vd-top-header {
+    background-color: #FFFFFF;
+    border-bottom: 1px solid #E5E7EB;
+    height: 56px;
+    min-height: 56px;
+    max-height: 56px;
+    padding: 0 1.5rem;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 90;
+}
+
+.vd-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 0;
+}
+
+.vd-menu-btn {
+    background: transparent;
+    border: none;
+    color: #4B5563;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+
+.vd-menu-btn:hover {
+    background-color: #F3F4F6;
+    color: #111827;
+}
+
+.vd-welcome-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.vd-welcome-subtitle {
+    font-size: 0.775rem;
+    color: #64748B;
+    margin: 0.1rem 0 0 0;
+    line-height: 1.25;
+    white-space: nowrap;
+}
+
+.vd-header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.vd-header-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0 0.85rem;
+    height: 34px;
+    min-height: 34px;
+    max-height: 34px;
+    box-sizing: border-box;
+    border-radius: 6px;
+    border: 1px solid #E5E7EB;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    line-height: 1;
+}
+
+.vd-vendor-pill {
+    background-color: #174F45;
+    color: #FFFFFF;
+    border-color: #174F45;
+    cursor: default;
+}
+
+.vd-vendor-pill-text {
+    font-weight: 700;
+    color: #FFFFFF;
+}
+
+.vd-logout-header-pill {
+    background-color: #FFFFFF;
+    border-color: #E5E7EB;
+    color: #DC2626;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.vd-logout-header-pill:hover {
+    background-color: #FEE2E2;
+    border-color: #FCA5A5;
+    color: #B91C1C;
+}
+
+/* 3. DASHBOARD BODY & METRICS */
+.vd-dashboard-body {
+    padding: 1.5rem 2rem 3rem 2rem;
+}
+
+.vd-card {
+    background: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.vd-metric-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+}
+
+.vd-metric-card {
+    background: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 4px;
+    padding: 1.25rem 1.4rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.vd-metric-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.vd-metric-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bg-light-green {
+    background-color: #DEF7EC;
+}
+
+.text-green {
+    color: #03543F;
+}
+
+.bg-light-amber {
+    background-color: #FEF3C7;
+}
+
+.text-amber {
+    color: #92400E;
+}
+
+.bg-light-blue {
+    background-color: #E0F2FE;
+}
+
+.text-blue {
+    color: #0284C7;
+}
+
+.vd-metric-label {
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: #6B7280;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.vd-metric-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem 0;
+}
+
+.vd-metric-value {
+    font-size: 1.85rem;
+    font-weight: 800;
+    color: #111827;
+    line-height: 1.1;
+    margin-bottom: 0.4rem;
+    text-align: center;
+}
+
+.vd-metric-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+/* 4. SEARCH & FILTERS */
+.vd-search-box {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: #F9FAFB;
+    border: 1px solid #D1D5DB;
+    border-radius: 4px;
+    padding: 0.45rem 0.85rem;
+    width: 280px;
+    color: #6B7280;
+}
+
+.vd-search-input {
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 0.82rem;
+    width: 100%;
+    color: #111827;
+}
+
+.vd-search-input::placeholder {
+    color: #9CA3AF;
+}
+
+/* 5. TABLE STYLES */
+.vd-table-deliveries th {
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: #4B5563;
+    padding: 0.85rem 0.75rem;
+    background-color: #F9FAFB;
+    border-bottom: 2px solid #E5E7EB;
+    white-space: nowrap;
+}
+
+.vd-table-deliveries td {
+    padding: 0.95rem 0.75rem;
+    font-size: 0.85rem;
+    vertical-align: middle;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+/* Status Badges */
+.vd-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 4px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+.status-approved {
+    background-color: #DEF7EC;
+    color: #03543F;
+}
+
+.status-pending {
+    background-color: #FEF3C7;
+    color: #92400E;
+}
+
+.status-dispatched {
+    background-color: #E0F2FE;
+    color: #0369A1;
+}
+
+.status-rejected {
+    background-color: #FDE8E8;
+    color: #9B1C1C;
+}
+
+/* Empty & Warning States */
+.vd-empty-state {
+    padding: 3rem 1.5rem;
+}
+
+.vd-auth-warning-wrap {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #F4F7F5;
+    padding: 1.5rem;
+}
+
+.vd-auth-warning-card {
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 4px;
+    padding: 2.5rem;
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.vd-btn-primary {
+    background-color: #174F45;
+    border-color: #174F45;
+    color: #FFFFFF;
+    font-weight: 600;
+}
+
+.vd-btn-primary:hover {
+    background-color: #134038;
+    border-color: #134038;
+    color: #FFFFFF;
+}
+
+/* Responsive queries */
+@media (max-width: 1200px) {
+    .vd-metric-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .vd-sidebar {
+        display: none;
+    }
+    .vd-main-canvas {
+        margin-left: 0;
+    }
+    .vd-metric-grid {
+        grid-template-columns: 1fr;
+    }
+}

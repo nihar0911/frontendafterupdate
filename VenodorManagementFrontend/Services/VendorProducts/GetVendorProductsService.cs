@@ -1,6 +1,6 @@
-using System.Collections.Generic; using System.Net.Http.Json; using System.Threading.Tasks;
-using VenodorManagementFrontend.Models; using VenodorManagementFrontend.Services.Infrastructure;
-namespace VenodorManagementFrontend.Services.VendorProducts
+﻿using System.Collections.Generic; using System.Net.Http.Json; using System.Threading.Tasks;
+using VendorManagement.Web.Models; using VendorManagement.Web.Services.Infrastructure;
+namespace VendorManagement.Web.Services.VendorProducts
 {
     public class GetVendorProductsService
     {

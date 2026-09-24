@@ -1,6 +1,6 @@
-@page "/organization/purchase-orders"
+﻿@page "/organization/purchase-orders"
 @page "/organization/purchase-orders/{PurchaseOrderId:int}"
-@namespace VenodorManagementFrontend.Components.Pages.OrgPurchaseOrders
+@namespace VendorManagement.Web.Components.Pages.OrgPurchaseOrders
 @inject AuthService Auth
 @inject NavigationManager Nav
 @inject ApiService Api
@@ -49,9 +49,6 @@ else
         }
         else
         {
-        <!-- =======================================================================
-             LEFT SIDEBAR NAVIGATION (ENTERPRISE DARK GREEN)
-             ======================================================================= -->
         <aside class="org-sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-branding" @onclick='() => Nav.NavigateTo(Auth.IsPurchaseManager ? "/purchase-manager" : "/org-dashboard")'>
@@ -372,9 +369,6 @@ else
                 }
                 else if (IsViewingPoDetails && SelectedPoForDetail != null)
                 {
-                    <!-- =======================================================
-                         PURCHASE ORDER DETAILS VIEW (MATCHES SCREENSHOT 2)
-                         ======================================================= -->
                     var po = SelectedPoForDetail;
                     var firstItem = po.Items?.FirstOrDefault();
                     string prodName = firstItem != null && ProductNames.TryGetValue(firstItem.ProductID, out var pn) ? pn : "Fresh Goods";
@@ -430,8 +424,6 @@ else
                                     </button>
                                 }
 
-
-
                                 @if (isDelivered && (Auth.IsPurchaseManager || Auth.IsAdmin))
                                 {
                                     <button type="button" class="btn btn-success d-flex align-items-center gap-2 fw-semibold px-3 py-2 rounded-3 shadow-sm" @onclick="OpenReviewModalForSelectedPo">
@@ -473,10 +465,6 @@ else
                                 <button type="button" class="btn-close btn-close-sm" @onclick="() => DeliveryFormError = string.Empty"></button>
                             </div>
                         }
-
-                        <!-- =======================================================
-                             STEP 1: RECORD DELIVERY INPUT FORM (PHASE 2Q-C)
-                             ======================================================= -->
                         @if (IsRecordingDelivery && !IsReviewingDelivery)
                         {
                             <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
@@ -545,10 +533,6 @@ else
                                 </div>
                             </div>
                         }
-
-                        <!-- =======================================================
-                             STEP 2: REVIEW & CONFIRM DELIVERY (PHASE 2Q-C)
-                             ======================================================= -->
                         @if (IsReviewingDelivery)
                         {
                             <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
@@ -1551,5 +1535,3 @@ else
                        Item="ReviewOrderItem"
                        OnReviewSubmitted="HandleReviewSubmitted" />
 }
-
-

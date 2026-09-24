@@ -1,8 +1,8 @@
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
 using System.Threading.Tasks;
-using VenodorManagementFrontend.Models;
+using VendorManagement.Web.Models;
 
-namespace VenodorManagementFrontend.Services.Authentication
+namespace VendorManagement.Web.Services.Authentication
 {
     public class LoginService
     {

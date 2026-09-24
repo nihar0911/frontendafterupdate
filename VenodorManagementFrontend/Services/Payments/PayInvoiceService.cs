@@ -1,9 +1,9 @@
-using System; using System.Net.Http.Json; using System.Threading.Tasks;
-using VenodorManagementFrontend.Models;
-using VenodorManagementFrontend.Models.Invoices.DTOs;
-using VenodorManagementFrontend.Models.Payments.Commands;
-using VenodorManagementFrontend.Services.Infrastructure;
-namespace VenodorManagementFrontend.Services.Payments
+﻿using System; using System.Net.Http.Json; using System.Threading.Tasks;
+using VendorManagement.Web.Models;
+using VendorManagement.Web.Models.Invoices.DTOs;
+using VendorManagement.Web.Models.Payments.Commands;
+using VendorManagement.Web.Services.Infrastructure;
+namespace VendorManagement.Web.Services.Payments
 {
     public class PayInvoiceService
     {

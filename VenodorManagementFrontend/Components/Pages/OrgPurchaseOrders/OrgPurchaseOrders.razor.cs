@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
-using VenodorManagementFrontend.Models;
-using VenodorManagementFrontend.Services;
+using VendorManagement.Web.Models;
+using VendorManagement.Web.Services;
 
-namespace VenodorManagementFrontend.Components.Pages.OrgPurchaseOrders;
+namespace VendorManagement.Web.Components.Pages.OrgPurchaseOrders;
 
 public partial class OrgPurchaseOrders : ComponentBase
 {
@@ -963,8 +963,6 @@ public partial class OrgPurchaseOrders : ComponentBase
             : "Organization Manager";
     }
 
-
-
     private bool CanApprovePo(PurchaseOrderDto po)
     {
         if (!IsAwaitingApproval(po))
@@ -1289,11 +1287,8 @@ public partial class OrgPurchaseOrders : ComponentBase
         };
     }
 
-    // =========================================================================
-    // VENDOR FEEDBACK / REVIEW MODAL STATE & HANDLERS
-    // =========================================================================
     private bool IsReviewModalOpen { get; set; } = false;
-    private VenodorManagementFrontend.Models.VendorPerformance.EligibleReviewOrderDto? ReviewOrderItem { get; set; }
+    private VendorManagement.Web.Models.VendorPerformance.EligibleReviewOrderDto? ReviewOrderItem { get; set; }
     private HashSet<int> ReviewedPoItemIds { get; set; } = new();
 
     private bool IsSelectedPoReviewed
@@ -1339,7 +1334,7 @@ public partial class OrgPurchaseOrders : ComponentBase
 
         DateTime? actualDate = po.ActualDeliveryDate ?? SelectedPoDeliveryRecords.FirstOrDefault()?.DeliveryDate;
 
-        ReviewOrderItem = new VenodorManagementFrontend.Models.VendorPerformance.EligibleReviewOrderDto
+        ReviewOrderItem = new VendorManagement.Web.Models.VendorPerformance.EligibleReviewOrderDto
         {
             PurchaseOrderID = po.PurchaseOrderID,
             POItemID = firstItem.POItemID,
@@ -1370,9 +1365,6 @@ public partial class OrgPurchaseOrders : ComponentBase
         StateHasChanged();
     }
 
-    // =========================================================================
-    // DELIVERY / GOODS RECEIVING METHODS (PHASE 2Q-C)
-    // =========================================================================
     private void StartRecordDelivery()
     {
         if (!Auth.IsPurchaseManager && !Auth.IsAdmin) return;

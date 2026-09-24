@@ -1,10 +1,10 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using VenodorManagementFrontend.Models;
-using VenodorManagementFrontend.Services.Infrastructure;
+using VendorManagement.Web.Models;
+using VendorManagement.Web.Services.Infrastructure;
 
-namespace VenodorManagementFrontend.Services.Organizations
+namespace VendorManagement.Web.Services.Organizations
 {
     public class GetOrganizationsService
     {

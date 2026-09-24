@@ -1,6 +1,6 @@
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
 
-namespace VenodorManagementFrontend.Components.Pages.VendorLogin;
+namespace VendorManagement.Web.Components.Pages.VendorLogin;
 
 public partial class VendorLogin : ComponentBase
 {

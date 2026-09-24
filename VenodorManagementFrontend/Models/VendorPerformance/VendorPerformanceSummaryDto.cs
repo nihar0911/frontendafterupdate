@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 
-namespace VenodorManagementFrontend.Models.VendorPerformance;
+namespace VendorManagement.Web.Models.VendorPerformance;
 
 public class VendorPerformanceSummaryDto
 {

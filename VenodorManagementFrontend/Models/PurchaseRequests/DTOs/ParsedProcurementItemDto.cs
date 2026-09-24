@@ -1,6 +1,6 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
-namespace VenodorManagementFrontend.Models;
+namespace VendorManagement.Web.Models;
 
 public class ParsedProcurementItemDto
 {

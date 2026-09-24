@@ -1,4 +1,4 @@
-@page "/purchase-request/{requestId:int}"
+﻿@page "/purchase-request/{requestId:int}"
 @page "/purchase-request"
 @rendermode InteractiveServer
 @inject ApiService Api
@@ -33,9 +33,6 @@ else
 
         @if (Auth.IsOutletManager)
         {
-            <!-- =======================================================================
-                 OUTLET MANAGER SIDEBAR NAVIGATION (DARK GREEN #174F45)
-                 ======================================================================= -->
             <aside class="pm-sidebar">
                 <div class="sidebar-header">
                     <div class="sidebar-branding" @onclick='() => Nav.NavigateTo("/outlet-manager")' style="cursor: pointer;">
@@ -155,9 +152,6 @@ else
         }
         else
         {
-            <!-- =======================================================================
-                 LEFT SIDEBAR NAVIGATION (DARK GREEN #174F45)
-                 ======================================================================= -->
             <aside class="pm-sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-branding" @onclick='() => Nav.NavigateTo("/purchase-manager")'>
@@ -290,7 +284,6 @@ else
                     </li>
                 </ul>
 
-
                 <!-- ACCOUNT -->
                 <div class="nav-section-account">
                     <div class="nav-section-title">ACCOUNT</div>
@@ -312,10 +305,6 @@ else
             </nav>
         </aside>
         }
-
-        <!-- =======================================================================
-             MAIN WRAPPER & TOPBAR
-             ======================================================================= -->
         <div class="pm-main-wrapper">
             <!-- Topbar -->
             <header class="pm-topbar">
@@ -616,10 +605,6 @@ else
             </main>
         </div>
     </div>
-
-    <!-- =======================================================================
-         MY PROFILE MODAL DIALOG
-         ======================================================================= -->
     @if (ShowProfileModal)
     {
         <div class="pm-modal-backdrop" @onclick="CloseProfileModal">

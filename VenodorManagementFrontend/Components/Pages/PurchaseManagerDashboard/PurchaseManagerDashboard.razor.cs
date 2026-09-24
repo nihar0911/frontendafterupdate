@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
-using VenodorManagementFrontend.Models;
-using VenodorManagementFrontend.Models.Invoices.DTOs;
-using VenodorManagementFrontend.Models.Payments.DTOs;
-using VenodorManagementFrontend.Services;
+using VendorManagement.Web.Models;
+using VendorManagement.Web.Models.Invoices.DTOs;
+using VendorManagement.Web.Models.Payments.DTOs;
+using VendorManagement.Web.Services;
 
-namespace VenodorManagementFrontend.Components.Pages.PurchaseManagerDashboard;
+namespace VendorManagement.Web.Components.Pages.PurchaseManagerDashboard;
 
 public partial class PurchaseManagerDashboard : ComponentBase
 {

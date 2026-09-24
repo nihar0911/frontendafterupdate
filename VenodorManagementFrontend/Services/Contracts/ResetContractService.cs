@@ -1,9 +1,9 @@
-using System; using System.Collections.Generic; using System.Net.Http.Json; using System.Threading.Tasks;
-using VenodorManagementFrontend.Models;
-using VenodorManagementFrontend.Models.Contracts.Commands;
-using VenodorManagementFrontend.Models.Contracts.Responses;
-using VenodorManagementFrontend.Services.Infrastructure;
-namespace VenodorManagementFrontend.Services.Contracts
+﻿using System; using System.Collections.Generic; using System.Net.Http.Json; using System.Threading.Tasks;
+using VendorManagement.Web.Models;
+using VendorManagement.Web.Models.Contracts.Commands;
+using VendorManagement.Web.Models.Contracts.Responses;
+using VendorManagement.Web.Services.Infrastructure;
+namespace VendorManagement.Web.Services.Contracts
 {
     public class ResetContractService
     {

@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace VenodorManagementFrontend.Models;
+namespace VendorManagement.Web.Models;
 
 public class PurchaseOrderDto
 {

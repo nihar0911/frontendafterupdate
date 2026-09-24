@@ -1,6 +1,6 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
-namespace VenodorManagementFrontend.Models.VendorPerformance;
+namespace VendorManagement.Web.Models.VendorPerformance;
 
 public class VendorAiInsightsDto
 {

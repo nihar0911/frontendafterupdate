@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
-using VenodorManagementFrontend.Models.VendorPerformance;
-using VenodorManagementFrontend.Services;
+using VendorManagement.Web.Models.VendorPerformance;
+using VendorManagement.Web.Services;
 
-namespace VenodorManagementFrontend.Components.Shared.SubmitReviewModal;
+namespace VendorManagement.Web.Components.Shared.SubmitReviewModal;
 
 public partial class SubmitReviewModal : ComponentBase
 {

@@ -1,4 +1,4 @@
-namespace VenodorManagementFrontend.Models.Contracts.Commands;
+﻿namespace VendorManagement.Web.Models.Contracts.Commands;
 
 public class ResetContractCommand
 {

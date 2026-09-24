@@ -1,4 +1,4 @@
-@page "/admin/taxrates"
+﻿@page "/admin/taxrates"
 @page "/taxrates"
 @rendermode InteractiveServer
 @inject ApiService Api
@@ -30,10 +30,6 @@ else if (!Auth.IsAdmin)
 else
 {
     <div class="admin-app-layout @(IsSidebarCollapsed ? "sidebar-collapsed" : "")">
-
-        <!-- =======================================================================
-             LEFT SIDEBAR NAVIGATION
-             ======================================================================= -->
         <aside class="admin-sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-branding" @onclick='() => Nav.NavigateTo("/admin")'>
@@ -198,10 +194,6 @@ else
                 </button>
             </div>
         </aside>
-
-        <!-- =======================================================================
-             MAIN BODY AREA
-             ======================================================================= -->
         <div class="admin-main-wrapper">
 
             <!-- TOP HEADER BAR -->
@@ -496,10 +488,6 @@ else
             </main>
 
         </div>
-
-        <!-- =======================================================================
-             RIGHT-SIDE TAX RATE DETAILS DRAWER / PANEL
-             ======================================================================= -->
         @if (SelectedTaxRateDetails != null)
         {
             var selTax = SelectedTaxRateDetails;

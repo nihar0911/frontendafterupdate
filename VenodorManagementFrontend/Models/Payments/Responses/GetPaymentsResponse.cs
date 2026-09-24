@@ -1,7 +1,7 @@
-using System.Collections.Generic;
-using VenodorManagementFrontend.Models.Payments.DTOs;
+﻿using System.Collections.Generic;
+using VendorManagement.Web.Models.Payments.DTOs;
 
-namespace VenodorManagementFrontend.Models.Payments.Responses;
+namespace VendorManagement.Web.Models.Payments.Responses;
 
 public class GetPaymentsResponse
 {

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
-using VenodorManagementFrontend.Models;
+using VendorManagement.Web.Models;
 
-namespace VenodorManagementFrontend.Components.Shared.ProductForm;
+namespace VendorManagement.Web.Components.Shared.ProductForm;
 
 public partial class ProductForm : ComponentBase
 {

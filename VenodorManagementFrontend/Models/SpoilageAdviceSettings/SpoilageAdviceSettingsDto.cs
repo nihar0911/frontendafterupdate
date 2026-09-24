@@ -1,7 +1,7 @@
 ﻿
 using System;
 
-namespace VenodorManagementFrontend.Models.SpoilageAdviceSettings
+namespace VendorManagement.Web.Models.SpoilageAdviceSettings
 {
     public class SpoilageAdviceSettingsDto
     {

@@ -1,4 +1,4 @@
-@page "/purchase-manager"
+﻿@page "/purchase-manager"
 @rendermode InteractiveServer
 @inject ApiService Api
 @inject AuthService Auth
@@ -29,10 +29,6 @@ else if (!Auth.IsPurchaseManager && !Auth.IsAdmin)
 else
 {
     <div class="pm-app-layout @(IsSidebarCollapsed ? "sidebar-collapsed" : "")">
-
-        <!-- =======================================================================
-             LEFT SIDEBAR NAVIGATION (ENTERPRISE DARK GREEN)
-             ======================================================================= -->
         <aside class="pm-sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-branding" @onclick='() => Nav.NavigateTo("/purchase-manager")'>
@@ -165,7 +161,6 @@ else
                     </li>
                 </ul>
 
-
                 <!-- CONFIGURATION -->
                 <div class="nav-section-title">CONFIGURATION</div>
                 <ul class="nav-list">
@@ -181,7 +176,6 @@ else
                         </button>
                     </li>
                 </ul>
-
 
                 <!-- ACCOUNT -->
                 <div class="nav-section-account">
@@ -203,10 +197,6 @@ else
                 </div>
             </nav>
         </aside>
-
-        <!-- =======================================================================
-             MAIN WRAPPER & TOPBAR
-             ======================================================================= -->
         <div class="pm-main-wrapper">
             <!-- Topbar -->
             <header class="pm-topbar">
@@ -313,9 +303,6 @@ else
                 }
                 else
                 {
-                    <!-- =======================================================================
-                         HEADER: GREETING & OUTLET PILL (CLEAN BUSINESS IDENTITY)
-                         ======================================================================= -->
                     <div class="pm-header-banner">
                         <div>
                             <h2 class="greeting-title">Welcome, @Auth.UserName</h2>
@@ -334,10 +321,6 @@ else
                             </div>
                         </div>
                     </div>
-
-                    <!-- =======================================================================
-                         KPI METRICS GRID (100% UNIFORM ENTERPRISE GREEN)
-                         ======================================================================= -->
                     <div class="pm-kpi-grid">
                         <!-- 1. Purchase Requests -->
                         <div class="kpi-card" @onclick='() => Nav.NavigateTo("/procurement")'>
@@ -452,10 +435,6 @@ else
                             </svg>
                         </div>
                     </div>
-
-                    <!-- =======================================================================
-                         MIDDLE SPLIT SECTION: RECENT ACTIVITY (65%) & MY TASKS (35%)
-                         ======================================================================= -->
                     <div class="pm-split-layout">
                         <!-- Left Panel: Recent Activity Table -->
                         <div class="pm-panel">
@@ -631,10 +610,6 @@ else
                             </div>
                         </div>
                     </div>
-
-                    <!-- =======================================================================
-                         BOTTOM SECTION: QUICK ACTIONS (100% UNIFORM PRIMARY GREEN BUTTONS)
-                         ======================================================================= -->
                     <div class="quick-actions-section">
                         <h4 class="section-heading">Quick Actions</h4>
                         <div class="quick-actions-grid">
@@ -719,10 +694,6 @@ else
             </main>
         </div>
     </div>
-
-    <!-- =======================================================================
-         MY PROFILE MODAL DIALOG (CLEAN BUSINESS IDENTITY)
-         ======================================================================= -->
     @if (ShowProfileModal)
     {
         <div class="pm-modal-backdrop" @onclick="CloseProfileModal">

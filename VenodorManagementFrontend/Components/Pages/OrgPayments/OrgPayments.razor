@@ -1,9 +1,9 @@
-@page "/organization/payments"
+﻿@page "/organization/payments"
 @page "/org/payments"
 @page "/organization/payments/{InvoiceId:int}"
-@namespace VenodorManagementFrontend.Components.Pages.OrgPayments
+@namespace VendorManagement.Web.Components.Pages.OrgPayments
 
-<PageTitle>Payments - @OrganizationName</PageTitle>
+<PageTitle>Payments - @(Auth.IsPurchaseManager && !string.IsNullOrEmpty(OutletDisplayName) ? OutletDisplayName : (!string.IsNullOrEmpty(OrganizationName) && OrganizationName != "Organization" ? OrganizationName : "Smart Vendor Management System"))</PageTitle>
 
 @if (!Auth.IsAuthenticated)
 {
@@ -47,9 +47,6 @@ else
         }
         else
         {
-        <!-- =======================================================================
-             LEFT SIDEBAR NAVIGATION (ENTERPRISE DARK GREEN)
-             ======================================================================= -->
         <aside class="org-sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-branding" @onclick='() => Nav.NavigateTo(Auth.IsPurchaseManager ? "/purchase-manager" : (Auth.IsOutletManager ? "/outlet-manager" : "/org-dashboard"))'>
@@ -182,10 +179,6 @@ else
             </nav>
         </aside>
         }
-
-        <!-- =======================================================================
-             MAIN CONTENT AREA
-             ======================================================================= -->
         <main class="org-main-viewport">
             
             <!-- Page Header -->
@@ -213,11 +206,15 @@ else
                 </div>
 
                 <div class="header-right">
-                    @if (!string.IsNullOrEmpty(OrganizationName))
+                    @if (Auth.IsPurchaseManager && !string.IsNullOrEmpty(OutletDisplayName))
+                    {
+                        <span class="topbar-org-badge">@OutletDisplayName</span>
+                    }
+                    else if (!string.IsNullOrEmpty(OrganizationName) && OrganizationName != "Organization")
                     {
                         <span class="topbar-org-badge">@OrganizationName</span>
                     }
-                    <ProfileMenu OrganizationName="@OrganizationName" />
+                    <ProfileMenu OrganizationName="@(OrganizationName != "Organization" ? OrganizationName : null)" OutletName="@OutletDisplayName" />
                 </div>
             </header>
 
@@ -333,9 +330,6 @@ else
                 }
                 else if (ActiveTab == "history")
                 {
-                    <!-- =======================================================
-                         TAB 1: PAYMENT HISTORY TABLE
-                         ======================================================= -->
                     var filtered = FilteredPayments.ToList();
                     @if (filtered.Count == 0)
                     {
@@ -422,9 +416,6 @@ else
                 }
                 else
                 {
-                    <!-- =======================================================
-                         TAB 2: INVOICES AWAITING PAYMENT TABLE
-                         ======================================================= -->
                     var pendingInvoices = InvoicesAwaitingPayment.ToList();
                     @if (pendingInvoices.Count == 0)
                     {
@@ -496,10 +487,6 @@ else
             </div>
         </main>
     </div>
-
-    <!-- =======================================================================
-         MAKE PAYMENT MODAL (AUTO-DERIVED SERVER-SIDE AMOUNT — READ ONLY)
-         ======================================================================= -->
     @if (ShowMakePaymentModal && SelectedInvoiceForPayment != null)
     {
         <div class="modal-backdrop-custom">
@@ -605,4 +592,3 @@ else
         </div>
     }
 }
-

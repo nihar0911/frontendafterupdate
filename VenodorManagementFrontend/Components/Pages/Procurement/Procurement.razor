@@ -1,4 +1,4 @@
-@page "/procurement"
+﻿@page "/procurement"
 @rendermode InteractiveServer
 @inject ApiService Api
 @inject AuthService Auth
@@ -29,10 +29,6 @@ else if (!Auth.IsPurchaseManager && !Auth.IsAdmin)
 else
 {
     <div class="pm-app-layout @(IsSidebarCollapsed ? "sidebar-collapsed" : "")">
-
-        <!-- =======================================================================
-             LEFT SIDEBAR NAVIGATION (DARK GREEN #174F45)
-             ======================================================================= -->
         <aside class="pm-sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-branding" @onclick='() => Nav.NavigateTo("/purchase-manager")'>
@@ -165,7 +161,6 @@ else
                     </li>
                 </ul>
 
-
                 <!-- ACCOUNT -->
                 <div class="nav-section-account">
                     <div class="nav-section-title">ACCOUNT</div>
@@ -186,10 +181,6 @@ else
                 </div>
             </nav>
         </aside>
-
-        <!-- =======================================================================
-             MAIN WRAPPER & TOPBAR
-             ======================================================================= -->
         <div class="pm-main-wrapper">
             <!-- Topbar -->
             <header class="pm-topbar">
@@ -278,9 +269,6 @@ else
 
                 @if (IsReviewsModalOpen && SelectedVendorForReviews != null)
                 {
-                    <!-- =======================================================
-                         DEDICATED VENDOR REVIEWS PAGE VIEW
-                         ======================================================= -->
                     <div class="vendor-reviews-page mb-4">
                         <!-- Navigation & Page Header -->
                         <div class="mb-4">
@@ -482,9 +470,6 @@ else
                 }
                 else if (!IsCreateMode)
                 {
-                    <!-- =======================================================
-                         PURCHASE REQUESTS LANDING PAGE & LIST TABLE
-                         ======================================================= -->
                     <div class="pm-header-banner">
                         <div>
                             <h2 class="greeting-title">Purchase Requests</h2>
@@ -635,9 +620,6 @@ else
                 }
                 else
                 {
-                    <!-- =======================================================
-                         3-STEP MULTI-PRODUCT PROCUREMENT CREATION WIZARD
-                         ======================================================= -->
                     <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
                         <div>
                             <button type="button" class="btn-back-link" @onclick="CancelCreateRequest">
@@ -755,9 +737,6 @@ else
                         }
                         else if (CurrentStep == 2)
                         {
-                            <!-- =======================================================
-                                 STEP 2: ADD PRODUCTS & VENDORS (2-COLUMN WORKSPACE)
-                                 ======================================================= -->
                             <div class="procurement-workspace-grid">
                                 <!-- LEFT COLUMN: Product Catalog & Active Configuration -->
                                 <div class="procurement-left-col">
@@ -1069,9 +1048,6 @@ else
                                     }
                                     else
                                     {
-                                        <!-- =======================================================
-                                             AI PROCUREMENT ASSISTANT PANEL
-                                             ======================================================= -->
                                             <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
                                                 <div>
                                                     <h4 class="fw-bold text-dark mb-1">AI Procurement Assistant</h4>
@@ -1687,9 +1663,6 @@ else
                         }
                         else if (CurrentStep == 3)
                         {
-                            <!-- =======================================================
-                                 STEP 3: REVIEW & DIRECT DISPATCH
-                                 ======================================================= -->
                             <div class="pm-panel p-4 mb-4">
                                 <h4 class="fw-bold text-dark mb-1">Step 3: Review &amp; Dispatch Request</h4>
                                 <p class="text-muted small mb-4">Verify all multi-product items and vendor routing before direct dispatch.</p>
@@ -1816,10 +1789,6 @@ else
             </main>
         </div>
     </div>
-
-    <!-- =======================================================================
-         MY PROFILE MODAL DIALOG
-         ======================================================================= -->
     @if (ShowProfileModal)
     {
         <div class="pm-modal-backdrop" @onclick="CloseProfileModal">

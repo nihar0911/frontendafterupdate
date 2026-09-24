@@ -1,6 +1,6 @@
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
 
-namespace VenodorManagementFrontend.Components.Pages.OutletLogin;
+namespace VendorManagement.Web.Components.Pages.OutletLogin;
 
 public partial class OutletLogin : ComponentBase
 {

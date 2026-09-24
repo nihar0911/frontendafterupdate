@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
-using VenodorManagementFrontend.Models;
-using VenodorManagementFrontend.Services;
+using VendorManagement.Web.Models;
+using VendorManagement.Web.Services;
 
-namespace VenodorManagementFrontend.Components.Pages.OrgOutlets;
+namespace VendorManagement.Web.Components.Pages.OrgOutlets;
 
 public partial class OrgOutlets : ComponentBase
 {

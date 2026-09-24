@@ -2,9 +2,9 @@
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
-using VenodorManagementFrontend.Services;
+using VendorManagement.Web.Services;
 
-namespace VenodorManagementFrontend.Components.Shared.LoginForm;
+namespace VendorManagement.Web.Components.Shared.LoginForm;
 
 public partial class LoginForm : ComponentBase
 {
@@ -140,7 +140,6 @@ public partial class LoginForm : ComponentBase
             IsLoading = false;
         }
     }
-
 
     private void HandleLogout()
     {

@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
-using VenodorManagementFrontend.Models;
-using VenodorManagementFrontend.Services;
+using VendorManagement.Web.Models;
+using VendorManagement.Web.Services;
 
-namespace VenodorManagementFrontend.Components.Pages.ContractDetails;
+namespace VendorManagement.Web.Components.Pages.ContractDetails;
 
 public partial class ContractDetails : ComponentBase
 {
@@ -323,9 +323,6 @@ public partial class ContractDetails : ComponentBase
         }
     }
 
-    // ==========================================
-    // RESET CONTRACT LOGIC (FOR CAPACITY REACHED)
-    // ==========================================
     private bool IsResetModalOpen { get; set; } = false;
     private bool IsResetting { get; set; } = false;
     private string? ResetErrorMessage { get; set; }
@@ -375,9 +372,6 @@ public partial class ContractDetails : ComponentBase
         }
     }
 
-    // ==========================================
-    // END CONTRACT LOGIC
-    // ==========================================
     private bool IsEndModalOpen { get; set; } = false;
     private bool IsEnding { get; set; } = false;
     private string? EndErrorMessage { get; set; }

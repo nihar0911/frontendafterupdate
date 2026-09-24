@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
-using VenodorManagementFrontend.Models;
-using VenodorManagementFrontend.Services;
+using VendorManagement.Web.Models;
+using VendorManagement.Web.Services;
 
-namespace VenodorManagementFrontend.Components.Pages.PurchaseRequestDetails;
+namespace VendorManagement.Web.Components.Pages.PurchaseRequestDetails;
 
 public partial class PurchaseRequestDetails : ComponentBase
 {

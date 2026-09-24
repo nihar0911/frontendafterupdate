@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
-namespace VenodorManagementFrontend.Models.Invoices.DTOs;
+namespace VendorManagement.Web.Models.Invoices.DTOs;
 
 public class InvoiceDto
 {

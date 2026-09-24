@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Text.Json;
 using Microsoft.JSInterop;
-using VenodorManagementFrontend.Models;
+using VendorManagement.Web.Models;
 
-namespace VenodorManagementFrontend.Services
+namespace VendorManagement.Web.Services
 {
     public class AuthService
     {

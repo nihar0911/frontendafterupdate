@@ -1,6 +1,6 @@
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
 
-namespace VenodorManagementFrontend.Components.Pages.AdminContracts;
+namespace VendorManagement.Web.Components.Pages.AdminContracts;
 
 public partial class AdminContracts : ComponentBase
 {

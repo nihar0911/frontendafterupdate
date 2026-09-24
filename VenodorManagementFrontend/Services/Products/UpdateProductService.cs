@@ -1,6 +1,6 @@
-using System; using System.Net.Http.Json; using System.Threading.Tasks;
-using VenodorManagementFrontend.Models; using VenodorManagementFrontend.Services.Infrastructure;
-namespace VenodorManagementFrontend.Services.Products
+﻿using System; using System.Net.Http.Json; using System.Threading.Tasks;
+using VendorManagement.Web.Models; using VendorManagement.Web.Services.Infrastructure;
+namespace VendorManagement.Web.Services.Products
 {
     public class UpdateProductService
     {

@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
-using VenodorManagementFrontend.Models.SpoilageAdviceSettings;
-using VenodorManagementFrontend.Services;
+using VendorManagement.Web.Models.SpoilageAdviceSettings;
+using VendorManagement.Web.Services;
 
-namespace VenodorManagementFrontend.Components.Pages.SpoilageAdviceSettings;
+namespace VendorManagement.Web.Components.Pages.SpoilageAdviceSettings;
 
 public partial class SpoilageAdviceSettings : ComponentBase
 {

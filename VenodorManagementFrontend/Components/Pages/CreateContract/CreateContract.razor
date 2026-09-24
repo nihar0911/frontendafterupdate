@@ -1,4 +1,4 @@
-@page "/contract/create"
+﻿@page "/contract/create"
 @page "/contract/create/{QuotationId:int}"
 @page "/create-contract/{QuotationId:int}"
 @rendermode InteractiveServer
@@ -31,10 +31,6 @@ else if (!Auth.IsOrgManager && !Auth.IsAdmin)
 else
 {
     <div class="org-app-layout @(IsSidebarCollapsed ? "sidebar-collapsed" : "")">
-
-        <!-- =======================================================================
-             LEFT SIDEBAR NAVIGATION (ENTERPRISE DARK GREEN)
-             ======================================================================= -->
         <aside class="org-sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-branding" @onclick='() => Nav.NavigateTo("/org-dashboard")'>
@@ -169,10 +165,6 @@ else
                 </ul>
             </nav>
         </aside>
-
-        <!-- =======================================================================
-             MAIN BODY WRAPPER
-             ======================================================================= -->
         <div class="org-main-wrapper">
 
             <!-- TOP HEADER -->
@@ -270,10 +262,6 @@ else
 
                         <!-- TWO COLUMN MAIN LAYOUT -->
                         <div class="contract-two-col-grid">
-
-                            <!-- =======================================================
-                                 LEFT COLUMN: SPECIFICATIONS & SCHEDULE
-                                 ======================================================= -->
                             <div class="col-left">
 
                                 @if (IsStandaloneMode)
@@ -393,10 +381,6 @@ else
                                 </div>
 
                             </div>
-
-                            <!-- =======================================================
-                                 RIGHT COLUMN: PRODUCTS & VENDOR ASSIGNMENTS
-                                 ======================================================= -->
                             <div class="col-right">
                                 <div class="content-card mb-4">
 
@@ -919,10 +903,6 @@ else
                             </div>
 
                         </div>
-
-                        <!-- =======================================================
-                             CUSTOMER REVIEWS & QUALITY DETAILS MODAL OVERLAY
-                             ======================================================= -->
                         @if (IsReviewsModalOpen && SelectedVendorForReviews != null)
                         {
                             <div class="custom-modal-backdrop" @onclick="CloseVendorReviewsModal"></div>

@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 
-namespace VenodorManagementFrontend.Models;
+namespace VendorManagement.Web.Models;
 
 public class ContractProductAssignmentDto
 {

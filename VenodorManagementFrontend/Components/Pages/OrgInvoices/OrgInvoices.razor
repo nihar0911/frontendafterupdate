@@ -1,6 +1,6 @@
-@page "/organization/invoices"
+﻿@page "/organization/invoices"
 @page "/organization/invoices/{InvoiceId:int}"
-@namespace VenodorManagementFrontend.Components.Pages.OrgInvoices
+@namespace VendorManagement.Web.Components.Pages.OrgInvoices
 
 <PageTitle>Invoices - @OrganizationName</PageTitle>
 
@@ -46,9 +46,6 @@ else
         }
         else
         {
-        <!-- =======================================================================
-             LEFT SIDEBAR NAVIGATION (ENTERPRISE DARK GREEN)
-             ======================================================================= -->
         <aside class="org-sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-branding" @onclick='() => Nav.NavigateTo(Auth.IsPurchaseManager ? "/purchase-manager" : (Auth.IsOutletManager ? "/outlet-manager" : "/org-dashboard"))'>
@@ -220,10 +217,6 @@ else
             </nav>
         </aside>
         }
-
-        <!-- =======================================================================
-             MAIN CONTENT CANVAS
-             ======================================================================= -->
         <div class="org-main-wrapper">
             <main class="org-main-content">
             
@@ -303,9 +296,6 @@ else
                 }
                 else if (IsViewingDetails && SelectedInvoice != null)
                 {
-                    <!-- =======================================================
-                         INVOICE DETAILS & 3-WAY RECONCILIATION VIEW
-                         ======================================================= -->
                     <div class="invoice-details-container">
                         @if (!string.IsNullOrEmpty(ActionError))
                         {
@@ -518,9 +508,6 @@ else
                 }
                 else
                 {
-                    <!-- =======================================================
-                         INVOICES LIST VIEW (ORGANIZATION MANAGER)
-                         ======================================================= -->
                     
                     <!-- SUMMARY METRIC CARDS -->
                     <div class="row g-3 mb-4">
@@ -736,10 +723,6 @@ else
         </main>
         </div>
     </div>
-
-    <!-- =======================================================================
-         REJECT INVOICE MODAL
-         ======================================================================= -->
     @if (ShowRejectModal && SelectedInvoice != null)
     {
         <div class="modal-backdrop-custom">
@@ -782,4 +765,3 @@ else
         </div>
     }
 }
-

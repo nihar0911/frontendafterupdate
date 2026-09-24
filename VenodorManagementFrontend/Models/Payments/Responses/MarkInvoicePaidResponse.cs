@@ -1,6 +1,6 @@
-using VenodorManagementFrontend.Models.Invoices.DTOs;
+﻿using VendorManagement.Web.Models.Invoices.DTOs;
 
-namespace VenodorManagementFrontend.Models.Payments.Responses;
+namespace VendorManagement.Web.Models.Payments.Responses;
 
 public class MarkInvoicePaidResponse
 {

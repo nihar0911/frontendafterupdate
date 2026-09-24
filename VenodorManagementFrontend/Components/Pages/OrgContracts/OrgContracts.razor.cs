@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
-using VenodorManagementFrontend.Models;
-using VenodorManagementFrontend.Services;
+using VendorManagement.Web.Models;
+using VendorManagement.Web.Services;
 
-namespace VenodorManagementFrontend.Components.Pages.OrgContracts;
+namespace VendorManagement.Web.Components.Pages.OrgContracts;
 
 public partial class OrgContracts : ComponentBase
 {
@@ -235,9 +235,6 @@ public partial class OrgContracts : ComponentBase
     private decimal TotalContractedValue => AllOrgContracts.Where(c => string.Equals(c.Status, "Active", StringComparison.OrdinalIgnoreCase)).Sum(c => c.TotalAmount > 0 ? c.TotalAmount : (c.TotalQuantity * c.UnitPrice + c.TaxAmount));
     private decimal TotalContractedQuantity => AllOrgContracts.Where(c => string.Equals(c.Status, "Active", StringComparison.OrdinalIgnoreCase)).Sum(c => c.TotalQuantity);
 
-    // ==========================================
-    // RESET / RENEW CONTRACT LOGIC (FOR CAPACITY REACHED)
-    // ==========================================
     private ContractDto? ContractToReset { get; set; }
     private bool IsResetModalOpen { get; set; } = false;
     private bool IsResetting { get; set; } = false;
@@ -451,9 +448,6 @@ public partial class OrgContracts : ComponentBase
         }
     }
 
-    // ==========================================
-    // END CONTRACT LOGIC
-    // ==========================================
     private ContractDto? ContractToEnd { get; set; }
     private bool IsEndModalOpen { get; set; } = false;
     private bool IsEnding { get; set; } = false;

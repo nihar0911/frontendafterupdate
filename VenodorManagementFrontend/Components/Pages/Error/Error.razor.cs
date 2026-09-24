@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Http;
 
-namespace VenodorManagementFrontend.Components.Pages.Error;
+namespace VendorManagement.Web.Components.Pages.Error;
 
 public partial class Error : ComponentBase
 {

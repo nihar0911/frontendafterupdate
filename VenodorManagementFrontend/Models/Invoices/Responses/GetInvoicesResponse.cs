@@ -1,7 +1,7 @@
-using System.Collections.Generic;
-using VenodorManagementFrontend.Models.Invoices.DTOs;
+﻿using System.Collections.Generic;
+using VendorManagement.Web.Models.Invoices.DTOs;
 
-namespace VenodorManagementFrontend.Models.Invoices.Responses;
+namespace VendorManagement.Web.Models.Invoices.Responses;
 
 public class GetInvoicesResponse
 {

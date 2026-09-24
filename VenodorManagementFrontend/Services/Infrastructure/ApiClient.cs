@@ -1,11 +1,11 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace VenodorManagementFrontend.Services.Infrastructure
+namespace VendorManagement.Web.Services.Infrastructure
 {
     public class ApiClient
     {

@@ -1,6 +1,6 @@
-using VenodorManagementFrontend.Models;
+﻿using VendorManagement.Web.Models;
 
-namespace VenodorManagementFrontend.Models.Contracts.Responses;
+namespace VendorManagement.Web.Models.Contracts.Responses;
 
 public class ResetContractResponse
 {

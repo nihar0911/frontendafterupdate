@@ -1,6 +1,6 @@
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
 
-namespace VenodorManagementFrontend.Components.Pages.AdminLogin;
+namespace VendorManagement.Web.Components.Pages.AdminLogin;
 
 public partial class AdminLogin : ComponentBase
 {

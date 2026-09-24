@@ -1,13 +1,13 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
-using VenodorManagementFrontend.Helpers;
-using VenodorManagementFrontend.Models;
-using VenodorManagementFrontend.Services;
+using VendorManagement.Web.Helpers;
+using VendorManagement.Web.Models;
+using VendorManagement.Web.Services;
 
-namespace VenodorManagementFrontend.Components.Pages.OutletManagerDashboard;
+namespace VendorManagement.Web.Components.Pages.OutletManagerDashboard;
 
 public partial class OutletManagerDashboard : ComponentBase
 {
@@ -194,9 +194,6 @@ public partial class OutletManagerDashboard : ComponentBase
         }
     }
 
-    // =========================================================================
-    // CONTRACT PROPERTIES & FILTERS FOR MY CONTRACTS
-    // =========================================================================
     private string ContractSearchQuery { get; set; } = string.Empty;
     private string ContractStatusFilter { get; set; } = "All";
     private ContractDto? SelectedContractForModal { get; set; }

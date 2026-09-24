@@ -1,6 +1,6 @@
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
 
-namespace VenodorManagementFrontend.Components.Pages.OrgLogin;
+namespace VendorManagement.Web.Components.Pages.OrgLogin;
 
 public partial class OrgLogin : ComponentBase
 {

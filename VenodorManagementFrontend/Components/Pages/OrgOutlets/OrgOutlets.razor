@@ -30,10 +30,6 @@ else if (!Auth.IsOrgManager && !Auth.IsAdmin)
 else
 {
     <div class="org-app-layout @(IsSidebarCollapsed ? "sidebar-collapsed" : "")">
-
-        <!-- =======================================================================
-             LEFT SIDEBAR NAVIGATION
-             ======================================================================= -->
         <aside class="org-sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-branding" @onclick='() => Nav.NavigateTo("/org-dashboard")'>
@@ -195,10 +191,6 @@ else
                 </ul>
             </nav>
         </aside>
-
-        <!-- =======================================================================
-             MAIN BODY WRAPPER
-             ======================================================================= -->
         <div class="org-main-wrapper">
 
             <!-- TOP HEADER -->
@@ -324,7 +316,6 @@ else
                                                 <div class="card-outlet-location mt-1">
                                                     <span>PO approval: @(string.Equals(o.PurchaseOrderApproverRole, "Outlet Manager", StringComparison.OrdinalIgnoreCase) ? "Outlet Manager" : "Organization Manager")</span>
                                                 </div>
-
 
                                                 <!-- Two-column Summary Block -->
                                                 <div class="outlet-metrics-block">
@@ -492,4 +483,3 @@ else
         </div>
     }
 }
-

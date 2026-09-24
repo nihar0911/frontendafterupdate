@@ -1,4 +1,4 @@
-@rendermode InteractiveServer
+﻿@rendermode InteractiveServer
 @implements IDisposable
 @inject AuthService Auth
 @inject ApiService Api
@@ -45,10 +45,6 @@
         </div>
     }
 </div>
-
-@* =========================================================================
-   BUILT-IN MY PROFILE MODAL
-   ========================================================================= *@
 @if (ShowProfileModal)
 {
     <div class="profile-modal-backdrop" @onclick="CloseModals">
@@ -123,10 +119,6 @@
         </div>
     </div>
 }
-
-@* =========================================================================
-   BUILT-IN EDIT PROFILE MODAL
-   ========================================================================= *@
 @if (ShowEditProfileModal)
 {
     <div class="profile-modal-backdrop" @onclick="CloseModals">

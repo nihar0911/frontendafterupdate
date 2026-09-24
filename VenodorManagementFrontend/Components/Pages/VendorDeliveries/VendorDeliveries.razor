@@ -1,0 +1,540 @@
+﻿@page "/vendor-manager/deliveries"
+@page "/vendor/deliveries"
+@page "/vendor-deliveries"
+@rendermode InteractiveServer
+@namespace VendorManagement.Web.Components.Pages.VendorDeliveries
+@inject ApiService Api
+@inject AuthService Auth
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+<PageTitle>My Deliveries - Smart Vendor Management System</PageTitle>
+
+@if (!Auth.IsAuthenticated)
+{
+    <div class="vd-auth-warning-wrap">
+        <div class="vd-auth-warning-card">
+            <h4 class="fw-bold mb-2 text-dark">Authentication Required</h4>
+            <p class="text-muted mb-3">Please log in as a Vendor Manager to view this portal.</p>
+            <button class="btn vd-btn-primary" @onclick='() => Nav.NavigateTo("/login")'>Go to Login</button>
+        </div>
+    </div>
+}
+else if (!Auth.IsVendorManager && !Auth.IsAdmin)
+{
+    <div class="vd-auth-warning-wrap">
+        <div class="vd-auth-warning-card">
+            <h4 class="fw-bold mb-2 text-danger">Access Denied</h4>
+            <p class="text-muted mb-3">You do not have Vendor Manager privileges to access this portal.</p>
+            <button class="btn btn-outline-secondary" @onclick='() => Nav.NavigateTo("/")'>Return to Home</button>
+        </div>
+    </div>
+}
+else if (!Auth.VendorID.HasValue || Auth.VendorID.Value <= 0)
+{
+    <div class="vd-auth-warning-wrap">
+        <div class="vd-auth-warning-card">
+            <h4 class="fw-bold mb-2 text-warning">Account Configuration Required</h4>
+            <p class="text-muted mb-3">Your vendor manager account is not currently linked to a specific Vendor ID in the database.</p>
+            <p class="small text-muted mb-3">Please contact an administrator to map your user profile to a registered vendor.</p>
+            <button class="btn btn-outline-secondary" @onclick='() => Nav.NavigateTo("/login")'>Return to Login</button>
+        </div>
+    </div>
+}
+else
+{
+    <div class="vd-layout">
+        <aside class="vd-sidebar">
+            <div class="vd-sidebar-top">
+                <!-- SIDEBAR BRAND -->
+                <div class="vd-sidebar-brand" @onclick='() => Nav.NavigateTo("/vendor-dashboard")' style="cursor: pointer;">
+                    <div class="vd-brand-icon-box">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+                            <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+                            <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+                            <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+                        </svg>
+                    </div>
+                    <span class="vd-brand-text">VENDOR WORKSPACE</span>
+                </div>
+
+                <!-- NAVIGATION ITEMS -->
+                <nav class="vd-nav-list">
+                    <button type="button" 
+                            class="vd-nav-item"
+                            @onclick='() => Nav.NavigateTo("/vendor-dashboard")'>
+                        <svg class="vd-nav-icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                        </svg>
+                        <span>Dashboard</span>
+                    </button>
+
+                    <button type="button" 
+                            class="vd-nav-item"
+                            @onclick='() => Nav.NavigateTo("/vendor-dashboard")'>
+                        <svg class="vd-nav-icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        <span>My Quotations</span>
+                    </button>
+
+                    <button type="button" 
+                            class="vd-nav-item"
+                            @onclick='() => Nav.NavigateTo("/vendor-dashboard")'>
+                        <svg class="vd-nav-icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                            <line x1="12" y1="11" x2="12" y2="17"></line>
+                            <line x1="9" y1="14" x2="15" y2="14"></line>
+                        </svg>
+                        <span>My Contracts</span>
+                    </button>
+
+                    <button type="button" 
+                            class="vd-nav-item"
+                            @onclick='() => Nav.NavigateTo("/vendor-dashboard")'>
+                        <svg class="vd-nav-icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="1" y="3" width="15" height="13"></rect>
+                            <polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon>
+                            <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                            <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                        </svg>
+                        <span>Purchase Orders</span>
+                    </button>
+
+                    <button type="button" 
+                            class="vd-nav-item active">
+                        <svg class="vd-nav-icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                        </svg>
+                        <span>My Deliveries</span>
+                    </button>
+
+                    <button type="button" 
+                            class="vd-nav-item"
+                            @onclick='() => Nav.NavigateTo("/vendor-dashboard")'>
+                        <svg class="vd-nav-icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        <span>Invoices</span>
+                    </button>
+
+                    <button type="button" 
+                            class="vd-nav-item"
+                            @onclick='() => Nav.NavigateTo("/vendor-dashboard")'>
+                        <svg class="vd-nav-icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                        <span>Performance &amp; Reviews</span>
+                    </button>
+
+                    <button type="button" 
+                            class="vd-nav-item"
+                            @onclick='() => Nav.NavigateTo("/vendor-dashboard")'>
+                        <svg class="vd-nav-icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        <span>My Profile</span>
+                    </button>
+
+                    <div style="height: 1px; background: rgba(255, 255, 255, 0.12); margin: 0.5rem 0.7rem;"></div>
+                    <div style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(255, 255, 255, 0.45); padding: 0.25rem 0.7rem;">Configuration</div>
+
+                    <button type="button" 
+                            class="vd-nav-item"
+                            @onclick='() => Nav.NavigateTo("/vendor/spoilage-advice-settings")'>
+                        <svg class="vd-nav-icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                        <span>Spoilage Advice Settings</span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- SIDEBAR FOOTER (USER & LOGOUT) -->
+            <div class="vd-sidebar-bottom">
+                <div class="vd-user-profile-row">
+                    <div class="vd-avatar-circle">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"></path>
+                            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                            <path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"></path>
+                        </svg>
+                    </div>
+                    <div class="vd-user-info-text">
+                        <div class="vd-user-name">@DisplayName</div>
+                        <div class="vd-user-role">@(Auth.IsAdmin ? "Administrator" : "Vendor Manager")</div>
+                    </div>
+                </div>
+
+                <button type="button" class="vd-logout-btn" @onclick="HandleLogout">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+        <main class="vd-main-canvas">
+
+            <!-- TOP HEADER -->
+            <header class="vd-top-header">
+                <div class="vd-header-left">
+                    <button type="button" class="vd-menu-btn" aria-label="Toggle menu" @onclick='() => Nav.NavigateTo("/vendor-dashboard")'>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <div>
+                        <h2 class="vd-welcome-title">My Deliveries</h2>
+                        <p class="vd-welcome-subtitle">Confirmed delivery history and item-level fulfillment records</p>
+                    </div>
+                </div>
+
+                <div class="vd-header-right">
+                    <ProfileMenu VendorName="@DisplayName" />
+                </div>
+            </header>
+
+            <!-- DASHBOARD BODY -->
+            <div class="vd-dashboard-body">
+
+                @if (IsLoading)
+                {
+                    <div class="vd-loading-container p-5 text-center">
+                        <div class="spinner-border text-success" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2 text-muted fw-semibold">Loading delivery history...</p>
+                    </div>
+                }
+                else if (!string.IsNullOrEmpty(ErrorMessage))
+                {
+                    <div class="alert alert-danger d-flex align-items-center justify-content-between p-3 mb-4 rounded" role="alert">
+                        <div class="d-flex align-items-center gap-2">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                            <span>@ErrorMessage</span>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-danger" @onclick="LoadDeliveriesAsync">Retry</button>
+                    </div>
+                }
+                else
+                {
+                    <div class="vd-metric-grid mb-4">
+                        <!-- TOTAL DELIVERIES -->
+                        <div class="vd-metric-card">
+                            <div class="vd-metric-header">
+                                <div class="vd-metric-icon bg-light-green text-green">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                                    </svg>
+                                </div>
+                                <span class="vd-metric-label">TOTAL DELIVERIES</span>
+                            </div>
+                            <div class="vd-metric-body">
+                                <span class="vd-metric-value">@TotalDeliveriesCount</span>
+                                <div class="vd-metric-link text-green">
+                                    <span>Confirmed item records</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TOTAL RECEIVED QUANTITY -->
+                        <div class="vd-metric-card">
+                            <div class="vd-metric-header">
+                                <div class="vd-metric-icon bg-light-blue text-blue">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M20 6L9 17l-5-5"></path>
+                                    </svg>
+                                </div>
+                                <span class="vd-metric-label">TOTAL RECEIVED</span>
+                            </div>
+                            <div class="vd-metric-body">
+                                <span class="vd-metric-value">@TotalReceivedDisplay</span>
+                                <div class="vd-metric-link text-blue">
+                                    <span>@ReceivedSubtext</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TOTAL SPOILED QUANTITY -->
+                        <div class="vd-metric-card">
+                            <div class="vd-metric-header">
+                                <div class="vd-metric-icon bg-light-amber text-amber">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                    </svg>
+                                </div>
+                                <span class="vd-metric-label">TOTAL SPOILED</span>
+                            </div>
+                            <div class="vd-metric-body">
+                                <span class="vd-metric-value">@TotalSpoiledDisplay</span>
+                                <div class="vd-metric-link text-amber">
+                                    <span>@SpoiledSubtext</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- DISTINCT PRODUCTS DELIVERED -->
+                        <div class="vd-metric-card">
+                            <div class="vd-metric-header">
+                                <div class="vd-metric-icon bg-light-green text-green">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                                    </svg>
+                                </div>
+                                <span class="vd-metric-label">PRODUCTS DELIVERED</span>
+                            </div>
+                            <div class="vd-metric-body">
+                                <span class="vd-metric-value">@DistinctProductsCount</span>
+                                <div class="vd-metric-link text-green">
+                                    <span>Distinct catalogue items</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="vd-card p-4">
+                        
+                        <!-- HEADER & FILTER TOOLBAR -->
+                        <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom flex-wrap gap-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="vd-metric-icon bg-light-green text-green">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="fw-bold mb-0 text-dark">Delivery Records</h3>
+                                    <p class="text-muted small mb-0">Item-level confirmation records with quantities and delivery statuses</p>
+                                </div>
+                            </div>
+
+                            <!-- SEARCH BOX -->
+                            <div class="vd-search-box">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                                <input type="text" 
+                                       class="vd-search-input" 
+                                       placeholder="Search PO, product, outlet..." 
+                                       @bind="SearchQuery" 
+                                       @bind:event="oninput" />
+                            </div>
+                        </div>
+
+                        <!-- TASK 6: FILTER CONTROLS BAR -->
+                        <div class="vd-filter-row mb-4 p-3 bg-light rounded border">
+                            <div class="row g-2 align-items-end">
+                                <!-- PRODUCT FILTER -->
+                                <div class="col-md-3 col-sm-6">
+                                    <label class="form-label small fw-bold text-muted mb-1">Product</label>
+                                    <select class="form-select form-select-sm" @bind="SelectedProductFilter">
+                                        <option value="All">All Products (@AllProductNames.Count)</option>
+                                        @foreach (var prod in AllProductNames)
+                                        {
+                                            <option value="@prod">@prod</option>
+                                        }
+                                    </select>
+                                </div>
+
+                                <!-- OUTLET FILTER -->
+                                <div class="col-md-3 col-sm-6">
+                                    <label class="form-label small fw-bold text-muted mb-1">Outlet</label>
+                                    <select class="form-select form-select-sm" @bind="SelectedOutletFilter">
+                                        <option value="All">All Outlets (@AllOutletNames.Count)</option>
+                                        @foreach (var outlet in AllOutletNames)
+                                        {
+                                            <option value="@outlet">@outlet</option>
+                                        }
+                                    </select>
+                                </div>
+
+                                <!-- STATUS FILTER -->
+                                <div class="col-md-2 col-sm-6">
+                                    <label class="form-label small fw-bold text-muted mb-1">Delivery Status</label>
+                                    <select class="form-select form-select-sm" @bind="SelectedStatusFilter">
+                                        <option value="All">All Statuses</option>
+                                        @foreach (var st in AllStatuses)
+                                        {
+                                            <option value="@st">@st</option>
+                                        }
+                                    </select>
+                                </div>
+
+                                <!-- DATE FROM -->
+                                <div class="col-md-2 col-sm-3">
+                                    <label class="form-label small fw-bold text-muted mb-1">Date From</label>
+                                    <input type="date" class="form-control form-control-sm" @bind="StartDateFilter" />
+                                </div>
+
+                                <!-- DATE TO -->
+                                <div class="col-md-2 col-sm-3">
+                                    <label class="form-label small fw-bold text-muted mb-1">Date To</label>
+                                    <input type="date" class="form-control form-control-sm" @bind="EndDateFilter" />
+                                </div>
+                            </div>
+
+                            @if (IsFiltered)
+                            {
+                                <div class="d-flex align-items-center justify-content-between mt-3 pt-2 border-top">
+                                    <span class="small text-muted">
+                                        Showing <strong>@FilteredDeliveries.Count</strong> of <strong>@AllDeliveries.Count</strong> delivery items
+                                    </span>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary px-3" @onclick="ResetFilters">
+                                        Reset Filters
+                                    </button>
+                                </div>
+                            }
+                        </div>
+                        @if (FilteredDeliveries.Count == 0)
+                        {
+                            <!-- TASK 7: EMPTY STATE -->
+                            <div class="vd-empty-state p-5 text-center">
+                                <div class="vd-empty-icon mb-3">
+                                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#9AA5B1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="1" y="3" width="15" height="13"></rect>
+                                        <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                                        <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                        <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                                    </svg>
+                                </div>
+                                <h5 class="fw-bold text-dark mb-1">No deliveries found.</h5>
+                                @if (IsFiltered)
+                                {
+                                    <p class="text-muted small mb-3">No confirmed delivery records match your selected filter criteria.</p>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="ResetFilters">Reset Filters</button>
+                                }
+                                else
+                                {
+                                    <p class="text-muted small mb-0">There are no confirmed delivery records available for your vendor account.</p>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0 vd-table-deliveries">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="small fw-bold text-muted text-uppercase">Purchase Order</th>
+                                            <th class="small fw-bold text-muted text-uppercase">Product</th>
+                                            <th class="small fw-bold text-muted text-uppercase">Outlet</th>
+                                            <th class="small fw-bold text-muted text-uppercase text-end">Ordered Quantity</th>
+                                            <th class="small fw-bold text-muted text-uppercase text-end">Received Quantity</th>
+                                            <th class="small fw-bold text-muted text-uppercase text-end">Spoiled Quantity</th>
+                                            <th class="small fw-bold text-muted text-uppercase text-center">Unit</th>
+                                            <th class="small fw-bold text-muted text-uppercase">Delivery Date</th>
+                                            <th class="small fw-bold text-muted text-uppercase">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in FilteredDeliveries)
+                                        {
+                                            bool isExpanded = ExpandedRecordId == item.DeliveryRecordID;
+                                            string poLabel = string.IsNullOrWhiteSpace(item.PONumber) 
+                                                ? $"PO-{item.PurchaseOrderID}" 
+                                                : item.PONumber.Replace("#", "");
+
+                                            <tr class="cursor-pointer @(isExpanded ? "table-active" : "")" 
+                                                @onclick="() => ToggleDetails(item.DeliveryRecordID)"
+                                                title="Click to view delivery details">
+                                                <td>
+                                                    <span class="badge bg-light text-dark border px-2.5 py-1.5 fw-bold font-monospace">@poLabel</span>
+                                                </td>
+                                                <td>
+                                                    <div class="fw-bold text-dark">@item.ProductName</div>
+                                                    <div class="text-muted small">Item #@item.POItemID</div>
+                                                </td>
+                                                <td>
+                                                    <div class="fw-semibold text-dark">@item.OutletName</div>
+                                                </td>
+                                                <td class="text-end fw-semibold">
+                                                    @item.OrderedQuantity.ToString("0.##")
+                                                </td>
+                                                <td class="text-end fw-bold text-success">
+                                                    @item.ReceivedQuantity.ToString("0.##")
+                                                </td>
+                                                <td class="text-end fw-semibold @(item.SpoiledQuantity > 0 ? "text-danger" : "text-muted")">
+                                                    @item.SpoiledQuantity.ToString("0.##")
+                                                </td>
+                                                <td class="text-center text-muted small fw-semibold">
+                                                    @item.Unit
+                                                </td>
+                                                <td class="text-muted small">
+                                                    @item.DeliveryDate.ToIst("dd MMM yyyy")
+                                                </td>
+                                                <td>
+                                                    <span class="vd-status-pill status-approved">
+                                                        <span>@(string.IsNullOrWhiteSpace(item.DeliveryStatus) ? item.Status : item.DeliveryStatus)</span>
+                                                    </span>
+                                                </td>
+                                            </tr>
+
+                                            @if (isExpanded)
+                                            {
+                                                <!-- TASK 10: CLEAN INLINE DELIVERY DETAILS DRAWER -->
+                                                <tr class="bg-light border-bottom">
+                                                    <td colspan="9" class="p-3">
+                                                        <div class="card border bg-white p-3 shadow-sm rounded">
+                                                            <div class="row g-3">
+                                                                <div class="col-md-3 col-sm-6">
+                                                                    <div class="text-muted small">Purchase Order Reference</div>
+                                                                    <div class="fw-bold text-dark">@poLabel (ID: @item.PurchaseOrderID)</div>
+                                                                </div>
+                                                                <div class="col-md-3 col-sm-6">
+                                                                    <div class="text-muted small">Confirmed By</div>
+                                                                    <div class="fw-bold text-dark">@(string.IsNullOrWhiteSpace(item.ConfirmedByUserName) ? "Outlet Staff" : item.ConfirmedByUserName)</div>
+                                                                </div>
+                                                                <div class="col-md-3 col-sm-6">
+                                                                    <div class="text-muted small">Confirmed On</div>
+                                                                    <div class="fw-bold text-dark">@(item.ConfirmedAt.HasValue ? item.ConfirmedAt.Value.ToIst("dd MMM yyyy, hh:mm tt") : item.DeliveryDate.ToIst("dd MMM yyyy"))</div>
+                                                                </div>
+                                                                <div class="col-md-3 col-sm-6">
+                                                                    <div class="text-muted small">Spoilage Percentage</div>
+                                                                    <div class="fw-bold @(item.SpoilagePercentage > 0 ? "text-danger" : "text-success")">
+                                                                        @item.SpoilagePercentage.ToString("0.00")%
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </main>
+    </div>
+}

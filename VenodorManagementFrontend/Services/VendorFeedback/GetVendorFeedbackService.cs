@@ -1,8 +1,8 @@
-using System; using System.Collections.Generic; using System.Net.Http.Json; using System.Threading.Tasks;
-using VenodorManagementFrontend.Models;
-using VenodorManagementFrontend.Models.VendorPerformance;
-using VenodorManagementFrontend.Services.Infrastructure;
-namespace VenodorManagementFrontend.Services.VendorFeedback
+﻿using System; using System.Collections.Generic; using System.Net.Http.Json; using System.Threading.Tasks;
+using VendorManagement.Web.Models;
+using VendorManagement.Web.Models.VendorPerformance;
+using VendorManagement.Web.Services.Infrastructure;
+namespace VendorManagement.Web.Services.VendorFeedback
 {
     public class GetVendorFeedbackService
     {

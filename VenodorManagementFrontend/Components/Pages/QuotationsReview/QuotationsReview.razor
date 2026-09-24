@@ -1,4 +1,4 @@
-@page "/quotations"
+﻿@page "/quotations"
 @rendermode InteractiveServer
 @inject ApiService Api
 @inject AuthService Auth
@@ -38,9 +38,6 @@ else
         }
         else if (Auth.IsOutletManager)
         {
-        <!-- =======================================================================
-             LEFT SIDEBAR NAVIGATION (OUTLET MANAGER WORKSPACE - ENTERPRISE DARK GREEN)
-             ======================================================================= -->
         <aside class="org-sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-branding" @onclick='() => Nav.NavigateTo("/outlet-manager")' style="cursor: pointer;">
@@ -163,9 +160,6 @@ else
         }
         else
         {
-        <!-- =======================================================================
-             LEFT SIDEBAR NAVIGATION (ENTERPRISE DARK GREEN)
-             ======================================================================= -->
         <aside class="org-sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-branding" @onclick='() => Nav.NavigateTo(Auth.IsPurchaseManager ? "/purchase-manager" : (Auth.IsOutletManager ? "/outlet-manager" : "/org-dashboard"))'>
@@ -334,10 +328,6 @@ else
             </nav>
         </aside>
         }
-
-        <!-- =======================================================================
-             MAIN BODY WRAPPER
-             ======================================================================= -->
         <div class="org-main-wrapper">
 
             <!-- TOP HEADER -->
@@ -727,10 +717,6 @@ else
         </div>
     </div>
 }
-
-<!-- =======================================================================
-     VIEW DETAILS MODAL (MATCHING REFERENCE IMAGE 2)
-     ======================================================================= -->
 @if (ModalQuotation != null)
 {
     var vendorDetails = GetVendorDetails(ModalQuotation.VendorID);

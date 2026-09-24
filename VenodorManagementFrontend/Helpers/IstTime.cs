@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 
-namespace VenodorManagementFrontend.Helpers;
+namespace VendorManagement.Web.Helpers;
 
 public static class IstTime
 {

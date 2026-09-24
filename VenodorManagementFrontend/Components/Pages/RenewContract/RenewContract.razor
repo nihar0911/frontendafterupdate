@@ -1,4 +1,4 @@
-@page "/contract/{contractId:int}/renew"
+﻿@page "/contract/{contractId:int}/renew"
 @rendermode InteractiveServer
 
 <PageTitle>Renew Contract #@contractId - Smart Vendor Management System</PageTitle>
@@ -26,10 +26,6 @@ else if (!Auth.IsOrgManager && !Auth.IsAdmin)
 else
 {
     <div class="org-app-layout @(IsSidebarCollapsed ? "sidebar-collapsed" : "")">
-
-        <!-- =======================================================================
-             LEFT SIDEBAR NAVIGATION
-             ======================================================================= -->
         <aside class="org-sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-branding" @onclick='() => Nav.NavigateTo("/org-dashboard")'>
@@ -164,10 +160,6 @@ else
                 </ul>
             </nav>
         </aside>
-
-        <!-- =======================================================================
-             MAIN BODY WRAPPER
-             ======================================================================= -->
         <div class="org-main-wrapper">
 
             <!-- TOP HEADER -->
@@ -291,10 +283,6 @@ else
                                 <button type="button" class="btn-close" @onclick="() => ValidationMessage = null" aria-label="Close"></button>
                             </div>
                         }
-
-                        <!-- =======================================================
-                             1. TOP HERO CARD (EXPIRED CONTRACT AUDIT CONTEXT)
-                             ======================================================= -->
                         <div class="contract-hero-card mb-4">
                             <div class="hero-left">
                                 <div class="hero-icon-box">
@@ -324,10 +312,6 @@ else
                                 <span class="status-pill status-expired">Expired</span>
                             </div>
                         </div>
-
-                        <!-- =======================================================
-                             2. RENEWAL SPECIFICATIONS GRID (TWO COLUMNS)
-                             ======================================================= -->
                         <div class="renewal-form-grid mb-4">
 
                             <!-- LEFT CARD: READ-ONLY CONTEXT -->
@@ -434,10 +418,6 @@ else
                             </div>
 
                         </div>
-
-                        <!-- =======================================================
-                             3. MULTI-PRODUCT PLANNING QUANTITIES TABLE
-                             ======================================================= -->
                         <div class="content-card mb-4">
                             <div class="card-header-row">
                                 <div class="card-icon-box">
@@ -528,10 +508,6 @@ else
                                 </div>
                             </div>
                         </div>
-
-                        <!-- =======================================================
-                             4. ACTION FOOTER
-                             ======================================================= -->
                         <div class="d-flex justify-content-between align-items-center pt-2 pb-5">
                             <button type="button" class="btn-cancel-renewal" @onclick="NavigateBack" disabled="@IsProcessing">
                                 Cancel &amp; Return
@@ -554,10 +530,6 @@ else
 
     </div>
 }
-
-<!-- =======================================================================
-     REVIEW & SUBMISSION MODAL
-     ======================================================================= -->
 @if (IsReviewModalOpen && ExpiredContract != null)
 {
     <div class="renewal-modal-backdrop" @onclick="CloseReviewModal">

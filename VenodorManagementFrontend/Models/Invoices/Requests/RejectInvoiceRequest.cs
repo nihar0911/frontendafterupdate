@@ -1,4 +1,4 @@
-namespace VenodorManagementFrontend.Models.Invoices.Requests;
+﻿namespace VendorManagement.Web.Models.Invoices.Requests;
 
 public class RejectInvoiceRequest
 {

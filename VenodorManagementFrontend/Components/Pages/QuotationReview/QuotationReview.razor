@@ -1,4 +1,4 @@
-@page "/quotation-review"
+﻿@page "/quotation-review"
 @page "/quotation-review/{QuotationId:int}"
 @rendermode InteractiveServer
 @inject ApiService Api
@@ -39,9 +39,6 @@ else
         }
         else if (Auth.IsOutletManager)
         {
-        <!-- =======================================================================
-             LEFT SIDEBAR NAVIGATION (OUTLET MANAGER WORKSPACE - ENTERPRISE DARK GREEN)
-             ======================================================================= -->
         <aside class="org-sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-branding" @onclick='() => Nav.NavigateTo("/outlet-manager")' style="cursor: pointer;">
@@ -164,9 +161,6 @@ else
         }
         else
         {
-        <!-- =======================================================================
-             LEFT SIDEBAR NAVIGATION (ENTERPRISE DARK GREEN)
-             ======================================================================= -->
         <aside class="org-sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-branding" @onclick='() => Nav.NavigateTo(Auth.IsPurchaseManager ? "/purchase-manager" : "/org-dashboard")'>
@@ -308,10 +302,6 @@ else
             </nav>
         </aside>
         }
-
-        <!-- =======================================================================
-             MAIN BODY WRAPPER
-             ======================================================================= -->
         <div class="org-main-wrapper">
 
             <!-- TOP HEADER -->
@@ -438,10 +428,6 @@ else
 
                         <!-- TWO COLUMN MAIN LAYOUT (MATCHING REFERENCE IMAGE) -->
                         <div class="quotation-two-col-grid">
-
-                            <!-- =======================================================
-                                 LEFT COLUMN: PURCHASE REQUEST & VENDOR CONTEXT
-                                 ======================================================= -->
                             <div class="col-left">
 
                                 <!-- PURCHASE REQUEST SUMMARY CARD -->
@@ -497,10 +483,6 @@ else
                                 </div>
 
                             </div>
-
-                            <!-- =======================================================
-                                 RIGHT COLUMN: QUOTATION SUMMARY, PRICING & ACTIONS
-                                 ======================================================= -->
                             <div class="col-right">
                                 <div class="content-card">
 
@@ -742,10 +724,6 @@ else
                             </div>
 
                         </div>
-
-                        <!-- =======================================================
-                             BOTTOM TWO OPTIONAL CARDS (DELIVERY TERMS & NOTES)
-                             ======================================================= -->
                         <div class="bottom-two-col-grid">
                             
                             <!-- DELIVERY TERMS CARD -->

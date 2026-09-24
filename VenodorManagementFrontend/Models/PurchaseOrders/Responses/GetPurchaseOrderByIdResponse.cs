@@ -1,4 +1,4 @@
-namespace VenodorManagementFrontend.Models;
+﻿namespace VendorManagement.Web.Models;
 
 public class GetPurchaseOrderByIdResponse
 {

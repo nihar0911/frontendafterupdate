@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 
-namespace VenodorManagementFrontend.Models.Payments.Commands;
+namespace VendorManagement.Web.Models.Payments.Commands;
 
 public class MarkInvoicePaidCommand
 {

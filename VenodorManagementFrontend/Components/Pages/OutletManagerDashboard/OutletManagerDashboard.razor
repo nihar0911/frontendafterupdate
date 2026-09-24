@@ -1,4 +1,4 @@
-@page "/outlet-manager"
+﻿@page "/outlet-manager"
 @page "/outlet-manager/dashboard"
 @page "/outlet/dashboard"
 @page "/outlet-manager/contracts"
@@ -33,10 +33,6 @@ else if (!Auth.IsOutletManager && !Auth.IsAdmin)
 else
 {
     <div class="om-layout">
-        
-        <!-- ===================================================================
-             1. DARK GREEN SIDEBAR (#174F45)
-             =================================================================== -->
         <aside class="om-sidebar @(IsSidebarCollapsed ? "collapsed" : "")">
             
             <div class="om-sidebar-top">
@@ -135,10 +131,6 @@ else
             </div>
 
         </aside>
-
-        <!-- ===================================================================
-             2. MAIN CONTENT AREA
-             =================================================================== -->
         <main class="om-main-canvas">
             
             <!-- TOP HEADER -->
@@ -301,9 +293,6 @@ else
             }
             else
             {
-                <!-- ===============================================================
-                     TAB 1: MAIN DASHBOARD VIEW
-                     =============================================================== -->
                 @if (ActiveTab == "Dashboard")
                 {
                     <div class="om-dashboard-body">
@@ -625,10 +614,6 @@ else
 
                     </div>
                 }
-
-                <!-- ===============================================================
-                     TAB 2: MY PURCHASE REQUESTS VIEW (EXACT MATCH TO REFERENCE)
-                     =============================================================== -->
                 else if (ActiveTab == "MyRequests")
                 {
                     <div class="om-prs-page-container">
@@ -765,13 +750,6 @@ else
 
                     </div>
                 }
-
-                <!-- ===============================================================
-                     TAB 3: MY OUTLET VIEW (EXACT MATCH TO REFERENCE DESIGN)
-                     =============================================================== -->
-                                <!-- ===============================================================
-                     TAB: MY CONTRACTS VIEW (READ-ONLY FOR OUTLET)
-                     =============================================================== -->
                 else if (ActiveTab == "MyContracts")
                 {
                     <div class="om-contracts-page-container">
@@ -1187,10 +1165,6 @@ else
 
                     </div>
                 }
-
-                <!-- ===============================================================
-                     TAB: PURCHASE ORDERS & DELIVERIES (CLEAN REDESIGN)
-                     =============================================================== -->
                 else if (ActiveTab == "PurchaseOrders")
                 {
                     <div class="om-po-page-container">
@@ -1406,10 +1380,6 @@ else
                         </div>
                     </div>
                 }
-
-                <!-- ===============================================================
-                     TAB 4: MY PROFILE VIEW
-                     =============================================================== -->
                 else if (ActiveTab == "MyProfile")
                 {
                     <div class="row justify-content-center">
@@ -1458,13 +1428,6 @@ else
             </div>
 
         </main>
-
-        <!-- ===================================================================
-             PURCHASE ORDER STATUS & DETAILS MODAL (MATCHES SCREENSHOT 1 DESIGN)
-             =================================================================== -->
-        <!-- ===================================================================
-             READ-ONLY CONTRACT DETAILS MODAL (OUTLET MANAGER)
-             =================================================================== -->
         @if (ShowContractDetailsModal && SelectedContractForModal != null)
         {
             <div class="om-modal-backdrop" @onclick="CloseContractDetails">
@@ -1711,10 +1674,6 @@ else
                                 <button type="button" class="btn-close btn-close-sm" @onclick="() => DeliveryFormError = string.Empty"></button>
                             </div>
                         }
-
-                        <!-- =======================================================
-                             VIEW MODE: STANDARD PO DETAILS
-                             ======================================================= -->
                         @if (!IsRecordingDelivery && !IsReviewingDelivery)
                         {
                             <!-- 2-COLUMN ORDER DETAILS GRID -->
@@ -1890,10 +1849,6 @@ else
                                 </div>
                             }
                         }
-
-                        <!-- =======================================================
-                             STEP 1: RECORD DELIVERY INPUT FORM
-                             ======================================================= -->
                         @if (false && IsRecordingDelivery && !IsReviewingDelivery)
                         {
                             <div class="om-delivery-form-container">
@@ -1947,10 +1902,6 @@ else
                                 </div>
                             </div>
                         }
-
-                        <!-- =======================================================
-                             STEP 2: REVIEW & CONFIRM DELIVERY
-                             ======================================================= -->
                         @if (false && IsReviewingDelivery)
                         {
                             <div class="om-delivery-review-container">
