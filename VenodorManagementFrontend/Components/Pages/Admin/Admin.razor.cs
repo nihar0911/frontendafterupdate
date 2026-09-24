@@ -36,13 +36,25 @@ public partial class Admin : ComponentBase
 
     private async Task MarkAsRead(int notificationId)
     {
-        await Api.MarkNotificationReadAsync(notificationId);
         var notif = Notifications.FirstOrDefault(n => n.NotificationID == notificationId);
-        if (notif != null)
+        if (notif != null && !notif.IsRead)
         {
-            notif.IsRead = true;
+            var success = await Api.MarkNotificationReadAsync(notificationId);
+            if (success)
+            {
+                notif.IsRead = true;
+                StateHasChanged();
+            }
         }
-        StateHasChanged();
+    }
+
+    private async Task HandleNotificationClick(NotificationDto notif)
+    {
+        if (notif == null) return;
+        if (!notif.IsRead)
+        {
+            await MarkAsRead(notif.NotificationID);
+        }
     }
 
     private async Task MarkAllAsRead()

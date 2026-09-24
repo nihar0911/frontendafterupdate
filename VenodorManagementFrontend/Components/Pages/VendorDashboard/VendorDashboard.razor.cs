@@ -1151,12 +1151,17 @@ public partial class VendorDashboard : ComponentBase
 
     private async Task MarkAsRead(int notificationId)
     {
+        var notif = Notifications.FirstOrDefault(n => n.NotificationID == notificationId);
+        if (notif == null || notif.IsRead) return;
+
         try
         {
-            await Api.MarkNotificationReadAsync(notificationId);
-            var notif = Notifications.FirstOrDefault(n => n.NotificationID == notificationId);
-            if (notif != null) notif.IsRead = true;
-            StateHasChanged();
+            var success = await Api.MarkNotificationReadAsync(notificationId);
+            if (success)
+            {
+                notif.IsRead = true;
+                StateHasChanged();
+            }
         }
         catch { }
     }
@@ -1197,7 +1202,11 @@ public partial class VendorDashboard : ComponentBase
 
     private async Task HandleVendorNotificationClick(NotificationDto notif)
     {
-        await MarkAsRead(notif.NotificationID);
+        if (notif == null) return;
+        if (!notif.IsRead)
+        {
+            await MarkAsRead(notif.NotificationID);
+        }
         ShowNotificationDropdown = false;
 
         if (notif.NotificationType == "VendorReview")

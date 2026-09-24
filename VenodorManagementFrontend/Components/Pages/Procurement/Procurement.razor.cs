@@ -235,10 +235,16 @@ public partial class Procurement : ComponentBase, IDisposable
 
     private async Task MarkNotificationRead(int notificationId)
     {
-        await Api.MarkNotificationReadAsync(notificationId);
         var notif = Notifications.FirstOrDefault(n => n.NotificationID == notificationId);
-        if (notif != null) notif.IsRead = true;
-        StateHasChanged();
+        if (notif != null && !notif.IsRead)
+        {
+            var success = await Api.MarkNotificationReadAsync(notificationId);
+            if (success)
+            {
+                notif.IsRead = true;
+                StateHasChanged();
+            }
+        }
     }
 
     private async Task MarkAllAsRead()

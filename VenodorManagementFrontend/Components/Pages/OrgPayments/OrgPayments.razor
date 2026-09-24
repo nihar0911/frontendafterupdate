@@ -83,12 +83,6 @@ else
                 </button>
             </div>
 
-            <!-- Portal Badge -->
-            <div class="sidebar-portal-badge">
-                <span class="portal-dot"></span>
-                <span class="portal-label">@(Auth.IsPurchaseManager ? "Purchase Manager Portal" : (Auth.IsOutletManager ? "Outlet Manager Portal" : "Organization Portal"))</span>
-            </div>
-
             <!-- Navigation Links -->
             <nav class="sidebar-nav">
                 <button class="nav-item-btn" @onclick='() => Nav.NavigateTo(Auth.IsPurchaseManager ? "/purchase-manager" : (Auth.IsOutletManager ? "/outlet-manager" : "/org-dashboard"))'>

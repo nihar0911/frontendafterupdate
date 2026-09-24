@@ -1,4 +1,4 @@
-﻿@page "/org-dashboard"
+@page "/org-dashboard"
 @rendermode InteractiveServer
 @inject ApiService Api
 @inject AuthService Auth
@@ -261,7 +261,7 @@ else
                                         }
                                     </div>
                                 </div>
-                                @if (Notifications.Count == 0)
+                                @if (Notifications == null || Notifications.Count == 0)
                                 {
                                     <p class="text-muted small mb-0 py-2 text-center">No notifications.</p>
                                 }
@@ -315,7 +315,7 @@ else
 
                                                     @if (!notif.IsRead)
                                                     {
-                                                        <button class="btn btn-link btn-sm p-0 text-muted" style="font-size: 0.72rem;" @onclick='() => MarkAsRead(notif.NotificationID)'>
+                                                        <button class="btn btn-link btn-sm p-0 text-muted" style="font-size: 0.72rem;" @onclick='() => MarkAsRead(notif.NotificationID)' @onclick:stopPropagation="true">
                                                             Mark as read
                                                         </button>
                                                     }
