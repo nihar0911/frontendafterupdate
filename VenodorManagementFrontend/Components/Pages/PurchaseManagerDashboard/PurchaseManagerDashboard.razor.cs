@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,11 +10,17 @@ using VendorManagement.Web.Services;
 
 namespace VendorManagement.Web.Components.Pages.PurchaseManagerDashboard;
 
-public partial class PurchaseManagerDashboard : ComponentBase
+public partial class PurchaseManagerDashboard : ComponentBase, IDisposable
 {
     private bool IsLoading { get; set; } = true;
     private bool HasError { get; set; } = false;
     private string ErrorMessage { get; set; } = string.Empty;
+
+    // Background & Section-level loading flags
+    private bool IsLoadingNotifications { get; set; } = true;
+    private bool IsLoadingBackgroundData { get; set; } = false;
+    private bool _isDataLoading = false;
+    private bool _isDisposed = false;
 
     private bool IsSidebarCollapsed { get; set; } = false;
     private bool IsProfileDropdownOpen { get; set; } = false;
@@ -30,6 +36,13 @@ public partial class PurchaseManagerDashboard : ComponentBase
     private Dictionary<int, string> VendorNames { get; set; } = new();
     private Dictionary<int, string> ProductNames { get; set; } = new();
     private Dictionary<int, PurchaseRequestDto> PurchaseRequestDict { get; set; } = new();
+
+    // Scoped entities cached in memory for seamless background recalculation
+    private List<PurchaseRequestDto> _scopedRequests = new();
+    private List<QuotationDto> _scopedQuotations = new();
+    private List<PurchaseOrderDto> _scopedOrders = new();
+    private List<InvoiceDto> _scopedInvoices = new();
+    private List<PaymentDto> _scopedPayments = new();
 
     // KPIs (Calculated dynamically)
     private int PurchaseRequestsCount { get; set; }
@@ -123,7 +136,7 @@ public partial class PurchaseManagerDashboard : ComponentBase
             if (success)
             {
                 notif.IsRead = true;
-                StateHasChanged();
+                await SafeInvokeStateHasChangedAsync();
             }
         }
     }
@@ -140,7 +153,7 @@ public partial class PurchaseManagerDashboard : ComponentBase
                     notif.IsRead = true;
                 }
             }
-            StateHasChanged();
+            await SafeInvokeStateHasChangedAsync();
         }
     }
 
@@ -150,12 +163,15 @@ public partial class PurchaseManagerDashboard : ComponentBase
         if (success)
         {
             Notifications?.Clear();
-            StateHasChanged();
+            await SafeInvokeStateHasChangedAsync();
         }
     }
 
     private async Task LoadDashboardDataAsync()
     {
+        if (_isDataLoading) return;
+        _isDataLoading = true;
+
         IsLoading = true;
         HasError = false;
         ErrorMessage = string.Empty;
@@ -163,391 +179,470 @@ public partial class PurchaseManagerDashboard : ComponentBase
 
         try
         {
-            // Load necessary APIs to resolve business entities and names
+            // PHASE 1: Critical initial viewport calls (started concurrently)
             var requestsTask = Api.GetPurchaseRequestsAsync();
             var quotationsTask = Api.GetQuotationsAsync();
             var ordersTask = Api.GetPurchaseOrdersAsync();
             var invoicesTask = Api.GetInvoicesAsync();
-            var paymentsTask = Api.GetPaymentsAsync();
-            var outletsTask = Api.GetOutletsAsync();
-            var orgsTask = Api.GetOrganizationsAsync();
-            var notifsTask = Api.GetMyNotificationsAsync();
-            var vendorsTask = Api.GetVendorsAsync();
-            var productsTask = Api.GetProductsAsync();
 
             await Task.WhenAll(
                 requestsTask,
                 quotationsTask,
                 ordersTask,
-                invoicesTask,
-                paymentsTask,
-                outletsTask,
-                orgsTask,
-                notifsTask,
-                vendorsTask,
-                productsTask
+                invoicesTask
             );
 
             var allRequests = await requestsTask ?? new List<PurchaseRequestDto>();
             var allQuotations = await quotationsTask ?? new List<QuotationDto>();
             var allOrders = await ordersTask ?? new List<PurchaseOrderDto>();
             var allInvoices = await invoicesTask ?? new List<InvoiceDto>();
-            var allPayments = await paymentsTask ?? new List<PaymentDto>();
-            var allOutlets = await outletsTask ?? new List<OutletDto>();
-            var allOrgs = await orgsTask ?? new List<OrganizationDto>();
-            var allVendors = await vendorsTask ?? new List<VendorDto>();
-            var allProducts = await productsTask ?? new List<ProductDto>();
-            Notifications = await notifsTask ?? new List<NotificationDto>();
-
-            // Build lookup dictionaries for real business names
-            VendorNames = allVendors
-                .Where(v => !string.IsNullOrWhiteSpace(v.VendorName))
-                .ToDictionary(v => v.VendorID, v => v.VendorName);
-
-            ProductNames = allProducts
-                .Where(p => !string.IsNullOrWhiteSpace(p.ProductName))
-                .ToDictionary(p => p.ProductID, p => p.ProductName);
 
             PurchaseRequestDict = allRequests
                 .ToDictionary(r => r.RequestID, r => r);
 
-            // 1. Resolve Organization and Outlet Information (Descriptive Business Names)
-            string resolvedOrgName = string.Empty;
-            string resolvedOutletName = string.Empty;
-            string resolvedOutletAddress = string.Empty;
-
-            // Attempt from allOrgs list
-            if (Auth.OrganizationID.HasValue && Auth.OrganizationID.Value > 0)
-            {
-                var org = allOrgs.FirstOrDefault(o => o.OrganizationID == Auth.OrganizationID.Value);
-                if (org != null && !string.IsNullOrWhiteSpace(org.OrganizationName) && !org.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase))
-                {
-                    resolvedOrgName = org.OrganizationName;
-                }
-            }
-
-            // Attempt direct org fetch if needed
-            if (string.IsNullOrWhiteSpace(resolvedOrgName) && Auth.OrganizationID.HasValue && Auth.OrganizationID.Value > 0)
-            {
-                try
-                {
-                    var directOrg = await Api.GetOrganizationByIdAsync(Auth.OrganizationID.Value);
-                    if (directOrg != null && !string.IsNullOrWhiteSpace(directOrg.OrganizationName) && !directOrg.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase))
-                    {
-                        resolvedOrgName = directOrg.OrganizationName;
-                    }
-                }
-                catch { }
-            }
-
-            // Attempt from allOutlets list
-            if (Auth.OutletID.HasValue && Auth.OutletID.Value > 0)
-            {
-                var matchedOutlet = allOutlets.FirstOrDefault(o => o.OutletID == Auth.OutletID.Value);
-                if (matchedOutlet != null)
-                {
-                    if (!string.IsNullOrWhiteSpace(matchedOutlet.OutletName) && !matchedOutlet.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
-                    {
-                        resolvedOutletName = matchedOutlet.OutletName;
-                    }
-                    else if (!string.IsNullOrWhiteSpace(matchedOutlet.Address))
-                    {
-                        resolvedOutletName = $"{matchedOutlet.Address.Split(',')[0].Trim()} Outlet";
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(matchedOutlet.OrganizationName) && !matchedOutlet.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(resolvedOrgName))
-                    {
-                        resolvedOrgName = matchedOutlet.OrganizationName;
-                    }
-
-                    resolvedOutletAddress = matchedOutlet.Address ?? string.Empty;
-                }
-            }
-
-            // Attempt from scoped/all Requests
-            if (string.IsNullOrWhiteSpace(resolvedOutletName))
-            {
-                var prMatch = allRequests.FirstOrDefault(r => 
-                    (Auth.OutletID.HasValue && r.OutletID == Auth.OutletID.Value && !string.IsNullOrWhiteSpace(r.OutletName) && !r.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase)) ||
-                    (!string.IsNullOrWhiteSpace(r.OutletName) && !r.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase)));
-                if (prMatch != null)
-                {
-                    resolvedOutletName = prMatch.OutletName;
-                }
-            }
-
-            // Attempt from scoped/all Invoices
-            if (string.IsNullOrWhiteSpace(resolvedOutletName) || string.IsNullOrWhiteSpace(resolvedOrgName))
-            {
-                var invMatch = allInvoices.FirstOrDefault(i => 
-                    (!string.IsNullOrWhiteSpace(i.OutletName) && !i.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase)) ||
-                    (!string.IsNullOrWhiteSpace(i.OrganizationName) && !i.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase)));
-                if (invMatch != null)
-                {
-                    if (string.IsNullOrWhiteSpace(resolvedOutletName) && !string.IsNullOrWhiteSpace(invMatch.OutletName) && !invMatch.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
-                    {
-                        resolvedOutletName = invMatch.OutletName;
-                    }
-                    if (string.IsNullOrWhiteSpace(resolvedOrgName) && !string.IsNullOrWhiteSpace(invMatch.OrganizationName) && !invMatch.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase))
-                    {
-                        resolvedOrgName = invMatch.OrganizationName;
-                    }
-                }
-            }
-
-            // Attempt from scoped/all Payments
-            if (string.IsNullOrWhiteSpace(resolvedOutletName) || string.IsNullOrWhiteSpace(resolvedOrgName))
-            {
-                var payMatch = allPayments.FirstOrDefault(p => 
-                    (!string.IsNullOrWhiteSpace(p.OutletName) && !p.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase)) ||
-                    (!string.IsNullOrWhiteSpace(p.OrganizationName) && !p.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase)));
-                if (payMatch != null)
-                {
-                    if (string.IsNullOrWhiteSpace(resolvedOutletName) && !string.IsNullOrWhiteSpace(payMatch.OutletName) && !payMatch.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
-                    {
-                        resolvedOutletName = payMatch.OutletName;
-                    }
-                    if (string.IsNullOrWhiteSpace(resolvedOrgName) && !string.IsNullOrWhiteSpace(payMatch.OrganizationName) && !payMatch.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase))
-                    {
-                        resolvedOrgName = payMatch.OrganizationName;
-                    }
-                }
-            }
-
-            // Attempt from first available named item in allOutlets / allOrgs
-            if (string.IsNullOrWhiteSpace(resolvedOutletName) && allOutlets.Count > 0)
-            {
-                var firstNamed = allOutlets.FirstOrDefault(o => !string.IsNullOrWhiteSpace(o.OutletName) && !o.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase));
-                if (firstNamed != null)
-                {
-                    resolvedOutletName = firstNamed.OutletName;
-                    if (string.IsNullOrWhiteSpace(resolvedOutletAddress)) resolvedOutletAddress = firstNamed.Address ?? string.Empty;
-                }
-            }
-
-            if (string.IsNullOrWhiteSpace(resolvedOrgName) && allOrgs.Count > 0)
-            {
-                var firstNamedOrg = allOrgs.FirstOrDefault(o => !string.IsNullOrWhiteSpace(o.OrganizationName) && !o.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase));
-                if (firstNamedOrg != null)
-                {
-                    resolvedOrgName = firstNamedOrg.OrganizationName;
-                }
-            }
-
-            // Clean corporate / enterprise fallbacks (prevent raw numeric strings like "Outlet #21" or "Organization #17")
-            if (string.IsNullOrWhiteSpace(resolvedOutletName) || resolvedOutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
-            {
-                resolvedOutletName = "Downtown Central Outlet";
-            }
-
-            if (string.IsNullOrWhiteSpace(resolvedOrgName) || resolvedOrgName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase))
-            {
-                resolvedOrgName = "Smart Vendor Enterprise";
-            }
-
-            OutletName = resolvedOutletName;
-            OutletAddress = resolvedOutletAddress;
-            OrganizationName = resolvedOrgName;
-
-            // 2. Scope Entities to Purchase Manager's Assigned Outlet
-            List<PurchaseRequestDto> scopedRequests;
-            List<QuotationDto> scopedQuotations;
-            List<PurchaseOrderDto> scopedOrders;
-            List<InvoiceDto> scopedInvoices;
-            List<PaymentDto> scopedPayments;
-
+            // Scope Entities to Purchase Manager's Assigned Outlet
             if (Auth.OutletID.HasValue && Auth.OutletID.Value > 0)
             {
                 int managerOutletId = Auth.OutletID.Value;
-                scopedRequests = allRequests.Where(r => r.OutletID == managerOutletId).ToList();
-                var scopedPrIds = scopedRequests.Select(r => r.RequestID).ToHashSet();
+                _scopedRequests = allRequests.Where(r => r.OutletID == managerOutletId).ToList();
+                var scopedPrIds = _scopedRequests.Select(r => r.RequestID).ToHashSet();
 
-                scopedQuotations = allQuotations.Where(q => scopedPrIds.Contains(q.RequestID)).ToList();
-                scopedOrders = allOrders.Where(o => o.OutletID == managerOutletId || scopedPrIds.Contains(o.RequestID)).ToList();
-                scopedInvoices = allInvoices.Where(i => i.OutletID == managerOutletId).ToList();
-                scopedPayments = allPayments.Where(p => p.OutletID == managerOutletId).ToList();
+                _scopedQuotations = allQuotations.Where(q => scopedPrIds.Contains(q.RequestID)).ToList();
+                _scopedOrders = allOrders.Where(o => o.OutletID == managerOutletId || scopedPrIds.Contains(o.RequestID)).ToList();
+                _scopedInvoices = allInvoices.Where(i => i.OutletID == managerOutletId).ToList();
             }
             else
             {
-                scopedRequests = allRequests;
-                scopedQuotations = allQuotations;
-                scopedOrders = allOrders;
-                scopedInvoices = allInvoices;
-                scopedPayments = allPayments;
+                _scopedRequests = allRequests;
+                _scopedQuotations = allQuotations;
+                _scopedOrders = allOrders;
+                _scopedInvoices = allInvoices;
             }
 
-            // 3. Compute 6 Primary KPIs Dynamically
-            PurchaseRequestsCount = scopedRequests.Count;
-            VendorQuotationsCount = scopedQuotations.Count;
-            PurchaseOrdersCount = scopedOrders.Count;
-            POsAwaitingApprovalCount = scopedOrders.Count(o =>
-                string.Equals(o.Status, "Awaiting Approval", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(o.Status, "AwaitingApproval", StringComparison.OrdinalIgnoreCase));
-            
-            DeliveriesCount = scopedOrders.Count(o =>
-                string.Equals(o.DeliveryStatus, "Delivered", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(o.DeliveryStatus, "Dispatched", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(o.DeliveryStatus, "Partially Delivered", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(o.Status, "Delivered", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(o.Status, "Dispatched", StringComparison.OrdinalIgnoreCase));
+            // Initial Organization and Outlet Name Resolution from primary requests & invoices
+            ResolveNamesFromPrimaryData(allRequests, _scopedInvoices);
 
-            PendingInvoicesCount = scopedInvoices.Count(i =>
-                string.Equals(i.Status, "Pending", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(i.Status, "Submitted", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(i.Status, "Created", StringComparison.OrdinalIgnoreCase));
+            // Compute 6 Primary KPIs Dynamically
+            CalculateKpis();
 
-            AwaitingPaymentCount = scopedInvoices.Count(i =>
-                string.Equals(i.Status, "Approved", StringComparison.OrdinalIgnoreCase));
+            // Build Initial Unified Recent Activity Feed (with PRs, Quotes, Orders, Invoices)
+            RebuildRecentActivities();
 
-            // 4. Compute Actionable Task Counts Dynamically
-            PendingQuotationsCount = scopedQuotations.Count(q =>
-                string.Equals(q.Status, "Submitted", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(q.Status, "Pending", StringComparison.OrdinalIgnoreCase));
+            // UNBLOCK FIRST VIEWPORT IMMEDIATELY
+            IsLoading = false;
+            StateHasChanged();
 
-            DeliveriesToConfirmCount = scopedOrders.Count(o =>
-                string.Equals(o.Status, "Dispatched", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(o.Status, "Sent", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(o.DeliveryStatus, "Dispatched", StringComparison.OrdinalIgnoreCase));
-
-            InvoicesToApproveCount = PendingInvoicesCount;
-            ApprovedInvoicesToPayCount = AwaitingPaymentCount;
-
-            // 5. Build Unified Chronological Recent Activity Feed (Using Meaningful Business Names)
-            var activityItems = new List<PurchaseManagerActivityItem>();
-
-            foreach (var pr in scopedRequests)
-            {
-                string productName = "Procurement Items";
-                string qtyText = string.Empty;
-                if (pr.Items != null && pr.Items.Count > 0)
-                {
-                    var firstItem = pr.Items[0];
-                    productName = GetProductName(firstItem.ProductID, firstItem.ProductName);
-                    if (pr.Items.Count > 1)
-                    {
-                        productName += $" + {pr.Items.Count - 1} more";
-                    }
-                    qtyText = $"{firstItem.Quantity:G29} {firstItem.Unit}".Trim();
-                }
-
-                activityItems.Add(new PurchaseManagerActivityItem
-                {
-                    Id = $"PR-{pr.RequestID}",
-                    Type = "Purchase Request",
-                    PrimaryTitle = $"Purchase Request — {productName}",
-                    ReferenceCode = $"PR-{pr.RequestID}",
-                    Subtitle = !string.IsNullOrWhiteSpace(qtyText) 
-                        ? $"{qtyText} requested by {(!string.IsNullOrWhiteSpace(pr.CreatedByName) ? pr.CreatedByName : "Outlet Staff")}"
-                        : $"Requested by {(!string.IsNullOrWhiteSpace(pr.CreatedByName) ? pr.CreatedByName : "Outlet Staff")}",
-                    Timestamp = pr.RequestDate,
-                    Status = pr.Status,
-                    StatusClass = GetStatusBadgeClass(pr.Status),
-                    ActionUrl = $"/purchase-request/{pr.RequestID}"
-                });
-            }
-
-            foreach (var q in scopedQuotations)
-            {
-                string vendorName = GetVendorName(q.VendorID, q.VendorName);
-                string relatedProduct = "Purchase Request";
-                if (PurchaseRequestDict.TryGetValue(q.RequestID, out var relPr) && relPr.Items != null && relPr.Items.Count > 0)
-                {
-                    relatedProduct = GetProductName(relPr.Items[0].ProductID, relPr.Items[0].ProductName);
-                }
-
-                activityItems.Add(new PurchaseManagerActivityItem
-                {
-                    Id = $"Q-{q.QuotationID}",
-                    Type = "Quotation",
-                    PrimaryTitle = $"Quotation — {vendorName}",
-                    ReferenceCode = $"QO-{q.QuotationID}",
-                    Subtitle = $"Submitted for {relatedProduct} (PR-{q.RequestID})",
-                    Timestamp = q.ValidUntil > DateTime.MinValue ? q.ValidUntil.AddDays(-7) : DateTime.Now,
-                    Status = q.Status,
-                    StatusClass = GetStatusBadgeClass(q.Status),
-                    ActionUrl = $"/quotation-review/{q.QuotationID}"
-                });
-            }
-
-            foreach (var po in scopedOrders)
-            {
-                string vendorName = GetVendorName(po.VendorID, po.VendorName);
-                string relatedProduct = string.Empty;
-                if (PurchaseRequestDict.TryGetValue(po.RequestID, out var relPr) && relPr.Items != null && relPr.Items.Count > 0)
-                {
-                    relatedProduct = GetProductName(relPr.Items[0].ProductID, relPr.Items[0].ProductName);
-                }
-
-                string detailSubtitle = !string.IsNullOrWhiteSpace(relatedProduct)
-                    ? $"{relatedProduct} • Rs. {po.TotalAmount:N2} | Delivery: {(!string.IsNullOrWhiteSpace(po.DeliveryStatus) ? po.DeliveryStatus : po.Status)}"
-                    : $"Rs. {po.TotalAmount:N2} | Delivery: {(!string.IsNullOrWhiteSpace(po.DeliveryStatus) ? po.DeliveryStatus : po.Status)}";
-
-                activityItems.Add(new PurchaseManagerActivityItem
-                {
-                    Id = $"PO-{po.PurchaseOrderID}",
-                    Type = "Purchase Order",
-                    PrimaryTitle = $"Purchase Order — {vendorName}",
-                    ReferenceCode = $"PO-{po.PurchaseOrderID}",
-                    Subtitle = detailSubtitle,
-                    Timestamp = po.OrderDate,
-                    Status = po.Status,
-                    StatusClass = GetStatusBadgeClass(po.Status),
-                    ActionUrl = $"/organization/purchase-orders/{po.PurchaseOrderID}",
-                    Amount = po.TotalAmount
-                });
-            }
-
-            foreach (var inv in scopedInvoices)
-            {
-                string vendorName = GetVendorName(inv.VendorID, inv.VendorName);
-                activityItems.Add(new PurchaseManagerActivityItem
-                {
-                    Id = $"INV-{inv.InvoiceID}",
-                    Type = "Invoice",
-                    PrimaryTitle = $"Invoice — {vendorName}",
-                    ReferenceCode = $"INV-{inv.InvoiceID}",
-                    Subtitle = $"PO Reference: PO-{inv.PurchaseOrderID} • Total: Rs. {inv.TotalAmount:N2}",
-                    Timestamp = inv.InvoiceDate,
-                    Status = inv.Status,
-                    StatusClass = GetStatusBadgeClass(inv.Status),
-                    ActionUrl = $"/organization/invoices/{inv.InvoiceID}",
-                    Amount = inv.TotalAmount
-                });
-            }
-
-            foreach (var pay in scopedPayments)
-            {
-                string vendorName = GetVendorName(pay.VendorID, pay.VendorName);
-                activityItems.Add(new PurchaseManagerActivityItem
-                {
-                    Id = $"PAY-{pay.PaymentID}",
-                    Type = "Payment",
-                    PrimaryTitle = $"Payment — {vendorName}",
-                    ReferenceCode = $"PAY-{pay.PaymentID}",
-                    Subtitle = $"Invoice: INV-{pay.InvoiceID} • Rs. {pay.Amount:N2} via {pay.PaymentMethod}",
-                    Timestamp = pay.PaymentDate,
-                    Status = pay.Status,
-                    StatusClass = GetStatusBadgeClass(pay.Status),
-                    ActionUrl = $"/organization/payments/{pay.InvoiceID}",
-                    Amount = pay.Amount
-                });
-            }
-
-            RecentActivities = activityItems
-                .OrderByDescending(a => a.Timestamp)
-                .Take(8)
-                .ToList();
+            // PHASE 2: Non-blocking background data fetching
+            _ = LoadBackgroundDataAsync();
         }
         catch (Exception ex)
         {
             HasError = true;
             ErrorMessage = ex.Message;
-        }
-        finally
-        {
             IsLoading = false;
             StateHasChanged();
         }
+        finally
+        {
+            _isDataLoading = false;
+        }
+    }
+
+    private void ResolveNamesFromPrimaryData(List<PurchaseRequestDto> allRequests, List<InvoiceDto> scopedInvoices)
+    {
+        string resolvedOrgName = string.Empty;
+        string resolvedOutletName = string.Empty;
+
+        // Attempt from scoped/all Requests
+        var prMatch = allRequests.FirstOrDefault(r => 
+            (Auth.OutletID.HasValue && r.OutletID == Auth.OutletID.Value && !string.IsNullOrWhiteSpace(r.OutletName) && !r.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase)) ||
+            (!string.IsNullOrWhiteSpace(r.OutletName) && !r.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase)));
+        if (prMatch != null)
+        {
+            resolvedOutletName = prMatch.OutletName;
+        }
+
+        // Attempt from scoped/all Invoices
+        if (string.IsNullOrWhiteSpace(resolvedOutletName) || string.IsNullOrWhiteSpace(resolvedOrgName))
+        {
+            var invMatch = scopedInvoices.FirstOrDefault(i => 
+                (!string.IsNullOrWhiteSpace(i.OutletName) && !i.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrWhiteSpace(i.OrganizationName) && !i.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase)));
+            if (invMatch != null)
+            {
+                if (string.IsNullOrWhiteSpace(resolvedOutletName) && !string.IsNullOrWhiteSpace(invMatch.OutletName) && !invMatch.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
+                {
+                    resolvedOutletName = invMatch.OutletName;
+                }
+                if (string.IsNullOrWhiteSpace(resolvedOrgName) && !string.IsNullOrWhiteSpace(invMatch.OrganizationName) && !invMatch.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase))
+                {
+                    resolvedOrgName = invMatch.OrganizationName;
+                }
+            }
+        }
+
+        // Clean corporate / enterprise fallbacks
+        if (string.IsNullOrWhiteSpace(resolvedOutletName) || resolvedOutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
+        {
+            resolvedOutletName = "Downtown Central Outlet";
+        }
+
+        if (string.IsNullOrWhiteSpace(resolvedOrgName) || resolvedOrgName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase))
+        {
+            resolvedOrgName = "Smart Vendor Enterprise";
+        }
+
+        OutletName = resolvedOutletName;
+        OrganizationName = resolvedOrgName;
+    }
+
+    private void CalculateKpis()
+    {
+        // 1. Compute 6 Primary KPIs Dynamically
+        PurchaseRequestsCount = _scopedRequests.Count;
+        VendorQuotationsCount = _scopedQuotations.Count;
+        PurchaseOrdersCount = _scopedOrders.Count;
+        POsAwaitingApprovalCount = _scopedOrders.Count(o =>
+            string.Equals(o.Status, "Awaiting Approval", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(o.Status, "AwaitingApproval", StringComparison.OrdinalIgnoreCase));
+        
+        DeliveriesCount = _scopedOrders.Count(o =>
+            string.Equals(o.DeliveryStatus, "Delivered", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(o.DeliveryStatus, "Dispatched", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(o.DeliveryStatus, "Partially Delivered", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(o.Status, "Delivered", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(o.Status, "Dispatched", StringComparison.OrdinalIgnoreCase));
+
+        PendingInvoicesCount = _scopedInvoices.Count(i =>
+            string.Equals(i.Status, "Pending", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(i.Status, "Submitted", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(i.Status, "Created", StringComparison.OrdinalIgnoreCase));
+
+        AwaitingPaymentCount = _scopedInvoices.Count(i =>
+            string.Equals(i.Status, "Approved", StringComparison.OrdinalIgnoreCase));
+
+        // 2. Compute Actionable Task Counts Dynamically
+        PendingQuotationsCount = _scopedQuotations.Count(q =>
+            string.Equals(q.Status, "Submitted", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(q.Status, "Pending", StringComparison.OrdinalIgnoreCase));
+
+        DeliveriesToConfirmCount = _scopedOrders.Count(o =>
+            string.Equals(o.Status, "Dispatched", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(o.Status, "Sent", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(o.DeliveryStatus, "Dispatched", StringComparison.OrdinalIgnoreCase));
+
+        InvoicesToApproveCount = PendingInvoicesCount;
+        ApprovedInvoicesToPayCount = AwaitingPaymentCount;
+    }
+
+    private void RebuildRecentActivities()
+    {
+        var activityItems = new List<PurchaseManagerActivityItem>();
+
+        foreach (var pr in _scopedRequests)
+        {
+            string productName = "Procurement Items";
+            string qtyText = string.Empty;
+            if (pr.Items != null && pr.Items.Count > 0)
+            {
+                var firstItem = pr.Items[0];
+                productName = GetProductName(firstItem.ProductID, firstItem.ProductName);
+                if (pr.Items.Count > 1)
+                {
+                    productName += $" + {pr.Items.Count - 1} more";
+                }
+                qtyText = $"{firstItem.Quantity:G29} {firstItem.Unit}".Trim();
+            }
+
+            activityItems.Add(new PurchaseManagerActivityItem
+            {
+                Id = $"PR-{pr.RequestID}",
+                Type = "Purchase Request",
+                PrimaryTitle = $"Purchase Request — {productName}",
+                ReferenceCode = $"PR-{pr.RequestID}",
+                Subtitle = !string.IsNullOrWhiteSpace(qtyText) 
+                    ? $"{qtyText} requested by {(!string.IsNullOrWhiteSpace(pr.CreatedByName) ? pr.CreatedByName : "Outlet Staff")}"
+                    : $"Requested by {(!string.IsNullOrWhiteSpace(pr.CreatedByName) ? pr.CreatedByName : "Outlet Staff")}",
+                Timestamp = pr.RequestDate,
+                Status = pr.Status,
+                StatusClass = GetStatusBadgeClass(pr.Status),
+                ActionUrl = $"/purchase-request/{pr.RequestID}"
+            });
+        }
+
+        foreach (var q in _scopedQuotations)
+        {
+            string vendorName = GetVendorName(q.VendorID, q.VendorName);
+            string relatedProduct = "Purchase Request";
+            if (PurchaseRequestDict.TryGetValue(q.RequestID, out var relPr) && relPr.Items != null && relPr.Items.Count > 0)
+            {
+                relatedProduct = GetProductName(relPr.Items[0].ProductID, relPr.Items[0].ProductName);
+            }
+
+            activityItems.Add(new PurchaseManagerActivityItem
+            {
+                Id = $"Q-{q.QuotationID}",
+                Type = "Quotation",
+                PrimaryTitle = $"Quotation — {vendorName}",
+                ReferenceCode = $"QO-{q.QuotationID}",
+                Subtitle = $"Submitted for {relatedProduct} (PR-{q.RequestID})",
+                Timestamp = q.ValidUntil > DateTime.MinValue ? q.ValidUntil.AddDays(-7) : DateTime.Now,
+                Status = q.Status,
+                StatusClass = GetStatusBadgeClass(q.Status),
+                ActionUrl = $"/quotation-review/{q.QuotationID}"
+            });
+        }
+
+        foreach (var po in _scopedOrders)
+        {
+            string vendorName = GetVendorName(po.VendorID, po.VendorName);
+            string relatedProduct = string.Empty;
+            if (PurchaseRequestDict.TryGetValue(po.RequestID, out var relPr) && relPr.Items != null && relPr.Items.Count > 0)
+            {
+                relatedProduct = GetProductName(relPr.Items[0].ProductID, relPr.Items[0].ProductName);
+            }
+
+            string detailSubtitle = !string.IsNullOrWhiteSpace(relatedProduct)
+                ? $"{relatedProduct} • Rs. {po.TotalAmount:N2} | Delivery: {(!string.IsNullOrWhiteSpace(po.DeliveryStatus) ? po.DeliveryStatus : po.Status)}"
+                : $"Rs. {po.TotalAmount:N2} | Delivery: {(!string.IsNullOrWhiteSpace(po.DeliveryStatus) ? po.DeliveryStatus : po.Status)}";
+
+            activityItems.Add(new PurchaseManagerActivityItem
+            {
+                Id = $"PO-{po.PurchaseOrderID}",
+                Type = "Purchase Order",
+                PrimaryTitle = $"Purchase Order — {vendorName}",
+                ReferenceCode = $"PO-{po.PurchaseOrderID}",
+                Subtitle = detailSubtitle,
+                Timestamp = po.OrderDate,
+                Status = po.Status,
+                StatusClass = GetStatusBadgeClass(po.Status),
+                ActionUrl = $"/organization/purchase-orders/{po.PurchaseOrderID}",
+                Amount = po.TotalAmount
+            });
+        }
+
+        foreach (var inv in _scopedInvoices)
+        {
+            string vendorName = GetVendorName(inv.VendorID, inv.VendorName);
+            activityItems.Add(new PurchaseManagerActivityItem
+            {
+                Id = $"INV-{inv.InvoiceID}",
+                Type = "Invoice",
+                PrimaryTitle = $"Invoice — {vendorName}",
+                ReferenceCode = $"INV-{inv.InvoiceID}",
+                Subtitle = $"PO Reference: PO-{inv.PurchaseOrderID} • Total: Rs. {inv.TotalAmount:N2}",
+                Timestamp = inv.InvoiceDate,
+                Status = inv.Status,
+                StatusClass = GetStatusBadgeClass(inv.Status),
+                ActionUrl = $"/organization/invoices/{inv.InvoiceID}",
+                Amount = inv.TotalAmount
+            });
+        }
+
+        foreach (var pay in _scopedPayments)
+        {
+            string vendorName = GetVendorName(pay.VendorID, pay.VendorName);
+            activityItems.Add(new PurchaseManagerActivityItem
+            {
+                Id = $"PAY-{pay.PaymentID}",
+                Type = "Payment",
+                PrimaryTitle = $"Payment — {vendorName}",
+                ReferenceCode = $"PAY-{pay.PaymentID}",
+                Subtitle = $"Invoice: INV-{pay.InvoiceID} • Rs. {pay.Amount:N2} via {pay.PaymentMethod}",
+                Timestamp = pay.PaymentDate,
+                Status = pay.Status,
+                StatusClass = GetStatusBadgeClass(pay.Status),
+                ActionUrl = $"/organization/payments/{pay.InvoiceID}",
+                Amount = pay.Amount
+            });
+        }
+
+        RecentActivities = activityItems
+            .OrderByDescending(a => a.Timestamp)
+            .Take(8)
+            .ToList();
+    }
+
+    private async Task LoadBackgroundDataAsync()
+    {
+        IsLoadingBackgroundData = true;
+        IsLoadingNotifications = true;
+
+        // 1. Background Notifications loading
+        var notifsTask = Task.Run(async () =>
+        {
+            try
+            {
+                var notifs = await Api.GetMyNotificationsAsync();
+                if (notifs != null && !_isDisposed)
+                {
+                    Notifications = notifs;
+                    await SafeInvokeStateHasChangedAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[PurchaseManagerDashboard] Background notifications load error: {ex.Message}");
+            }
+            finally
+            {
+                IsLoadingNotifications = false;
+                await SafeInvokeStateHasChangedAsync();
+            }
+        });
+
+        // 2. Background Outlets & Organizations lookup
+        var orgOutletTask = Task.Run(async () =>
+        {
+            try
+            {
+                var outletsTask = Api.GetOutletsAsync();
+                var orgsTask = Api.GetOrganizationsAsync();
+
+                await Task.WhenAll(outletsTask, orgsTask);
+
+                var allOutlets = await outletsTask ?? new List<OutletDto>();
+                var allOrgs = await orgsTask ?? new List<OrganizationDto>();
+
+                string resolvedOrgName = string.Empty;
+                string resolvedOutletName = string.Empty;
+                string resolvedOutletAddress = string.Empty;
+
+                if (Auth.OrganizationID.HasValue && Auth.OrganizationID.Value > 0)
+                {
+                    var org = allOrgs.FirstOrDefault(o => o.OrganizationID == Auth.OrganizationID.Value);
+                    if (org != null && !string.IsNullOrWhiteSpace(org.OrganizationName) && !org.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase))
+                    {
+                        resolvedOrgName = org.OrganizationName;
+                    }
+                }
+
+                if (string.IsNullOrWhiteSpace(resolvedOrgName) && Auth.OrganizationID.HasValue && Auth.OrganizationID.Value > 0)
+                {
+                    try
+                    {
+                        var directOrg = await Api.GetOrganizationByIdAsync(Auth.OrganizationID.Value);
+                        if (directOrg != null && !string.IsNullOrWhiteSpace(directOrg.OrganizationName) && !directOrg.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase))
+                        {
+                            resolvedOrgName = directOrg.OrganizationName;
+                        }
+                    }
+                    catch { }
+                }
+
+                if (Auth.OutletID.HasValue && Auth.OutletID.Value > 0)
+                {
+                    var matchedOutlet = allOutlets.FirstOrDefault(o => o.OutletID == Auth.OutletID.Value);
+                    if (matchedOutlet != null)
+                    {
+                        if (!string.IsNullOrWhiteSpace(matchedOutlet.OutletName) && !matchedOutlet.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
+                        {
+                            resolvedOutletName = matchedOutlet.OutletName;
+                        }
+                        else if (!string.IsNullOrWhiteSpace(matchedOutlet.Address))
+                        {
+                            resolvedOutletName = $"{matchedOutlet.Address.Split(',')[0].Trim()} Outlet";
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(matchedOutlet.OrganizationName) && !matchedOutlet.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(resolvedOrgName))
+                        {
+                            resolvedOrgName = matchedOutlet.OrganizationName;
+                        }
+
+                        resolvedOutletAddress = matchedOutlet.Address ?? string.Empty;
+                    }
+                }
+
+                if (string.IsNullOrWhiteSpace(resolvedOutletName) && allOutlets.Count > 0)
+                {
+                    var firstNamed = allOutlets.FirstOrDefault(o => !string.IsNullOrWhiteSpace(o.OutletName) && !o.OutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase));
+                    if (firstNamed != null)
+                    {
+                        resolvedOutletName = firstNamed.OutletName;
+                        if (string.IsNullOrWhiteSpace(resolvedOutletAddress)) resolvedOutletAddress = firstNamed.Address ?? string.Empty;
+                    }
+                }
+
+                if (string.IsNullOrWhiteSpace(resolvedOrgName) && allOrgs.Count > 0)
+                {
+                    var firstNamedOrg = allOrgs.FirstOrDefault(o => !string.IsNullOrWhiteSpace(o.OrganizationName) && !o.OrganizationName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase));
+                    if (firstNamedOrg != null)
+                    {
+                        resolvedOrgName = firstNamedOrg.OrganizationName;
+                    }
+                }
+
+                if (!string.IsNullOrWhiteSpace(resolvedOutletName) && !resolvedOutletName.StartsWith("Outlet #", StringComparison.OrdinalIgnoreCase))
+                {
+                    OutletName = resolvedOutletName;
+                }
+
+                if (!string.IsNullOrWhiteSpace(resolvedOutletAddress))
+                {
+                    OutletAddress = resolvedOutletAddress;
+                }
+
+                if (!string.IsNullOrWhiteSpace(resolvedOrgName) && !resolvedOrgName.StartsWith("Organization #", StringComparison.OrdinalIgnoreCase))
+                {
+                    OrganizationName = resolvedOrgName;
+                }
+
+                await SafeInvokeStateHasChangedAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[PurchaseManagerDashboard] Background org/outlet load error: {ex.Message}");
+            }
+        });
+
+        // 3. Background Payments, Vendors & Products metadata loading
+        var metaAndPaymentsTask = Task.Run(async () =>
+        {
+            try
+            {
+                var paymentsTask = Api.GetPaymentsAsync();
+                var vendorsTask = Api.GetVendorsAsync();
+                var productsTask = Api.GetProductsAsync();
+
+                await Task.WhenAll(paymentsTask, vendorsTask, productsTask);
+
+                var allPayments = await paymentsTask ?? new List<PaymentDto>();
+                var allVendors = await vendorsTask ?? new List<VendorDto>();
+                var allProducts = await productsTask ?? new List<ProductDto>();
+
+                VendorNames = allVendors
+                    .Where(v => !string.IsNullOrWhiteSpace(v.VendorName))
+                    .ToDictionary(v => v.VendorID, v => v.VendorName);
+
+                ProductNames = allProducts
+                    .Where(p => !string.IsNullOrWhiteSpace(p.ProductName))
+                    .ToDictionary(p => p.ProductID, p => p.ProductName);
+
+                if (Auth.OutletID.HasValue && Auth.OutletID.Value > 0)
+                {
+                    _scopedPayments = allPayments.Where(p => p.OutletID == Auth.OutletID.Value).ToList();
+                }
+                else
+                {
+                    _scopedPayments = allPayments;
+                }
+
+                // Refresh Recent Activities with loaded payment items and resolved vendor/product names
+                RebuildRecentActivities();
+                await SafeInvokeStateHasChangedAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[PurchaseManagerDashboard] Background payments/metadata load error: {ex.Message}");
+            }
+            finally
+            {
+                IsLoadingBackgroundData = false;
+                await SafeInvokeStateHasChangedAsync();
+            }
+        });
+
+        await Task.WhenAll(notifsTask, orgOutletTask, metaAndPaymentsTask);
     }
 
     private string GetVendorName(int vendorId, string? embeddedName = null)
@@ -586,6 +681,23 @@ public partial class PurchaseManagerDashboard : ComponentBase
                 or "pending" or "submitted" or "created" or "dispatched" or "sent" => "status-badge-green",
             _ => "status-badge-neutral"
         };
+    }
+
+    private async Task SafeInvokeStateHasChangedAsync()
+    {
+        if (_isDisposed) return;
+        try
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (ObjectDisposedException) { }
+        catch (InvalidOperationException) { }
+        catch { }
+    }
+
+    public void Dispose()
+    {
+        _isDisposed = true;
     }
 }
 

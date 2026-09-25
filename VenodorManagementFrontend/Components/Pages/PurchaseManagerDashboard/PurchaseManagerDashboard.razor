@@ -1,5 +1,6 @@
-﻿@page "/purchase-manager"
+@page "/purchase-manager"
 @rendermode InteractiveServer
+@implements IDisposable
 @inject ApiService Api
 @inject AuthService Auth
 @inject NavigationManager Nav
@@ -251,7 +252,14 @@ else
                                     </div>
                                 </div>
                                 <div class="dropdown-list">
-                                    @if (Notifications == null || Notifications.Count == 0)
+                                    @if (IsLoadingNotifications)
+                                    {
+                                        <div class="p-3 text-center text-muted small">
+                                            <span class="spinner-border spinner-border-sm text-success me-1" role="status"></span>
+                                            Loading notifications...
+                                        </div>
+                                    }
+                                    else if (Notifications == null || Notifications.Count == 0)
                                     {
                                         <div class="p-3 text-center text-muted small">No notifications</div>
                                     }
@@ -451,7 +459,15 @@ else
                             @if (RecentActivities.Count == 0)
                             {
                                 <div class="p-4 text-center text-muted small">
-                                    No recent procurement activity recorded for this outlet yet.
+                                    @if (IsLoadingBackgroundData)
+                                    {
+                                        <span class="spinner-border spinner-border-sm text-success me-1" role="status"></span>
+                                        <span>Loading latest activity...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>No recent procurement activity recorded for this outlet yet.</span>
+                                    }
                                 </div>
                             }
                             else

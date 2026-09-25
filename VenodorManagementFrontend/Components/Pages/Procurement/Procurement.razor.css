@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    PURCHASE REQUESTS / PROCUREMENT — PM PORTAL DESIGN SYSTEM
    ========================================================================== */
 
@@ -542,6 +542,35 @@
 .btn-primary-action:disabled {
     opacity: 0.65;
     cursor: not-allowed;
+}
+
+.btn-back-header {
+    background-color: #FFFFFF;
+    color: #374151;
+    border: 1px solid #D1D5DB;
+    padding: 0.45rem 0.95rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.15s ease-in-out;
+    text-decoration: none;
+    white-space: nowrap;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-back-header:hover {
+    background-color: #F3F4F6;
+    border-color: #9CA3AF;
+    color: #111827;
+}
+
+.btn-back-header:focus-visible {
+    outline: 2px solid #174F45;
+    outline-offset: 2px;
 }
 
 .btn-back-link {
@@ -1561,3 +1590,31 @@
     border-radius: 6px;
 }
 
+
+
+/* Vendor Recommendation Card Dual-Scope Reviews */
+.vendor-reviews-dual-scope-container {
+    width: 100%;
+}
+
+.review-scope-box {
+    background-color: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.vendor-rec-card:hover .review-scope-box {
+    background-color: #F3F4F6;
+}
+
+.vendor-rec-card.selected .review-scope-box {
+    background-color: #FFFFFF;
+    border-color: #D1E7DD;
+}
+
+.review-scope-title {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #6B7280;
+    letter-spacing: 0.04em;
+}

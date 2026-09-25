@@ -396,7 +396,6 @@
     display: grid;
     grid-template-columns: 340px 1fr;
     gap: 1.5rem;
-    margin-bottom: 1.5rem;
 }
 
 .col-left {
@@ -821,57 +820,7 @@
 }
 
 /* -----------------------------------------------------------------------------
-   6. BOTTOM TWO CARDS (DELIVERY TERMS & NOTES)
-   ----------------------------------------------------------------------------- */
-.bottom-two-col-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-}
-
-.bottom-card-header {
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-    margin-bottom: 1.1rem;
-    padding-bottom: 0.65rem;
-    border-bottom: 1px solid #F3F4F6;
-}
-
-.bottom-icon-box {
-    width: 32px;
-    height: 32px;
-    background-color: #E6F4EA;
-    color: #174F45;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.bottom-card-title {
-    font-size: 0.95rem;
-    font-weight: 800;
-    color: #111827;
-    margin: 0;
-}
-
-.notes-content {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.note-paragraph {
-    font-size: 0.86rem;
-    color: #4B5563;
-    line-height: 1.45;
-    margin: 0;
-}
-
-/* -----------------------------------------------------------------------------
-   7. LOADING & ERROR STATES
+   6. LOADING & ERROR STATES
    ----------------------------------------------------------------------------- */
 .loading-state {
     text-align: center;
@@ -976,7 +925,7 @@
 }
 
 /* -----------------------------------------------------------------------------
-   8. UNAUTHENTICATED CONTAINER
+   7. UNAUTHENTICATED CONTAINER
    ----------------------------------------------------------------------------- */
 .unauth-container {
     min-height: 80vh;
@@ -1021,14 +970,10 @@
 }
 
 /* -----------------------------------------------------------------------------
-   9. RESPONSIVE DESIGN
+   8. RESPONSIVE DESIGN
    ----------------------------------------------------------------------------- */
 @media (max-width: 1024px) {
     .quotation-two-col-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .bottom-two-col-grid {
         grid-template-columns: 1fr;
     }
 }

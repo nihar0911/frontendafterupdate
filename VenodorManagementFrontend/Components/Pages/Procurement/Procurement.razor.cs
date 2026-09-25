@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -73,6 +73,7 @@ public partial class Procurement : ComponentBase, IDisposable
     private List<VendorRecommendationDto>? VendorRecommendations { get; set; }
     private bool HasActiveContractsForSelectedProduct { get; set; } = false;
     private Dictionary<int, VendorManagement.Web.Models.VendorPerformance.VendorReviewDto> LatestReviewsByVendorDict { get; set; } = new();
+    private Dictionary<(int VendorId, int ProductId), List<VendorManagement.Web.Models.VendorPerformance.VendorReviewDto>> ProductReviewsCache { get; set; } = new();
     private string VendorSortBy { get; set; } = "Reviews";
 
     // Validation & Error Messages
@@ -773,7 +774,7 @@ public partial class Procurement : ComponentBase, IDisposable
 
     private async Task LoadLatestReviewsForVendorsAsync(List<VendorRecommendationDto> recs, int productId)
     {
-        if (recs == null || recs.Count == 0) return;
+        if (recs == null || recs.Count == 0 || productId <= 0) return;
         var distinctVendorIds = recs.Select(r => r.VendorID).Distinct().ToList();
         var reviewTasks = distinctVendorIds.ToDictionary(
             vId => vId,
@@ -785,9 +786,14 @@ public partial class Procurement : ComponentBase, IDisposable
             foreach (var kvp in reviewTasks)
             {
                 var list = await kvp.Value;
+                ProductReviewsCache[(kvp.Key, productId)] = list ?? new();
                 if (list != null && list.Count > 0)
                 {
                     LatestReviewsByVendorDict[kvp.Key] = list[0];
+                }
+                else
+                {
+                    LatestReviewsByVendorDict.Remove(kvp.Key);
                 }
             }
         }
@@ -1103,8 +1109,8 @@ public partial class Procurement : ComponentBase, IDisposable
             var top = allRecs.OrderByDescending(r => r.OverallScore).First();
             string contractNotice = top.HasActiveContract ? (isHindi ? " साथ ही इसके पास सक्रिय अनुबंध भी है।" : " It also holds an active contract.") : "";
             AssistantSpeechMessage = isHindi
-                ? $"पहला विक्रेता {top.VendorName} सबसे बेहतर है क्योंकि इसका समग्र स्कोर {top.OverallScore:0.#}/100 है, औसत रेटिंग {top.AverageRating:0.0}★ है और कीमत ₹{top.UnitPrice:N0} है।{contractNotice}"
-                : $"The top-ranked vendor is {top.VendorName} with an overall score of {top.OverallScore:0.#}/100, average rating of {top.AverageRating:0.0}★, and price of ₹{top.UnitPrice:N0}.{contractNotice}";
+                ? $"पहला विक्रेता {top.VendorName} सबसे बेहतर है क्योंकि इसका समग्र स्कोर {top.OverallScore:0.#}/100 है, विक्रेता रेटिंग {top.AverageRating:0.0}★ है और कीमत ₹{top.UnitPrice:N0} है।{contractNotice}"
+                : $"The top-ranked vendor is {top.VendorName} with an overall score of {top.OverallScore:0.#}/100, vendor rating of {top.AverageRating:0.0}★, and price of ₹{top.UnitPrice:N0}.{contractNotice}";
 
             if (IsTtsEnabled) _ = SpeakAssistantMessageAsync(AssistantSpeechMessage, isHindi ? "hi-IN" : "en-US");
             StateHasChanged();
@@ -1119,8 +1125,8 @@ public partial class Procurement : ComponentBase, IDisposable
         {
             var second = allRecs.OrderByDescending(r => r.OverallScore).Skip(1).FirstOrDefault() ?? allRecs.First();
             AssistantSpeechMessage = isHindi
-                ? $"दूसरा विक्रेता {second.VendorName} है, जिसका समग्र स्कोर {second.OverallScore:0.#}/100, रेटिंग {second.AverageRating:0.0}★, डिलीवरी समय {second.EstimatedDeliveryDays} दिन और कीमत ₹{second.UnitPrice:N0} है।"
-                : $"The second vendor is {second.VendorName} with an overall score of {second.OverallScore:0.#}/100, rating of {second.AverageRating:0.0}★, delivery in {second.EstimatedDeliveryDays} days, and price of ₹{second.UnitPrice:N0}.";
+                ? $"दूसरा विक्रेता {second.VendorName} है, जिसका समग्र स्कोर {second.OverallScore:0.#}/100, विक्रेता रेटिंग {second.AverageRating:0.0}★, डिलीवरी समय {second.EstimatedDeliveryDays} दिन और कीमत ₹{second.UnitPrice:N0} है।"
+                : $"The second vendor is {second.VendorName} with an overall score of {second.OverallScore:0.#}/100, vendor rating of {second.AverageRating:0.0}★, delivery in {second.EstimatedDeliveryDays} days, and price of ₹{second.UnitPrice:N0}.";
 
             if (IsTtsEnabled) _ = SpeakAssistantMessageAsync(AssistantSpeechMessage, isHindi ? "hi-IN" : "en-US");
             StateHasChanged();
@@ -1605,12 +1611,31 @@ public partial class Procurement : ComponentBase, IDisposable
     // --- VENDOR REVIEWS MODAL ---
     private bool IsReviewsModalOpen { get; set; } = false;
     private bool IsLoadingVendorReviews { get; set; } = false;
+    private string ReviewViewMode { get; set; } = "VendorWide"; // "VendorWide" or "Product"
     private VendorRecommendationDto? SelectedVendorForReviews { get; set; }
+    private int? SelectedProductForReviewsId { get; set; }
+    private string SelectedProductForReviewsName { get; set; } = string.Empty;
     private List<VendorManagement.Web.Models.VendorPerformance.VendorReviewDto> CurrentVendorReviews { get; set; } = new();
 
-    private async Task OpenVendorReviewsModal(VendorRecommendationDto vendor)
+    private int GetProductReviewCount(int vendorId, int productId)
     {
+        if (productId <= 0) return 0;
+        return ProductReviewsCache.TryGetValue((vendorId, productId), out var list) ? (list?.Count ?? 0) : 0;
+    }
+
+    private List<VendorManagement.Web.Models.VendorPerformance.VendorReviewDto> GetProductReviews(int vendorId, int productId)
+    {
+        if (productId <= 0) return new();
+        return ProductReviewsCache.TryGetValue((vendorId, productId), out var list) && list != null ? list : new();
+    }
+
+    private async Task OpenVendorWideReviewsModal(VendorRecommendationDto vendor)
+    {
+        if (vendor == null) return;
+        ReviewViewMode = "VendorWide";
         SelectedVendorForReviews = vendor;
+        SelectedProductForReviewsId = vendor.ProductID > 0 ? vendor.ProductID : (SelectedProduct?.ProductID);
+        SelectedProductForReviewsName = !string.IsNullOrWhiteSpace(vendor.ProductName) ? vendor.ProductName : (SelectedProduct?.ProductName ?? string.Empty);
         IsReviewsModalOpen = true;
         IsLoadingVendorReviews = true;
         CurrentVendorReviews.Clear();
@@ -1618,13 +1643,13 @@ public partial class Procurement : ComponentBase, IDisposable
 
         try
         {
-            int? productId = vendor.ProductID > 0 ? vendor.ProductID : SelectedProduct?.ProductID;
-            var reviews = await Api.GetVendorReviewsAsync(vendor.VendorID, productId);
+            var reviews = await Api.GetVendorReviewsAsync(vendor.VendorID, null);
             CurrentVendorReviews = reviews ?? new();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[Procurement] Error loading reviews for vendor {vendor.VendorID}: {ex.Message}");
+            Console.WriteLine($"[Procurement] Error loading vendor-wide reviews for vendor {vendor.VendorID}: {ex.Message}");
+            CurrentVendorReviews = new();
         }
         finally
         {
@@ -1633,10 +1658,73 @@ public partial class Procurement : ComponentBase, IDisposable
         }
     }
 
+    private async Task OpenProductReviewsModal(VendorRecommendationDto vendor, int productId, string productName)
+    {
+        if (vendor == null) return;
+        ReviewViewMode = "Product";
+        SelectedVendorForReviews = vendor;
+        SelectedProductForReviewsId = productId;
+        SelectedProductForReviewsName = !string.IsNullOrWhiteSpace(productName) ? productName : (vendor.ProductName ?? string.Empty);
+        IsReviewsModalOpen = true;
+        IsLoadingVendorReviews = true;
+        CurrentVendorReviews.Clear();
+        StateHasChanged();
+
+        try
+        {
+            var reviews = await Api.GetVendorReviewsAsync(vendor.VendorID, productId);
+            CurrentVendorReviews = reviews ?? new();
+            if (productId > 0)
+            {
+                ProductReviewsCache[(vendor.VendorID, productId)] = CurrentVendorReviews;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Procurement] Error loading product reviews for vendor {vendor.VendorID}, product {productId}: {ex.Message}");
+            CurrentVendorReviews = new();
+        }
+        finally
+        {
+            IsLoadingVendorReviews = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SwitchReviewModalMode(string mode)
+    {
+        if (SelectedVendorForReviews == null || ReviewViewMode == mode) return;
+
+        if (mode == "VendorWide")
+        {
+            await OpenVendorWideReviewsModal(SelectedVendorForReviews);
+        }
+        else if (mode == "Product" && SelectedProductForReviewsId.HasValue && SelectedProductForReviewsId.Value > 0)
+        {
+            await OpenProductReviewsModal(SelectedVendorForReviews, SelectedProductForReviewsId.Value, SelectedProductForReviewsName);
+        }
+    }
+
+    private async Task OpenVendorReviewsModal(VendorRecommendationDto vendor)
+    {
+        int? productId = vendor.ProductID > 0 ? vendor.ProductID : SelectedProduct?.ProductID;
+        string prodName = !string.IsNullOrWhiteSpace(vendor.ProductName) ? vendor.ProductName : (SelectedProduct?.ProductName ?? string.Empty);
+        if (productId.HasValue && productId.Value > 0)
+        {
+            await OpenProductReviewsModal(vendor, productId.Value, prodName);
+        }
+        else
+        {
+            await OpenVendorWideReviewsModal(vendor);
+        }
+    }
+
     private void CloseVendorReviewsModal()
     {
         IsReviewsModalOpen = false;
         SelectedVendorForReviews = null;
+        SelectedProductForReviewsId = null;
+        SelectedProductForReviewsName = string.Empty;
         CurrentVendorReviews.Clear();
     }
 

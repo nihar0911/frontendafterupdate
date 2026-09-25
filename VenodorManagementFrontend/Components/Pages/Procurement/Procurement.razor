@@ -1,4 +1,4 @@
-﻿@page "/procurement"
+@page "/procurement"
 @rendermode InteractiveServer
 @inject ApiService Api
 @inject AuthService Auth
@@ -272,20 +272,37 @@ else
                     <div class="vendor-reviews-page mb-4">
                         <!-- Navigation & Page Header -->
                         <div class="mb-4">
-                            <div class="mb-2">
+                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
                                 <button type="button" class="btn btn-outline-secondary btn-sm fw-semibold px-3 py-1.5" @onclick="CloseVendorReviewsModal">
-                                    Back to Procurement Request
+                                    &larr; Back to Procurement Request
                                 </button>
+                                @if (SelectedProductForReviewsId.HasValue && SelectedProductForReviewsId.Value > 0 && !string.IsNullOrWhiteSpace(SelectedProductForReviewsName))
+                                {
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <button type="button" class="btn @(ReviewViewMode == "VendorWide" ? "btn-success text-white" : "btn-outline-secondary") fw-semibold px-3" @onclick='() => SwitchReviewModalMode("VendorWide")'>
+                                            Vendor Review History (All Products)
+                                        </button>
+                                        <button type="button" class="btn @(ReviewViewMode == "Product" ? "btn-success text-white" : "btn-outline-secondary") fw-semibold px-3" @onclick='() => SwitchReviewModalMode("Product")'>
+                                            @SelectedProductForReviewsName Reviews
+                                        </button>
+                                    </div>
+                                }
                             </div>
-                            <h2 class="greeting-title mt-2 mb-1">Customer Reviews</h2>
+                            <h2 class="greeting-title mt-2 mb-1">
+                                @(ReviewViewMode == "VendorWide" ? "Vendor Review History" : $"Product Reviews — {SelectedProductForReviewsName}")
+                            </h2>
                             <div class="d-flex align-items-center gap-2 flex-wrap">
                                 <span class="fs-5 fw-bold text-dark">@SelectedVendorForReviews.VendorName</span>
                                 <span class="text-muted">&bull;</span>
                                 <span class="fs-6 text-success fw-semibold bg-success-subtle px-2.5 py-0.5 rounded border border-success-subtle">
-                                    @(SelectedProduct?.ProductName ?? SelectedVendorForReviews.ProductName)
+                                    @(ReviewViewMode == "VendorWide" ? "All Products History" : SelectedProductForReviewsName)
                                 </span>
                             </div>
-                            <p class="greeting-subtitle mt-1 mb-0">Verified feedback from completed purchase orders</p>
+                            <p class="greeting-subtitle mt-1 mb-0">
+                                @(ReviewViewMode == "VendorWide"
+                                    ? $"All verified customer feedback across all products supplied by {SelectedVendorForReviews.VendorName}"
+                                    : $"Verified customer feedback specifically for {SelectedProductForReviewsName} from completed purchase orders")
+                            </p>
                         </div>
 
                         @if (IsLoadingVendorReviews)
@@ -307,11 +324,21 @@ else
                                 </div>
                                 <h4 class="fw-bold text-dark mb-1">No Reviews Yet</h4>
                                 <p class="text-muted small mb-4" style="max-width: 440px; margin: 0 auto;">
-                                    There are no verified customer reviews for <strong>@SelectedVendorForReviews.VendorName</strong> supplying <strong>@(SelectedProduct?.ProductName ?? SelectedVendorForReviews.ProductName)</strong> yet.
+                                    @(ReviewViewMode == "VendorWide"
+                                        ? $"There are no verified customer reviews for {SelectedVendorForReviews.VendorName} across any products yet."
+                                        : $"There are no verified customer reviews for {SelectedVendorForReviews.VendorName} supplying {SelectedProductForReviewsName} yet.")
                                 </p>
-                                <button type="button" class="btn btn-outline-secondary btn-sm fw-semibold px-4 py-2" @onclick="CloseVendorReviewsModal">
-                                    Back to Procurement Request
-                                </button>
+                                <div class="d-flex align-items-center justify-content-center gap-2 flex-wrap">
+                                    @if (ReviewViewMode == "Product" && SelectedVendorForReviews.TotalFeedbackCount > 0)
+                                    {
+                                        <button type="button" class="btn btn-outline-success btn-sm fw-semibold px-3 py-2" @onclick='() => SwitchReviewModalMode("VendorWide")'>
+                                            View Vendor Review History (@SelectedVendorForReviews.TotalFeedbackCount total)
+                                        </button>
+                                    }
+                                    <button type="button" class="btn btn-outline-secondary btn-sm fw-semibold px-4 py-2" @onclick="CloseVendorReviewsModal">
+                                        Back to Procurement Request
+                                    </button>
+                                </div>
                             </div>
                         }
                         else
@@ -320,7 +347,7 @@ else
                             <div class="row g-3 mb-4">
                                 <div class="col-md-4">
                                     <div class="review-stat-card p-3 h-100">
-                                        <div class="stat-card-label">AVERAGE RATING</div>
+                                        <div class="stat-card-label">@(ReviewViewMode == "VendorWide" ? "AVERAGE VENDOR RATING" : "AVERAGE PRODUCT RATING")</div>
                                         <div class="d-flex align-items-baseline gap-2 mt-2">
                                             <span class="fs-2 fw-bold text-success">@CurrentVendorAvgRating.ToString("0.0")</span>
                                             <span class="text-muted fw-normal">/ 5.0</span>
@@ -329,7 +356,7 @@ else
                                             </span>
                                         </div>
                                         <div class="small text-muted mt-1">
-                                            Based on <strong>@CurrentVendorReviews.Count</strong> @(CurrentVendorReviews.Count == 1 ? "verified review" : "verified reviews")
+                                            Based on <strong>@CurrentVendorReviews.Count</strong> @(CurrentVendorReviews.Count == 1 ? "verified review" : "verified reviews") @(ReviewViewMode == "VendorWide" ? "(all products)" : $"for {SelectedProductForReviewsName}")
                                         </div>
                                     </div>
                                 </div>
@@ -620,14 +647,18 @@ else
                 }
                 else
                 {
-                    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+                    <div class="pm-header-banner">
                         <div>
-                            <button type="button" class="btn-back-link" @onclick="CancelCreateRequest">
-                                Back to Purchase Requests
-                            </button>
-                            <h2 class="greeting-title mt-2">Create Multi-Product Purchase Request</h2>
+                            <h2 class="greeting-title">Create Multi-Product Purchase Request</h2>
                             <p class="greeting-subtitle">Add required products, assign recommended vendors per item, and dispatch directly.</p>
                         </div>
+                        <button type="button" class="btn btn-outline-secondary btn-back-header" @onclick="CancelCreateRequest">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="19" y1="12" x2="5" y2="12"></line>
+                                <polyline points="12 19 5 12 12 5"></polyline>
+                            </svg>
+                            <span>Back to Purchase Requests</span>
+                        </button>
                     </div>
 
                     <!-- STEP PROGRESS INDICATOR -->
@@ -935,8 +966,8 @@ else
                                                                     bool isSelected = SelectedVendorForProduct?.VendorID == rec.VendorID;
                                                                     <div class="vendor-rec-card compact-card @(isSelected ? "selected" : "")" @onclick="() => SelectVendorForProduct(rec)">
                                                                         <div class="d-flex align-items-start justify-content-between flex-wrap gap-2">
-                                                                            <div>
-                                                                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                                            <div class="flex-grow-1" style="min-width: 220px;">
+                                                                                <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
                                                                                     <h6 class="fw-bold text-dark mb-0">@rec.VendorName</h6>
                                                                                     @if (!string.IsNullOrWhiteSpace(rec.SmartBadge))
                                                                                     {
@@ -948,32 +979,77 @@ else
                                                                                     }
                                                                                 </div>
 
-                                                                                <div class="d-flex align-items-center gap-2.5 text-muted small flex-wrap mt-1">
-                                                                                    <div>
-                                                                                        @if (rec.TotalFeedbackCount > 0)
-                                                                                        {
-                                                                                            <button type="button" class="btn p-0 text-success fw-bold text-decoration-underline border-0 bg-transparent" style="font-size: 0.78rem;" @onclick="() => OpenVendorReviewsModal(rec)" @onclick:stopPropagation="true">
-                                                                                                Rating: @rec.AverageRating.ToString("0.0") (@rec.TotalFeedbackCount @(rec.TotalFeedbackCount == 1 ? "review" : "reviews"))
-                                                                                            </button>
-                                                                                        }
-                                                                                        else
-                                                                                        {
-                                                                                            <span class="text-secondary" style="font-size: 0.78rem;">No Reviews Yet</span>
-                                                                                        }
-                                                                                    </div>
-                                                                                    <div>&bull;</div>
+                                                                                <div class="d-flex align-items-center gap-2 text-muted small flex-wrap mb-2">
                                                                                     <div style="font-size: 0.78rem;">Quality: <strong class="text-dark">@(rec.AverageQualityRating > 0 ? $"{rec.AverageQualityRating:0.0} / 5" : "Standard")</strong></div>
                                                                                     <div>&bull;</div>
                                                                                     <div style="font-size: 0.78rem;">Est. Delivery: <strong class="text-dark">@rec.EstimatedDeliveryDays days</strong></div>
                                                                                 </div>
+
+                                                                                <!-- DUAL-SCOPE REVIEWS SECTION -->
+                                                                                <div class="vendor-reviews-dual-scope-container d-flex flex-column gap-1.5 mt-1">
+                                                                                    <!-- SECTION 1 — VENDOR-WIDE -->
+                                                                                    <div class="review-scope-box p-2 rounded">
+                                                                                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
+                                                                                            <div>
+                                                                                                <div class="review-scope-title text-uppercase">VENDOR RATING</div>
+                                                                                                <div class="d-flex align-items-baseline gap-1.5 mt-0.5">
+                                                                                                    @if (rec.TotalFeedbackCount > 0)
+                                                                                                    {
+                                                                                                        <span class="fw-bold text-success" style="font-size: 0.82rem;">@rec.AverageRating.ToString("0.0") / 5.0</span>
+                                                                                                        <span class="text-muted" style="font-size: 0.73rem;">&bull; Based on @rec.TotalFeedbackCount total vendor @(rec.TotalFeedbackCount == 1 ? "review" : "reviews")</span>
+                                                                                                    }
+                                                                                                    else
+                                                                                                    {
+                                                                                                        <span class="text-muted" style="font-size: 0.76rem;">No vendor reviews yet</span>
+                                                                                                    }
+                                                                                                </div>
+                                                                                            </div>
+                                                                                            @if (rec.TotalFeedbackCount > 0)
+                                                                                            {
+                                                                                                <button type="button" class="btn p-0 text-success fw-bold text-decoration-underline border-0 bg-transparent" style="font-size: 0.74rem;" @onclick="() => OpenVendorWideReviewsModal(rec)" @onclick:stopPropagation="true">
+                                                                                                    View Vendor Review History
+                                                                                                </button>
+                                                                                            }
+                                                                                        </div>
+                                                                                    </div>
+
+                                                                                    <!-- SECTION 2 — CURRENT PRODUCT -->
+                                                                                    @{
+                                                                                        int prodReviewCount = SelectedProduct != null ? GetProductReviewCount(rec.VendorID, SelectedProduct.ProductID) : 0;
+                                                                                        string currentProdName = SelectedProduct?.ProductName ?? "Current Product";
+                                                                                    }
+                                                                                    <div class="review-scope-box p-2 rounded">
+                                                                                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
+                                                                                            <div>
+                                                                                                <div class="review-scope-title text-uppercase">PRODUCT REVIEWS &mdash; @currentProdName</div>
+                                                                                                <div class="d-flex align-items-baseline gap-1.5 mt-0.5">
+                                                                                                    @if (prodReviewCount > 0)
+                                                                                                    {
+                                                                                                        <span class="fw-bold text-dark" style="font-size: 0.82rem;">@prodReviewCount @(prodReviewCount == 1 ? "review" : "reviews")</span>
+                                                                                                    }
+                                                                                                    else
+                                                                                                    {
+                                                                                                        <span class="text-muted" style="font-size: 0.76rem;">No reviews yet</span>
+                                                                                                    }
+                                                                                                </div>
+                                                                                            </div>
+                                                                                            @if (prodReviewCount > 0 && SelectedProduct != null)
+                                                                                            {
+                                                                                                <button type="button" class="btn p-0 text-success fw-bold text-decoration-underline border-0 bg-transparent" style="font-size: 0.74rem;" @onclick="() => OpenProductReviewsModal(rec, SelectedProduct.ProductID, SelectedProduct.ProductName)" @onclick:stopPropagation="true">
+                                                                                                    View @currentProdName Reviews
+                                                                                                </button>
+                                                                                            }
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
                                                                             </div>
 
-                                                                            <div class="d-flex align-items-center gap-3 text-end">
-                                                                                <div>
+                                                                            <div class="d-flex flex-column align-items-end justify-content-between text-end ms-auto">
+                                                                                <div class="mb-2">
                                                                                     <div class="fw-bold text-success fs-5 lh-1">
                                                                                         ₹@rec.UnitPrice.ToString("N0")
                                                                                     </div>
-                                                                                    <div class="small text-muted" style="font-size: 0.72rem;">/ @SelectedProduct.Unit</div>
+                                                                                    <div class="small text-muted" style="font-size: 0.72rem;">/ @(SelectedProduct?.Unit ?? "unit")</div>
                                                                                 </div>
                                                                                 <button type="button" class="btn btn-sm @(isSelected ? "btn-success" : "btn-outline-success") fw-bold px-3 py-1.5" @onclick="() => SelectVendorForProduct(rec)" @onclick:stopPropagation="true">
                                                                                     @(isSelected ? "Selected" : "Select Vendor")
@@ -997,18 +1073,18 @@ else
                                                                                     }
                                                                                 </div>
                                                                                 <div class="d-flex align-items-center gap-3 flex-wrap text-muted" style="font-size: 0.75rem;">
-                                                                                    <div>Contract Quantity: <strong class="text-dark">@((rec.ContractQuantity ?? rec.AllocatedQuantity).ToString("N0")) @SelectedProduct.Unit</strong></div>
+                                                                                    <div>Contract Quantity: <strong class="text-dark">@((rec.ContractQuantity ?? rec.AllocatedQuantity).ToString("N0")) @(SelectedProduct?.Unit ?? "unit")</strong></div>
                                                                                     <div>&bull;</div>
-                                                                                    <div>Purchased Quantity: <strong class="text-dark">@((rec.PurchasedQuantity ?? rec.UsedQuantity).ToString("N0")) @SelectedProduct.Unit</strong></div>
+                                                                                    <div>Purchased Quantity: <strong class="text-dark">@((rec.PurchasedQuantity ?? rec.UsedQuantity).ToString("N0")) @(SelectedProduct?.Unit ?? "unit")</strong></div>
                                                                                     <div>&bull;</div>
                                                                                     <div>
                                                                                         @if (rec.VarianceQuantity.HasValue && rec.VarianceQuantity.Value > 0)
                                                                                         {
-                                                                                            <span class="text-warning-emphasis fw-bold">Variance: +@rec.VarianceQuantity.Value.ToString("N0") @SelectedProduct.Unit (Purchased Exceeds Contract)</span>
+                                                                                            <span class="text-warning-emphasis fw-bold">Variance: +@rec.VarianceQuantity.Value.ToString("N0") @(SelectedProduct?.Unit ?? "unit") (Purchased Exceeds Contract)</span>
                                                                                         }
                                                                                         else
                                                                                         {
-                                                                                            <span>Remaining: <strong class="text-dark">@rec.RemainingQuantity.ToString("N0") @SelectedProduct.Unit</strong></span>
+                                                                                            <span>Remaining: <strong class="text-dark">@rec.RemainingQuantity.ToString("N0") @(SelectedProduct?.Unit ?? "unit")</strong></span>
                                                                                         }
                                                                                     </div>
                                                                                 </div>
@@ -1420,8 +1496,8 @@ else
 
                                                                             <div class="vendor-rec-card compact-card @(isThisVendorSelected ? "selected" : "")" @onclick="() => ToggleVendorForAiItem(currentItem, vendorRec)">
                                                                                 <div class="d-flex align-items-start justify-content-between flex-wrap gap-2">
-                                                                                    <div>
-                                                                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                                                    <div class="flex-grow-1" style="min-width: 220px;">
+                                                                                        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
                                                                                             <h6 class="fw-bold text-dark mb-0">@vendorRec.VendorName</h6>
                                                                                             @if (!string.IsNullOrWhiteSpace(vendorRec.SmartBadge))
                                                                                             {
@@ -1433,38 +1509,83 @@ else
                                                                                             }
                                                                                         </div>
 
-                                                                                        <div class="d-flex align-items-center gap-2.5 text-muted small flex-wrap mt-1">
-                                                                                            <div>
-                                                                                                @if (vendorRec.TotalFeedbackCount > 0)
-                                                                                                {
-                                                                                                    <button type="button" class="btn p-0 text-success fw-bold text-decoration-underline border-0 bg-transparent" style="font-size: 0.78rem;" @onclick="() => OpenVendorReviewsModal(vendorRec)" @onclick:stopPropagation="true">
-                                                                                                        Rating: @vendorRec.AverageRating.ToString("0.0") (@vendorRec.TotalFeedbackCount @(vendorRec.TotalFeedbackCount == 1 ? "review" : "reviews"))
-                                                                                                    </button>
-                                                                                                }
-                                                                                                else
-                                                                                                {
-                                                                                                    <span class="text-secondary" style="font-size: 0.78rem;">No Reviews Yet</span>
-                                                                                                }
-                                                                                            </div>
-                                                                                            <div>&bull;</div>
+                                                                                        <div class="d-flex align-items-center gap-2 text-muted small flex-wrap mb-2">
                                                                                             <div style="font-size: 0.78rem;">Quality: <strong class="text-dark">@(vendorRec.AverageQualityRating > 0 ? $"{vendorRec.AverageQualityRating:0.0} / 5" : "Standard")</strong></div>
                                                                                             <div>&bull;</div>
                                                                                             <div style="font-size: 0.78rem;">Est. Delivery: <strong class="text-dark">@vendorRec.EstimatedDeliveryDays days</strong></div>
                                                                                         </div>
-                                                                                    </div>
 
-                                                                                    <div class="d-flex align-items-center gap-3 text-end">
-                                                                                        <div>
-                                                                                            <div class="fw-bold text-success fs-5 lh-1">
-                                                                                                ₹@vendorRec.UnitPrice.ToString("N0")
+                                                                                        <!-- DUAL-SCOPE REVIEWS SECTION -->
+                                                                                        <div class="vendor-reviews-dual-scope-container d-flex flex-column gap-1.5 mt-1">
+                                                                                            <!-- SECTION 1 — VENDOR-WIDE -->
+                                                                                            <div class="review-scope-box p-2 rounded">
+                                                                                                <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
+                                                                                                    <div>
+                                                                                                        <div class="review-scope-title text-uppercase">VENDOR RATING</div>
+                                                                                                        <div class="d-flex align-items-baseline gap-1.5 mt-0.5">
+                                                                                                            @if (vendorRec.TotalFeedbackCount > 0)
+                                                                                                            {
+                                                                                                                <span class="fw-bold text-success" style="font-size: 0.82rem;">@vendorRec.AverageRating.ToString("0.0") / 5.0</span>
+                                                                                                                <span class="text-muted" style="font-size: 0.73rem;">&bull; Based on @vendorRec.TotalFeedbackCount total vendor @(vendorRec.TotalFeedbackCount == 1 ? "review" : "reviews")</span>
+                                                                                                            }
+                                                                                                            else
+                                                                                                            {
+                                                                                                                <span class="text-muted" style="font-size: 0.76rem;">No vendor reviews yet</span>
+                                                                                                            }
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                    @if (vendorRec.TotalFeedbackCount > 0)
+                                                                                                    {
+                                                                                                        <button type="button" class="btn p-0 text-success fw-bold text-decoration-underline border-0 bg-transparent" style="font-size: 0.74rem;" @onclick="() => OpenVendorWideReviewsModal(vendorRec)" @onclick:stopPropagation="true">
+                                                                                                            View Vendor Review History
+                                                                                                        </button>
+                                                                                                    }
+                                                                                                </div>
                                                                                             </div>
-                                                                                            <div class="small text-muted" style="font-size: 0.72rem;">/ @currentItem.Unit</div>
+
+                                                                                            <!-- SECTION 2 — CURRENT PRODUCT -->
+                                                                                            @{
+                                                                                                int prodReviewCount = currentItem.ProductID.HasValue ? GetProductReviewCount(vendorRec.VendorID, currentItem.ProductID.Value) : 0;
+                                                                                                string currentProdName = !string.IsNullOrWhiteSpace(currentItem.ProductName) ? currentItem.ProductName : "Current Product";
+                                                                                            }
+                                                                                            <div class="review-scope-box p-2 rounded">
+                                                                                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
+                                                                                                <div>
+                                                                                                    <div class="review-scope-title text-uppercase">PRODUCT REVIEWS &mdash; @currentProdName</div>
+                                                                                                    <div class="d-flex align-items-baseline gap-1.5 mt-0.5">
+                                                                                                        @if (prodReviewCount > 0)
+                                                                                                        {
+                                                                                                            <span class="fw-bold text-dark" style="font-size: 0.82rem;">@prodReviewCount @(prodReviewCount == 1 ? "review" : "reviews")</span>
+                                                                                                        }
+                                                                                                        else
+                                                                                                        {
+                                                                                                            <span class="text-muted" style="font-size: 0.76rem;">No reviews yet</span>
+                                                                                                        }
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                                @if (prodReviewCount > 0 && currentItem.ProductID.HasValue)
+                                                                                                {
+                                                                                                    <button type="button" class="btn p-0 text-success fw-bold text-decoration-underline border-0 bg-transparent" style="font-size: 0.74rem;" @onclick="() => OpenProductReviewsModal(vendorRec, currentItem.ProductID.Value, currentProdName)" @onclick:stopPropagation="true">
+                                                                                                        View @currentProdName Reviews
+                                                                                                    </button>
+                                                                                                }
+                                                                                            </div>
                                                                                         </div>
-                                                                                        <button type="button" class="btn btn-sm @(isThisVendorSelected ? "btn-success" : "btn-outline-success") fw-bold px-3 py-1.5" @onclick="() => ToggleVendorForAiItem(currentItem, vendorRec)" @onclick:stopPropagation="true">
-                                                                                            @(isThisVendorSelected ? "Selected" : "Select Vendor")
-                                                                                        </button>
                                                                                     </div>
                                                                                 </div>
+
+                                                                                <div class="d-flex flex-column align-items-end justify-content-between text-end ms-auto">
+                                                                                    <div class="mb-2">
+                                                                                        <div class="fw-bold text-success fs-5 lh-1">
+                                                                                            ₹@vendorRec.UnitPrice.ToString("N0")
+                                                                                        </div>
+                                                                                        <div class="small text-muted" style="font-size: 0.72rem;">/ @currentItem.Unit</div>
+                                                                                    </div>
+                                                                                    <button type="button" class="btn btn-sm @(isThisVendorSelected ? "btn-success" : "btn-outline-success") fw-bold px-3 py-1.5" @onclick="() => ToggleVendorForAiItem(currentItem, vendorRec)" @onclick:stopPropagation="true">
+                                                                                        @(isThisVendorSelected ? "Selected" : "Select Vendor")
+                                                                                    </button>
+                                                                                </div>
+                                                                            </div>
 
                                                                                 @if (vendorRec.HasActiveContract)
                                                                                 {
