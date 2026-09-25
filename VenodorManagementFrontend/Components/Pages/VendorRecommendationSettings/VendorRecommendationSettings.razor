@@ -1,4 +1,4 @@
-﻿@page "/purchase-manager/recommendation-settings"
+@page "/purchase-manager/recommendation-settings"
 @page "/recommendation-settings"
 @rendermode InteractiveServer
 @inject ApiService Api
@@ -197,7 +197,7 @@ else
                 </div>
             </nav>
         </aside>
-        <main class="pm-main-content">
+        <div class="pm-main-wrapper">
             <!-- TOP BAR -->
             <header class="pm-topbar">
                 <div class="header-left topbar-left">
@@ -219,7 +219,9 @@ else
                 </div>
             </header>
 
-            <div class="pm-dashboard-body">
+            <!-- Page Body -->
+            <main class="pm-page-container">
+                <div class="pm-dashboard-body">
 
                 <!-- Header Actions Card -->
                 <div class="settings-header-card mb-4">
@@ -461,7 +463,8 @@ else
                 }
 
             </div>
-        </main>
+            </main>
+        </div>
     </div>
 
     <!-- PROFILE MODAL -->

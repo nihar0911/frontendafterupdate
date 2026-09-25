@@ -179,11 +179,16 @@
     padding: 0.6rem 0;
 }
 
-.pm-main-content {
+.pm-main-wrapper {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
     min-width: 0;
+}
+
+.pm-page-container {
+    flex: 1;
+    overflow-y: auto;
 }
 
 .pm-topbar {

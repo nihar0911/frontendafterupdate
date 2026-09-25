@@ -1,4 +1,4 @@
-﻿@page "/organization/invoices"
+@page "/organization/invoices"
 @page "/organization/invoices/{InvoiceId:int}"
 @namespace VendorManagement.Web.Components.Pages.OrgInvoices
 
@@ -218,9 +218,8 @@ else
         </aside>
         }
         <div class="org-main-wrapper">
-            <main class="org-main-content">
             
-                <!-- TOP APP BAR -->
+            <!-- TOP APP BAR -->
             <header class="org-top-header">
                 <div class="header-left">
                     <button class="menu-toggle-btn" @onclick="ToggleSidebar" title="Toggle Menu">
@@ -286,7 +285,8 @@ else
                 </div>
             </header>
 
-            <div class="content-scroll-container">
+            <main class="org-main-content">
+                <div class="content-scroll-container">
                 @if (IsLoading)
                 {
                     <div class="text-center py-5">

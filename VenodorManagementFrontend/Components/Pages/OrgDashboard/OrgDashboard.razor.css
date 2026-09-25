@@ -143,19 +143,20 @@
     font-weight: 500;
     cursor: pointer;
     text-align: left;
-    transition: background-color 0.15s ease, color 0.15s ease;
+    transition: transform 0.15s ease, background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
     white-space: nowrap;
 }
 
 .nav-link:hover {
-    background-color: rgba(255, 255, 255, 0.08);
+    background-color: rgba(255, 255, 255, 0.12);
     color: #FFFFFF;
 }
 
 .nav-link.active {
-    background-color: rgba(255, 255, 255, 0.16);
+    background-color: rgba(255, 255, 255, 0.18);
     color: #FFFFFF;
     font-weight: 650;
+    box-shadow: inset 3px 0 0 #A7F3D0;
 }
 
 .nav-icon {

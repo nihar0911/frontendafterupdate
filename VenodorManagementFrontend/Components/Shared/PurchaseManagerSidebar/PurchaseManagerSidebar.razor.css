@@ -125,7 +125,7 @@
     display: flex;
     align-items: center;
     gap: 0.6rem;
-    padding: 0.42rem 0.6rem;
+    padding: 0.45rem 0.65rem;
     color: rgba(255, 255, 255, 0.85);
     text-decoration: none;
     border-radius: 6px;
@@ -136,19 +136,20 @@
     width: 100%;
     text-align: left;
     cursor: pointer;
-    transition: background-color 0.15s, color 0.15s;
+    transition: transform 0.15s ease, background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
     white-space: nowrap;
 }
 
 .sidebar-nav-link:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.12);
     color: #FFFFFF;
 }
 
 .sidebar-nav-link.active {
     background-color: #0D332D;
     color: #FFFFFF;
-    font-weight: 600;
+    font-weight: 650;
+    box-shadow: inset 3px 0 0 #A7F3D0;
 }
 
 .nav-icon {

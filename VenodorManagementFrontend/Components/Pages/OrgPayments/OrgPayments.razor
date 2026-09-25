@@ -1,4 +1,4 @@
-﻿@page "/organization/payments"
+@page "/organization/payments"
 @page "/org/payments"
 @page "/organization/payments/{InvoiceId:int}"
 @namespace VendorManagement.Web.Components.Pages.OrgPayments
@@ -179,7 +179,7 @@ else
             </nav>
         </aside>
         }
-        <main class="org-main-viewport">
+        <div class="org-main-wrapper">
             
             <!-- Page Header -->
             <header class="org-top-header">
@@ -217,6 +217,10 @@ else
                     <ProfileMenu OrganizationName="@(OrganizationName != "Organization" ? OrganizationName : null)" OutletName="@OutletDisplayName" />
                 </div>
             </header>
+
+            <!-- Main Content Area -->
+            <main class="org-main-content">
+                <div class="content-container">
 
             <!-- Success notification banner -->
             @if (!string.IsNullOrWhiteSpace(PaymentSuccessMessage))
@@ -485,7 +489,9 @@ else
                     }
                 }
             </div>
-        </main>
+                </div>
+            </main>
+        </div>
     </div>
     @if (ShowMakePaymentModal && SelectedInvoiceForPayment != null)
     {

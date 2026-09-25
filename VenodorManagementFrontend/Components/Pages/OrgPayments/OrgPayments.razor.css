@@ -209,16 +209,40 @@
 }
 
 /* -----------------------------------------------------------------------------
-   2. MAIN VIEWPORT
+   2. MAIN VIEWPORT & TOP HEADER
    ----------------------------------------------------------------------------- */
-.org-main-viewport {
+.org-main-wrapper {
     flex: 1;
+    display: flex;
+    flex-direction: column;
     min-width: 0;
-    padding: 2rem 2.5rem;
+}
+
+.org-top-header {
+    height: 64px;
+    background-color: #FFFFFF;
+    border-bottom: 1px solid #D9E2DD;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.75rem;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.org-main-content {
+    flex: 1;
+    padding: 1.75rem 2.5rem;
     overflow-y: auto;
 }
 
-.org-page-header {
+.content-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.org-content-header {
     display: flex;
     align-items: center;
     justify-content: space-between;

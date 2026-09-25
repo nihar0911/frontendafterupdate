@@ -234,29 +234,30 @@
     justify-content: center;
     width: 100%;
     height: 48px;
-    background-color: #134E48;
-    border: 1px solid #134E48;
+    background-color: #174F45;
+    border: 1px solid #174F45;
     border-radius: 4px;
     color: #FFFFFF;
     font-size: 0.95rem;
     font-weight: 650;
     letter-spacing: 0.04em;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(19, 78, 72, 0.22);
-    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.08s ease, box-shadow 0.15s ease;
+    box-shadow: 0 4px 12px rgba(23, 79, 69, 0.22);
+    transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease;
 }
 
 .svm-btn-primary:hover:not(:disabled) {
-    background-color: #0F3F3A;
-    border-color: #0F3F3A;
+    transform: translateY(-1px);
+    background-color: #123F37;
+    border-color: #123F37;
     color: #FFFFFF;
-    box-shadow: 0 6px 16px rgba(19, 78, 72, 0.30);
+    box-shadow: 0 6px 16px rgba(23, 79, 69, 0.28), 0 0 0 1px rgba(23, 79, 69, 0.12);
 }
 
 .svm-btn-primary:active:not(:disabled) {
-    background-color: #0B2F2B;
-    border-color: #0B2F2B;
-    transform: translateY(1px);
+    background-color: #0D302A;
+    border-color: #0D302A;
+    transform: translateY(0);
 }
 
 .svm-btn-primary:disabled {
@@ -277,13 +278,20 @@
     font-size: 0.9rem;
     font-weight: 550;
     cursor: pointer;
-    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    transition: transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .svm-btn-ghost:hover {
+    transform: translateY(-1px);
     background-color: #F4F7F5;
-    border-color: #BDCEC5;
-    color: #134E48;
+    border-color: #CBD5E1;
+    color: #174F45;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+}
+
+.svm-btn-ghost:active {
+    transform: translateY(0);
 }
 
 /* -----------------------------------------------------------------------------
