@@ -1,4 +1,4 @@
-﻿@page "/contract/{contractId:int}"
+@page "/contract/{contractId:int}"
 @page "/contract"
 @rendermode InteractiveServer
 @inject ApiService Api
@@ -559,8 +559,8 @@ else
                                     </div>
 
                                     <!-- PRODUCT TRACKING TABLE -->
-                                    <div class="alloc-table-wrap">
-                                        <table class="alloc-table">
+                                    <div class="alloc-table-wrap" style="overflow-x: auto;">
+                                        <table class="alloc-table text-nowrap" style="min-width: 580px;">
                                             <thead>
                                                 <tr>
                                                     <th>PRODUCT</th>

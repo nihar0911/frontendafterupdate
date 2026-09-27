@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -641,6 +641,11 @@ public partial class OrgPurchaseOrders : ComponentBase
             // Check if vendor has an active contract for this product and outlet
             var matchingContract = AllContracts.FirstOrDefault(c =>
                 c.OutletID == outletId &&
+                string.Equals(c.Status, "Active", StringComparison.OrdinalIgnoreCase) &&
+                (c.VendorID == q.VendorID || (c.Allocations != null && c.Allocations.Any(a => a.VendorID == q.VendorID && string.Equals(a.Status, "Active", StringComparison.OrdinalIgnoreCase)))) &&
+                c.Products != null && c.Products.Any(p => p.ProductID == productId)
+            ) ?? AllContracts.FirstOrDefault(c =>
+                c.OutletID == outletId &&
                 c.ProductID == productId &&
                 string.Equals(c.Status, "Active", StringComparison.OrdinalIgnoreCase) &&
                 (c.VendorID == q.VendorID || (c.Allocations != null && c.Allocations.Any(a => a.VendorID == q.VendorID && string.Equals(a.Status, "Active", StringComparison.OrdinalIgnoreCase))))
@@ -651,7 +656,12 @@ public partial class OrgPurchaseOrders : ComponentBase
 
             if (matchingContract != null)
             {
-                if (matchingContract.Allocations != null && matchingContract.Allocations.Count > 0)
+                var matchedProduct = matchingContract.Products?.FirstOrDefault(p => p.ProductID == productId);
+                if (matchedProduct != null)
+                {
+                    remainingQty = Math.Max(0m, matchedProduct.ContractQuantity - matchedProduct.PurchasedQuantity);
+                }
+                else if (matchingContract.Allocations != null && matchingContract.Allocations.Count > 0)
                 {
                     var alloc = matchingContract.Allocations.FirstOrDefault(a => a.VendorID == q.VendorID);
                     if (alloc != null)
@@ -671,7 +681,7 @@ public partial class OrgPurchaseOrders : ComponentBase
 
             bool isRecommended = hasContract && remainingQty > 0;
             string badge = isRecommended
-                ? $"Recommended (Active Contract â€¢ Remaining: {remainingQty:N0} {unit})"
+                ? $"Recommended (Active Contract \u2013 Remaining: {remainingQty:N0} {unit})"
                 : (hasContract ? "Active Contract (0 Remaining Capacity)" : "Alternative Eligible Vendor (No Active Contract)");
 
             options.Add(new QuotationPoOption
