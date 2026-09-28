@@ -31,7 +31,7 @@ public partial class Procurement : ComponentBase, IDisposable
     private Dictionary<int, VendorRecommendationDto?> AiSelectedVendors { get; set; } = new();
     private HashSet<int> AiItemAddedToCartKeys { get; set; } = new();
     private string SelectedVoiceLanguage { get; set; } = "hi-IN"; // "hi-IN" or "en-US"
-    private bool IsTtsEnabled { get; set; } = true;
+    private bool IsTtsEnabled { get; set; } = false;
     private string? AssistantSpeechMessage { get; set; }
     private bool IsVoiceListening { get; set; } = false;
     private string? VoiceMessage { get; set; }
@@ -873,24 +873,13 @@ public partial class Procurement : ComponentBase, IDisposable
 
     private async Task SpeakAssistantMessageAsync(string? text, string lang)
     {
-        if (string.IsNullOrWhiteSpace(text) || !IsTtsEnabled) return;
-        try
-        {
-            await JS.InvokeVoidAsync("voiceSynthesis.speak", text, lang);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[Procurement] TTS speak error: {ex.Message}");
-        }
+        // Audio response completely disabled
+        await Task.CompletedTask;
     }
 
     private async Task ReplayAssistantSpeech()
     {
-        if (!string.IsNullOrWhiteSpace(AssistantSpeechMessage))
-        {
-            bool isHindi = IsHindiPrompt(AssistantSpeechMessage) || SelectedVoiceLanguage == "hi-IN";
-            await SpeakAssistantMessageAsync(AssistantSpeechMessage, isHindi ? "hi-IN" : "en-US");
-        }
+        await Task.CompletedTask;
     }
 
     private static bool IsHindiPrompt(string text)
@@ -945,6 +934,7 @@ public partial class Procurement : ComponentBase, IDisposable
         AiItemErrorStates.Clear();
         AiSelectedVendors.Clear();
         AiItemAddedToCartKeys.Clear();
+        _ = JS.InvokeVoidAsync("voiceSynthesis.stop");
         StateHasChanged();
 
         try
@@ -1046,6 +1036,7 @@ public partial class Procurement : ComponentBase, IDisposable
     private bool TryHandleFollowUpQuestion(string prompt, bool isHindi)
     {
         string pLower = prompt.ToLowerInvariant();
+        _ = JS.InvokeVoidAsync("voiceSynthesis.stop");
 
         // Check if query has a numeric quantity + product syntax indicating a NEW procurement request
         bool hasProcurementIntent = System.Text.RegularExpressions.Regex.IsMatch(pLower, @"\b\d+(?:\.\d+)?\s*(?:kg|kgs|किलो|किग्रा|gm|ग्राम|ltr|लीटर|box|डिब्बा|पैकेट|packet|unit|units|pcs)\b");
@@ -1072,7 +1063,6 @@ public partial class Procurement : ComponentBase, IDisposable
                 ? $"सबसे कम यूनिट कीमत वाला विक्रेता {bestPrice.VendorName} है, जिसकी कीमत ₹{bestPrice.UnitPrice:N0} प्रति {unit} है।"
                 : $"The vendor with the lowest unit price is {bestPrice.VendorName} at ₹{bestPrice.UnitPrice:N0} per {unit}.";
 
-            if (IsTtsEnabled) _ = SpeakAssistantMessageAsync(AssistantSpeechMessage, isHindi ? "hi-IN" : "en-US");
             StateHasChanged();
             return true;
         }
@@ -1089,7 +1079,6 @@ public partial class Procurement : ComponentBase, IDisposable
                 ? $"सबसे जल्दी डिलीवरी देने वाला विक्रेता {fastest.VendorName} है, जो {fastest.EstimatedDeliveryDays} दिनों में डिलीवरी करता है।"
                 : $"The fastest delivering vendor is {fastest.VendorName}, delivering in approximately {fastest.EstimatedDeliveryDays} days.";
 
-            if (IsTtsEnabled) _ = SpeakAssistantMessageAsync(AssistantSpeechMessage, isHindi ? "hi-IN" : "en-US");
             StateHasChanged();
             return true;
         }
@@ -1106,7 +1095,6 @@ public partial class Procurement : ComponentBase, IDisposable
                 ? $"पहला विक्रेता {top.VendorName} सबसे बेहतर है क्योंकि इसका समग्र स्कोर {top.OverallScore:0.#}/100 है, विक्रेता रेटिंग {top.AverageRating:0.0}★ है और कीमत ₹{top.UnitPrice:N0} है।{contractNotice}"
                 : $"The top-ranked vendor is {top.VendorName} with an overall score of {top.OverallScore:0.#}/100, vendor rating of {top.AverageRating:0.0}★, and price of ₹{top.UnitPrice:N0}.{contractNotice}";
 
-            if (IsTtsEnabled) _ = SpeakAssistantMessageAsync(AssistantSpeechMessage, isHindi ? "hi-IN" : "en-US");
             StateHasChanged();
             return true;
         }
@@ -1122,7 +1110,6 @@ public partial class Procurement : ComponentBase, IDisposable
                 ? $"दूसरा विक्रेता {second.VendorName} है, जिसका समग्र स्कोर {second.OverallScore:0.#}/100, विक्रेता रेटिंग {second.AverageRating:0.0}★, डिलीवरी समय {second.EstimatedDeliveryDays} दिन और कीमत ₹{second.UnitPrice:N0} है।"
                 : $"The second vendor is {second.VendorName} with an overall score of {second.OverallScore:0.#}/100, vendor rating of {second.AverageRating:0.0}★, delivery in {second.EstimatedDeliveryDays} days, and price of ₹{second.UnitPrice:N0}.";
 
-            if (IsTtsEnabled) _ = SpeakAssistantMessageAsync(AssistantSpeechMessage, isHindi ? "hi-IN" : "en-US");
             StateHasChanged();
             return true;
         }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -225,7 +225,7 @@ public partial class AdminVendorProducts : ComponentBase
                 var result = await Api.CreateVendorProductAsync(command);
                 if (result.Success && result.Data != null)
                 {
-                    SuccessMessage = $"Mapping created -- {GetVendorName(FormVendorID)} to {GetProductName(FormProductID)}";
+                    SuccessMessage = "Vendor product added successfully.";
                     CloseForm();
                     await LoadData();
                 }
@@ -233,7 +233,7 @@ public partial class AdminVendorProducts : ComponentBase
                 {
                     ErrorMessage = !string.IsNullOrWhiteSpace(result.ErrorMessage)
                         ? result.ErrorMessage
-                        : "Unable to create vendor product mapping.";
+                        : "Unable to add vendor product.";
                 }
             }
             else
@@ -251,7 +251,7 @@ public partial class AdminVendorProducts : ComponentBase
                 var result = await Api.UpdateVendorProductAsync(EditingMapping.VendorProductID, command);
                 if (result.Success)
                 {
-                    SuccessMessage = $"Mapping updated -- {GetVendorName(FormVendorID)} to {GetProductName(FormProductID)}";
+                    SuccessMessage = "Vendor product updated successfully.";
                     CloseForm();
                     await LoadData();
                 }
@@ -259,14 +259,14 @@ public partial class AdminVendorProducts : ComponentBase
                 {
                     ErrorMessage = !string.IsNullOrWhiteSpace(result.ErrorMessage)
                         ? result.ErrorMessage
-                        : "Unable to update vendor product mapping.";
+                        : "Unable to update vendor product.";
                 }
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[AdminVendorProducts] Error saving mapping: {ex.Message}");
-            ErrorMessage = "An error occurred while saving the mapping.";
+            Console.WriteLine($"[AdminVendorProducts] Error saving vendor product: {ex.Message}");
+            ErrorMessage = "An error occurred while saving the vendor product.";
         }
         finally
         {
@@ -287,20 +287,20 @@ public partial class AdminVendorProducts : ComponentBase
             var result = await Api.ActivateVendorProductAsync(id);
             if (result.Success)
             {
-                SuccessMessage = "Vendor product mapping activated successfully.";
+                SuccessMessage = "Vendor product activated successfully.";
                 await LoadData();
             }
             else
             {
                 ErrorMessage = !string.IsNullOrWhiteSpace(result.ErrorMessage)
                     ? result.ErrorMessage
-                    : "Unable to activate vendor product mapping.";
+                    : "Unable to activate vendor product.";
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[AdminVendorProducts] Error activating mapping: {ex.Message}");
-            ErrorMessage = "An error occurred while activating the vendor product mapping.";
+            Console.WriteLine($"[AdminVendorProducts] Error activating vendor product: {ex.Message}");
+            ErrorMessage = "An error occurred while activating the vendor product.";
         }
         finally
         {
@@ -321,20 +321,20 @@ public partial class AdminVendorProducts : ComponentBase
             var result = await Api.DeactivateVendorProductAsync(id);
             if (result.Success)
             {
-                SuccessMessage = "Vendor product mapping deactivated successfully.";
+                SuccessMessage = "Vendor product deactivated successfully.";
                 await LoadData();
             }
             else
             {
                 ErrorMessage = !string.IsNullOrWhiteSpace(result.ErrorMessage)
                     ? result.ErrorMessage
-                    : "Unable to deactivate vendor product mapping.";
+                    : "Unable to deactivate vendor product.";
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[AdminVendorProducts] Error deactivating mapping: {ex.Message}");
-            ErrorMessage = "An error occurred while deactivating the vendor product mapping.";
+            Console.WriteLine($"[AdminVendorProducts] Error deactivating vendor product: {ex.Message}");
+            ErrorMessage = "An error occurred while deactivating the vendor product.";
         }
         finally
         {
