@@ -81,7 +81,6 @@ public partial class OrgPurchaseOrders : ComponentBase
     private bool IsActionProcessing { get; set; } = false;
     private int SelectedQuotationId { get; set; } = 0;
     private DateTime ExpectedDeliveryDate { get; set; } = DateTime.Today.AddDays(3);
-    private string SelectedSubmissionApproverRole { get; set; } = "Organization Manager";
 
     // Bulk PO Submission State
     private HashSet<int> SelectedQuotationIds { get; set; } = new();
@@ -755,7 +754,6 @@ public partial class OrgPurchaseOrders : ComponentBase
         ShowBulkResults = false;
         BulkResults.Clear();
         BulkSummaryMessage = null;
-        SelectedSubmissionApproverRole = "Organization Manager";
     }
 
     private async Task SubmitBulkPurchaseOrdersAsync()
@@ -788,8 +786,7 @@ public partial class OrgPurchaseOrders : ComponentBase
             var command = new CreatePurchaseOrderCommand
             {
                 QuotationID = item.QuotationID,
-                ExpectedDeliveryDate = BulkExpectedDeliveryDate,
-                ApproverRole = SelectedSubmissionApproverRole
+                ExpectedDeliveryDate = BulkExpectedDeliveryDate
             };
 
             var result = await Api.CreatePurchaseOrderWithResultAsync(command);
@@ -867,7 +864,6 @@ public partial class OrgPurchaseOrders : ComponentBase
     {
         if (!Auth.IsPurchaseManager && !Auth.IsAdmin) return;
         ModalErrorMessage = null;
-        SelectedSubmissionApproverRole = "Organization Manager";
         if (EligiblePoOptions.Count > 0)
         {
             SelectedQuotationId = EligiblePoOptions.First().QuotationID;
@@ -906,8 +902,7 @@ public partial class OrgPurchaseOrders : ComponentBase
             var command = new CreatePurchaseOrderCommand
             {
                 QuotationID = SelectedQuotationId,
-                ExpectedDeliveryDate = ExpectedDeliveryDate,
-                ApproverRole = SelectedSubmissionApproverRole
+                ExpectedDeliveryDate = ExpectedDeliveryDate
             };
 
             var createdPo = await Api.CreatePurchaseOrderAsync(command);
