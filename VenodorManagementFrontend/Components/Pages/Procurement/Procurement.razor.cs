@@ -955,7 +955,7 @@ public partial class Procurement : ComponentBase, IDisposable
             {
                 AiErrorMessage = isHindi
                     ? "एआई सेवा से कनेक्ट करने में असमर्थ। कृपया पुनः प्रयास करें।"
-                    : "Unable to connect to AI parsing service. Please try again or use manual product search.";
+                    : "Unable to connect to AI translation service. Please try again or use manual product search.";
                 return;
             }
 
@@ -963,9 +963,8 @@ public partial class Procurement : ComponentBase, IDisposable
             {
                 AiErrorMessage = !string.IsNullOrWhiteSpace(AiResponse.Message)
                     ? AiResponse.Message
-                    : (isHindi ? "अनुरोध को समझने में असमर्थ। कृपया उत्पाद और मात्रा स्पष्ट रूप से बताएं।" : "Unable to parse request. Please describe the items and quantity clearly.");
+                    : (isHindi ? "अनुरोध को समझने में असमर्थ। कृपया उत्पाद और मात्रा स्पष्ट रूप से बताएं।" : "Unable to understand what you have said in your request. Please describe the items and quantity clearly.");
                 AssistantSpeechMessage = AiErrorMessage;
-                if (IsTtsEnabled) await SpeakAssistantMessageAsync(AssistantSpeechMessage, isHindi ? "hi-IN" : "en-US");
                 return;
             }
 
@@ -1030,11 +1029,6 @@ public partial class Procurement : ComponentBase, IDisposable
                 AssistantSpeechMessage = isHindi
                     ? $"मुझे '{nfItem.SpokenProductName}' का मिलान आपके कैटलॉग में नहीं मिला।"
                     : $"Product '{nfItem.SpokenProductName}' was not found in active catalog.";
-            }
-
-            if (!string.IsNullOrWhiteSpace(AssistantSpeechMessage) && IsTtsEnabled)
-            {
-                await SpeakAssistantMessageAsync(AssistantSpeechMessage, isHindi ? "hi-IN" : "en-US");
             }
         }
         catch (Exception ex)
@@ -1261,16 +1255,11 @@ public partial class Procurement : ComponentBase, IDisposable
             AssistantSpeechMessage = isHindi
                 ? $"ठीक है। मैंने {matched.ProductName} का चयन किया है। {vendorCount} विक्रेता उपलब्ध हैं।"
                 : $"Selected {matched.ProductName}. {vendorCount} suppliers available.";
-
-            if (IsTtsEnabled)
-            {
-                _ = SpeakAssistantMessageAsync(AssistantSpeechMessage, isHindi ? "hi-IN" : "en-US");
-            }
         }
         else
         {
             item.ResolutionStatus = "NotFound";
-            item.Message = $"Product '{chosenMatchName}' not found in active catalog.";
+            item.Message = $"Product '{chosenMatchName}' not found in available product history.the products should be available to search it ";
             StateHasChanged();
         }
     }
