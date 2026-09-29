@@ -463,7 +463,7 @@ else
                                         </div>
                                         <div class="d-flex justify-content-between align-items-center py-2.5">
                                             <span class="text-muted small">Request Date</span>
-                                            <span class="text-dark">@(SelectedQuotationPR?.RequestDate.ToIst("dd MMM yyyy") ?? "N/A")</span>
+                                            <span class="text-dark">@GetQuotationRequestDate(SelectedQuotation)</span>
                                         </div>
                                     </div>
                                 </div>

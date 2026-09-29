@@ -1,4 +1,5 @@
-﻿using System;
+using VendorManagement.Web.Helpers;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -550,7 +551,7 @@ public partial class VendorDashboard : ComponentBase
         StateHasChanged();
     }
 
-    private void OpenQuotationDetails(int quotationId)
+    private async Task OpenQuotationDetails(int quotationId)
     {
         SelectedQuotation = AllQuotations.FirstOrDefault(q => q.QuotationID == quotationId);
         if (SelectedQuotation != null)
@@ -563,9 +564,68 @@ public partial class VendorDashboard : ComponentBase
             {
                 SelectedQuotationPR = AllPurchaseRequests.FirstOrDefault(pr => pr.RequestID == SelectedQuotation.RequestID);
             }
+
+            if (SelectedQuotationPR == null && Opportunities != null)
+            {
+                var opp = Opportunities.FirstOrDefault(o => o.RequestID == SelectedQuotation.RequestID);
+                if (opp != null)
+                {
+                    SelectedQuotationPR = new PurchaseRequestDto
+                    {
+                        RequestID = opp.RequestID,
+                        OutletID = opp.OutletID,
+                        RequestDate = opp.RequestDate,
+                        Status = opp.OpportunityStatus,
+                        OutletName = opp.OutletName
+                    };
+                }
+            }
+
             ActiveSidebarNav = "QuotationDetails";
+            StateHasChanged();
+
+            if (!SelectedQuotation.RequestDate.HasValue)
+            {
+                try
+                {
+                    var fresh = await Api.GetQuotationByIdAsync(quotationId);
+                    if (fresh != null && fresh.RequestDate.HasValue)
+                    {
+                        SelectedQuotation.RequestDate = fresh.RequestDate;
+                        StateHasChanged();
+                    }
+                }
+                catch { }
+            }
         }
-        StateHasChanged();
+        else
+        {
+            StateHasChanged();
+        }
+    }
+
+    private string GetQuotationRequestDate(QuotationDto? quotation)
+    {
+        if (quotation?.RequestDate.HasValue == true && quotation.RequestDate.Value != default)
+        {
+            return quotation.RequestDate.ToIst("dd MMM yyyy");
+        }
+
+        if (SelectedQuotationPR?.RequestDate != null && SelectedQuotationPR.RequestDate != default)
+        {
+            return SelectedQuotationPR.RequestDate.ToIst("dd MMM yyyy");
+        }
+
+        if (quotation != null && Opportunities != null)
+        {
+            var opp = Opportunities.FirstOrDefault(o => o.RequestID == quotation.RequestID);
+            if (opp != null && opp.RequestDate != default)
+            {
+                return opp.RequestDate.ToIst("dd MMM yyyy");
+            }
+        }
+
+        return "N/A";
     }
 
     private void CloseQuotationDetails()
